@@ -61,7 +61,7 @@
 
 		<copy todir="${temp_build}">
 			<fileset file="LICENSE" />
-			<fileset file="README.md" />
+			<fileset file="README" />
 		</copy>
 
 

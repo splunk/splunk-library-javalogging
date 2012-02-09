@@ -1,0 +1,28 @@
+Splunk Java Logging Framework
+-----------------------------
+
+Contents :
+
+* Implementation of Splunk CIM(Common Information Model) and best practice logging semantics
+
+* java.util.logging handler for logging to Splunk REST endpoints
+
+* log4j appender for logging to Splunk REST endpoints
+
+* logback appender for logging to Splunk REST endpoints
+
+* Example logging configuration files
+
+* Javadocs
+
+Simple code example at com.dtdsoftware.splunk.logging.examples.Example.java
+Assumes you know how to setup your classpath to use your preferred logging framework implementation.
+
+
+
+
+
+
+
+
+

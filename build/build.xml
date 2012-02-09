@@ -1,0 +1,83 @@
+<project name="SPLUNK Logging" default="build_release" basedir="..">
+	<description>
+		SPLUNK Logging Build Script
+    </description>
+
+
+	<property file="build/build.properties" />
+
+	<path id="project.class.path">
+
+		<fileset dir="${lib}">
+			<include name="**/*.jar" />
+		</fileset>
+
+	</path>
+
+
+	<target name="init">
+
+		<delete dir="${temp_build}" />
+		<mkdir dir="${temp_build}" />
+
+
+	</target>
+
+	<target name="compile" depends="init" description="compile the source ">
+		<!-- Compile the java code from ${src} into ${build} -->
+
+		<mkdir dir="${temp_build}/${classes}" />
+
+		<javac srcdir="${src}" destdir="${temp_build}/${classes}">
+			<classpath refid="project.class.path" />
+		</javac>
+
+	</target>
+
+
+	<target name="build_release" depends="compile" description="generate a distribution">
+		<!-- Create the distribution directory -->
+
+
+		<copy todir="${temp_build}/${lib}">
+			<fileset dir="${lib}" />
+
+		</copy>
+
+
+
+		<copy todir="${temp_build}/${config}">
+			<fileset dir="${config}" />
+		</copy>
+
+		<copy todir="${temp_build}/${javadocs}">
+			<fileset dir="${javadocs}" />
+		</copy>
+
+		<copy todir="${temp_build}/3rdparty_licenses">
+			<fileset dir="3rdparty_licenses" />
+		</copy>
+
+
+		<copy todir="${temp_build}">
+			<fileset file="LICENSE" />
+			<fileset file="README.md" />
+		</copy>
+
+
+		<jar jarfile="${temp_build}/${lib}/${main_jar}">
+			<fileset dir="${temp_build}/${classes}" includes="com/dtdsoftware/splunk/**" />
+
+		</jar>
+
+		<delete dir="${temp_build}/${classes}" />
+
+		<tar destfile="${release}/${id}-${version}${suffix}" compression="${compressionType}">
+			<zipfileset dir="${temp_build}" prefix="${id}" fileMode="744" />
+		</tar>
+
+		<delete dir="${temp_build}" />
+
+	</target>
+
+</project>

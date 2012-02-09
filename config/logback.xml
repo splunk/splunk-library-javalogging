@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--Example logback configuration using a Splunk REST Appender -->
+
+<configuration>
+
+<!--Send log events to a Splunk REST endpoint-->
+  <appender name="splunkrest" class="com.dtdsoftware.splunk.logging.logback.appender.SplunkRestAppender">
+    <port>8089</port>
+    <host>localhost</host>
+    <delivery>stream</delivery>
+    <user>admin</user>
+    <metaSourcetype>testing</metaSourcetype>
+    <pass>somepass</pass>
+    <metaSource>rest</metaSource>
+    <metaIndex>main</metaIndex>
+    <layout class="ch.qos.logback.classic.PatternLayout">
+      <pattern>%m loglevel="%p"%n</pattern>
+      <!-- optionally you can enrich the messages with formatting tokens from the logging framework
+      <pattern>%d{ABSOLUTE} %m%n</pattern>
+      <pattern>%m loglevel="%p"%n</pattern>
+       -->
+    </layout>
+  </appender>
+  
+<!--Send log events to a console-->
+  <appender name="stdout" class="ch.qos.logback.core.ConsoleAppender">
+    <Target>System.out</Target>
+    <encoder>
+      <pattern>%d [%thread] %level %mdc %logger{35} - %msg%n</pattern>
+    </encoder>
+  </appender>
+  
+<!--Splunk logger-->
+  <logger name="splunk.logger" additivity="false" level="INFO">
+    <appender-ref ref="splunkrest"/>
+  </logger>
+  
+<!--Root logger-->
+  <root level="INFO">
+    <appender-ref ref="stdout"/>
+  </root>
+</configuration>

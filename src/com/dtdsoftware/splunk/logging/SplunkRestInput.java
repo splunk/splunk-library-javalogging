@@ -19,7 +19,6 @@ import com.splunk.Service;
 
 public class SplunkRestInput {
 
-
 	// Java SDK objects
 	private Service service;
 	private Receivers receivers;

@@ -35,14 +35,23 @@ public class SplunkRestAppender extends AppenderSkeleton {
 	private SplunkRestInput sri;
 	private RestEventData red = new RestEventData();
 
-	public SplunkRestAppender() {
-	}
+	/**
+	 * Constructor
+	 */
+	public SplunkRestAppender() {}
 
+	/**
+	 * Constructor 
+	 * @param layout the layout to apply to the log event
+	 */
 	public SplunkRestAppender(Layout layout) {
 
 		this.layout = layout;
 	}
 
+	/**
+	 *  Log the message
+	 */
 	@Override
 	protected void append(LoggingEvent event) {
 
@@ -72,6 +81,9 @@ public class SplunkRestAppender extends AppenderSkeleton {
 
 	}
 
+	/**
+	 * Clean up resources
+	 */
 	@Override
 	synchronized public void close() {
 

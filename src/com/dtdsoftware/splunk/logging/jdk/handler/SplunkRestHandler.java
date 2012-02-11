@@ -36,6 +36,9 @@ public class SplunkRestHandler extends Handler {
 	private SplunkRestInput sri;
 	private RestEventData red = new RestEventData();
 
+	/**
+	 * Constructor
+	 */
 	public SplunkRestHandler() {
 
 		configure();
@@ -51,6 +54,9 @@ public class SplunkRestHandler extends Handler {
 
 	}
 
+	/**
+	 * Read in the handler properties from the config file
+	 */
 	private void configure() {
 
 		LogManager manager = LogManager.getLogManager();
@@ -83,6 +89,9 @@ public class SplunkRestHandler extends Handler {
 
 	}
 
+	/**
+	 * Clean up resources
+	 */
 	@Override
 	synchronized public void close() throws SecurityException {
 
@@ -98,6 +107,9 @@ public class SplunkRestHandler extends Handler {
 
 	}
 
+	/**
+	 * Log the message
+	 */
 	@Override
 	public void publish(LogRecord record) {
 
@@ -105,7 +117,6 @@ public class SplunkRestHandler extends Handler {
 			return;
 		}
 		if (sri == null) {
-
 			return;
 		}
 
@@ -113,11 +124,9 @@ public class SplunkRestHandler extends Handler {
 		if (delivery.equals(STREAM)) {
 			sri.streamEvent(formatted);
 		}
-
 		else if (delivery.equals(SIMPLE))
 			sri.sendEvent(formatted);
 		else {
-
 			return;
 		}
 
@@ -224,9 +233,6 @@ public class SplunkRestHandler extends Handler {
 	}
 
 	@Override
-	public void flush() {
-		// TODO Auto-generated method stub
-
-	}
+	public void flush() {}
 
 }

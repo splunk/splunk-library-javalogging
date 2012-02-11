@@ -37,9 +37,14 @@ public class SplunkRestAppender extends AppenderBase<ILoggingEvent> {
 
 	private Layout<ILoggingEvent> layout;
 
-	public SplunkRestAppender() {
-	}
+	/**
+	 * Constructor
+	 */
+	public SplunkRestAppender() {}
 
+	/**
+	 *  Log the message
+	 */
 	@Override
 	protected void append(ILoggingEvent event) {
 
@@ -57,7 +62,10 @@ public class SplunkRestAppender extends AppenderBase<ILoggingEvent> {
 			}
 		}
 	}
-
+	
+	/**
+	 *  Initialisation logic
+	 */
 	@Override
 	public void start() {
 
@@ -78,6 +86,9 @@ public class SplunkRestAppender extends AppenderBase<ILoggingEvent> {
 		super.start();
 	}
 
+	/**
+	 * Clean up resources
+	 */
 	@Override
 	public void stop() {
 		if (sri != null) {

@@ -73,7 +73,7 @@
 		<delete dir="${temp_build}/${classes}" />
 
 		<tar destfile="${release}/${id}-${version}${suffix}" compression="${compressionType}">
-			<zipfileset dir="${temp_build}" prefix="${id}" fileMode="744" />
+			<zipfileset dir="${temp_build}" prefix="${id}"  />
 		</tar>
 
 		<delete dir="${temp_build}" />

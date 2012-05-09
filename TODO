@@ -1,11 +1,3 @@
-TCP "Splunk Cooked" appender. 
-How to understand cooked format ? sniff packets with wireshark ? , does Splunk publish the protocol ?
-
-Build in some concepts from Splunk outptus.conf into appenders:
--compression
--security
--store/forward
--load balancing
--cloning
-
+Simple Load Balancing , round robin
 Connection retry/re-establishment logic in REST appenders
+Build in latest Splunk Java SDK

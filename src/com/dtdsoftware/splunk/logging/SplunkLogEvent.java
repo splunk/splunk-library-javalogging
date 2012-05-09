@@ -1,7 +1,9 @@
 package com.dtdsoftware.splunk.logging;
 
-import java.text.SimpleDateFormat;
+
 import java.util.Date;
+
+import org.apache.commons.lang.time.FastDateFormat;
 
 /**
  * <pre>
@@ -39,6 +41,24 @@ import java.util.Date;
 public class SplunkLogEvent {
 
 	/**
+	 * Simple shallow cloning method
+	 */
+	public SplunkLogEvent clone(){
+		
+		SplunkLogEvent clone = new SplunkLogEvent();
+		clone.quoteValues = this.quoteValues;
+		clone.useInternalDate = this.useInternalDate;
+		clone.eventMessage = new StringBuffer();
+		clone.eventMessage.append(this.eventMessage);
+		return clone;
+	}
+	/**
+	 * Default private constructor used for cloning
+	 */
+	private SplunkLogEvent(){}
+	
+	
+	/**
 	 * Contents of the event message
 	 */
 	private StringBuffer eventMessage;
@@ -72,7 +92,7 @@ public class SplunkLogEvent {
 	/**
 	 * Date Formatter instance
 	 */
-	private static SimpleDateFormat DATEFORMATTER = new SimpleDateFormat(
+	private static FastDateFormat DATEFORMATTER = FastDateFormat.getInstance(
 			DATEFORMATPATTERN);
 
 	/**

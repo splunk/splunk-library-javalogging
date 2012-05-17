@@ -24,6 +24,12 @@ public class SplunkRestInput {
 	private Receivers receivers;
 	private Args args;
 
+	// connection props
+	private String user = "";
+	private String pass = "";
+	private String host = "";
+	private int port;
+
 	// streaming objects
 	private Socket streamSocket = null;
 	private OutputStream ostream;
@@ -50,18 +56,42 @@ public class SplunkRestInput {
 	public SplunkRestInput(String user, String pass, String host, int port,
 			RestEventData red, boolean stream) throws Exception {
 
+		this.host = host;
+		this.port = port;
+		this.user = user;
+		this.pass = pass;
+		this.args = createArgs(red);
+
+		initService();
+
+		if (stream) {
+			openStream();
+		}
+
+	}
+
+	private void initService() {
+
 		this.service = new Service(host, port);
 		this.service.login(user, pass);
 		this.receivers = new Receivers(this.service);
 
-		this.args = createArgs(red);
+	}
 
-		if (stream) {
+	/**
+	 * open the stream
+	 * 
+	 * @throws Exception
+	 */
+	private void openStream() throws Exception {
+
+		if (this.receivers != null) {
+
 			this.streamSocket = this.receivers.attach(args);
-			ostream = streamSocket.getOutputStream();
-			writerOut = new OutputStreamWriter(ostream, "UTF8");
-		}
+			this.ostream = streamSocket.getOutputStream();
+			this.writerOut = new OutputStreamWriter(ostream, "UTF8");
 
+		}
 	}
 
 	/**
@@ -76,16 +106,20 @@ public class SplunkRestInput {
 
 		if (red != null) {
 			if (red.getIndex().length() > 0)
-				urlArgs.add(RestEventData.RECEIVERS_SIMPLE_ARG_INDEX, red.getIndex());
+				urlArgs.add(RestEventData.RECEIVERS_SIMPLE_ARG_INDEX, red
+						.getIndex());
 			if (red.getSource().length() > 0)
-				urlArgs.add(RestEventData.RECEIVERS_SIMPLE_ARG_SOURCE, red.getSource());
+				urlArgs.add(RestEventData.RECEIVERS_SIMPLE_ARG_SOURCE, red
+						.getSource());
 			if (red.getSourcetype().length() > 0)
 				urlArgs.add(RestEventData.RECEIVERS_SIMPLE_ARG_SOURCETYPE, red
 						.getSourcetype());
 			if (red.getHost().length() > 0)
-				urlArgs.add(RestEventData.RECEIVERS_SIMPLE_ARG_HOST, red.getHost());
+				urlArgs.add(RestEventData.RECEIVERS_SIMPLE_ARG_HOST, red
+						.getHost());
 			if (red.getHostRegex().length() > 0)
-				urlArgs.add(RestEventData.RECEIVERS_SIMPLE_ARG_HOSTREGEX, red.getHostRegex());
+				urlArgs.add(RestEventData.RECEIVERS_SIMPLE_ARG_HOSTREGEX, red
+						.getHostRegex());
 
 		}
 		return urlArgs;
@@ -96,6 +130,7 @@ public class SplunkRestInput {
 	 */
 	public void closeStream() {
 		try {
+
 			if (writerOut != null) {
 				writerOut.flush();
 				writerOut.close();
@@ -125,12 +160,25 @@ public class SplunkRestInput {
 	public void streamEvent(String message) {
 
 		try {
+
 			if (writerOut != null) {
+
 				writerOut.write(message + "\n");
 				writerOut.flush();
-			}
-		} catch (IOException e) {
-		}
 
+			}
+
+		} catch (IOException e) {
+			try {
+				closeStream();
+			} catch (Exception e1) {
+			}
+
+			try {
+				initService();
+				openStream();
+			} catch (Exception e2) {
+			}
+		}
 	}
 }

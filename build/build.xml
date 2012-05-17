@@ -28,7 +28,7 @@
 
 		<mkdir dir="${temp_build}/${classes}" />
 
-		<javac srcdir="${src}" destdir="${temp_build}/${classes}">
+		<javac srcdir="${src}" destdir="${temp_build}/${classes}" target="${javaClassTarget}">
 			<classpath refid="project.class.path" />
 		</javac>
 

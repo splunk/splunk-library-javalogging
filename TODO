@@ -1,3 +1,1 @@
-Simple Load Balancing , round robin
-Connection retry/re-establishment logic in REST appenders
-Build in latest Splunk Java SDK
+Build in final release Splunk Java SDK

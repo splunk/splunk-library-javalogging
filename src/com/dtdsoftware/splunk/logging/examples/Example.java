@@ -41,6 +41,7 @@ public class Example {
 
 		// log a splunk log event generated string
 		logger.info(event.toString());
+		
 
 	}
 

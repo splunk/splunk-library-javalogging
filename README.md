@@ -22,6 +22,8 @@ This framework contains :
 
 *   Javadocs
 
+If you want to use UDP to send events to Splunk , then Log4j and Logback  already have Syslog Appenders
+
 ## License
 
 The Splunk Java Logging Framework is licensed under the Creative Commons 3.0 License. 

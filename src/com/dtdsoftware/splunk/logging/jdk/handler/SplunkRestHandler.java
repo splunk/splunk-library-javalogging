@@ -123,8 +123,7 @@ public class SplunkRestHandler extends Handler {
 		String formatted = getFormatter().format(record);
 		if (delivery.equals(STREAM)) {
 			sri.streamEvent(formatted);
-		}
-		else if (delivery.equals(SIMPLE))
+		} else if (delivery.equals(SIMPLE))
 			sri.sendEvent(formatted);
 		else {
 			return;
@@ -233,6 +232,7 @@ public class SplunkRestHandler extends Handler {
 	}
 
 	@Override
-	public void flush() {}
+	public void flush() {
+	}
 
 }

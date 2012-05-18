@@ -15,8 +15,8 @@ public class RestEventData {
 	public static String RECEIVERS_SIMPLE_ARG_SOURCETYPE = "sourcetype";
 	public static String RECEIVERS_SIMPLE_ARG_HOST = "host";
 	public static String RECEIVERS_SIMPLE_ARG_HOSTREGEX = "host_regex";
-	
-	//URL parameter values
+
+	// URL parameter values
 	private String source = "";
 	private String sourcetype = "";
 	private String index = "";
@@ -26,16 +26,25 @@ public class RestEventData {
 	/**
 	 * Default constructor
 	 */
-	public RestEventData() {}
+	public RestEventData() {
+	}
 
 	/**
 	 * Constructor
 	 * 
-	 * @param source The source value to fill in the metadata for this input's events. 
-	 * @param sourcetype The sourcetype to apply to events from this input. 
-	 * @param index The index to send events from this input to. 
-	 * @param host The value to populate in the host field for events from this data input. 
-	 * @param hostRegex A regular expression used to extract the host value from each event. 
+	 * @param source
+	 *            The source value to fill in the metadata for this input's
+	 *            events.
+	 * @param sourcetype
+	 *            The sourcetype to apply to events from this input.
+	 * @param index
+	 *            The index to send events from this input to.
+	 * @param host
+	 *            The value to populate in the host field for events from this
+	 *            data input.
+	 * @param hostRegex
+	 *            A regular expression used to extract the host value from each
+	 *            event.
 	 */
 	public RestEventData(String source, String sourcetype, String index,
 			String host, String hostRegex) {
@@ -47,7 +56,8 @@ public class RestEventData {
 	}
 
 	/**
-	 * The source value to fill in the metadata for this input's events. 
+	 * The source value to fill in the metadata for this input's events.
+	 * 
 	 * @return
 	 */
 	public String getSource() {
@@ -55,7 +65,8 @@ public class RestEventData {
 	}
 
 	/**
-	 * The source value to fill in the metadata for this input's events. 
+	 * The source value to fill in the metadata for this input's events.
+	 * 
 	 * @param source
 	 */
 	public void setSource(String source) {
@@ -63,7 +74,8 @@ public class RestEventData {
 	}
 
 	/**
-	 * The sourcetype to apply to events from this input. 
+	 * The sourcetype to apply to events from this input.
+	 * 
 	 * @return
 	 */
 	public String getSourcetype() {
@@ -71,7 +83,8 @@ public class RestEventData {
 	}
 
 	/**
-	 * The sourcetype to apply to events from this input. 
+	 * The sourcetype to apply to events from this input.
+	 * 
 	 * @param sourcetype
 	 */
 	public void setSourcetype(String sourcetype) {
@@ -79,7 +92,8 @@ public class RestEventData {
 	}
 
 	/**
-	 * 	The index to send events from this input to. 
+	 * The index to send events from this input to.
+	 * 
 	 * @return
 	 */
 	public String getIndex() {
@@ -87,15 +101,17 @@ public class RestEventData {
 	}
 
 	/**
-	 * 	The index to send events from this input to. 
-	 * @param index 
+	 * The index to send events from this input to.
+	 * 
+	 * @param index
 	 */
 	public void setIndex(String index) {
 		this.index = index;
 	}
 
 	/**
-	 * The value to populate in the host field for events from this data input. 
+	 * The value to populate in the host field for events from this data input.
+	 * 
 	 * @return
 	 */
 	public String getHost() {
@@ -103,7 +119,8 @@ public class RestEventData {
 	}
 
 	/**
-	 * The value to populate in the host field for events from this data input. 
+	 * The value to populate in the host field for events from this data input.
+	 * 
 	 * @param host
 	 */
 	public void setHost(String host) {
@@ -111,7 +128,8 @@ public class RestEventData {
 	}
 
 	/**
-	 * A regular expression used to extract the host value from each event. 
+	 * A regular expression used to extract the host value from each event.
+	 * 
 	 * @return
 	 */
 	public String getHostRegex() {
@@ -119,7 +137,8 @@ public class RestEventData {
 	}
 
 	/**
-	 * A regular expression used to extract the host value from each event. 
+	 * A regular expression used to extract the host value from each event.
+	 * 
 	 * @param hostRegex
 	 */
 	public void setHostRegex(String hostRegex) {

@@ -34,8 +34,8 @@ public abstract class SplunkLogEventFactory {
 	 */
 	public static void addTemplate(String name, SplunkLogEvent template) {
 
-		if(template != null)
-		  templates.put(name, template);
+		if (template != null)
+			templates.put(name, template);
 	}
 
 	/**

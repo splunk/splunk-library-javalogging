@@ -38,11 +38,14 @@ public class SplunkRestAppender extends AppenderSkeleton {
 	/**
 	 * Constructor
 	 */
-	public SplunkRestAppender() {}
+	public SplunkRestAppender() {
+	}
 
 	/**
-	 * Constructor 
-	 * @param layout the layout to apply to the log event
+	 * Constructor
+	 * 
+	 * @param layout
+	 *            the layout to apply to the log event
 	 */
 	public SplunkRestAppender(Layout layout) {
 
@@ -50,7 +53,7 @@ public class SplunkRestAppender extends AppenderSkeleton {
 	}
 
 	/**
-	 *  Log the message
+	 * Log the message
 	 */
 	@Override
 	protected void append(LoggingEvent event) {

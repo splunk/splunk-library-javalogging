@@ -1,6 +1,5 @@
 package com.dtdsoftware.splunk.logging;
 
-
 import java.util.Date;
 
 import org.apache.commons.lang.time.FastDateFormat;
@@ -40,7 +39,6 @@ import org.apache.commons.lang.time.FastDateFormat;
  */
 public class SplunkLogEvent {
 
-	
 	/**
 	 * Contents of the event message
 	 */
@@ -50,8 +48,7 @@ public class SplunkLogEvent {
 	 * Whether or not to put quotes around values
 	 */
 	private boolean quoteValues = true;
-	
-	
+
 	/**
 	 * Whether or not to add a date to the event string
 	 */
@@ -76,8 +73,8 @@ public class SplunkLogEvent {
 	/**
 	 * Date Formatter instance
 	 */
-	private static FastDateFormat DATEFORMATTER = FastDateFormat.getInstance(
-			DATEFORMATPATTERN);
+	private static FastDateFormat DATEFORMATTER = FastDateFormat
+			.getInstance(DATEFORMATPATTERN);
 
 	/**
 	 * Event prefix fields
@@ -1207,7 +1204,7 @@ public class SplunkLogEvent {
 		this.eventMessage = new StringBuffer();
 		this.quoteValues = quoteValues;
 		this.useInternalDate = useInternalDate;
-		
+
 		addPair(PREFIX_NAME, eventName);
 		addPair(PREFIX_EVENT_ID, eventID);
 	}
@@ -1225,20 +1222,20 @@ public class SplunkLogEvent {
 
 		this(eventName, eventID, true, true);
 	}
-	
+
 	/**
 	 * Default constructor
 	 */
-	public SplunkLogEvent(){
-		
+	public SplunkLogEvent() {
+
 		this.eventMessage = new StringBuffer();
 	}
-	
+
 	/**
 	 * Simple shallow cloning method
 	 */
-	public SplunkLogEvent clone(){
-		
+	public SplunkLogEvent clone() {
+
 		SplunkLogEvent clone = new SplunkLogEvent();
 		clone.quoteValues = this.quoteValues;
 		clone.useInternalDate = this.useInternalDate;
@@ -1246,7 +1243,6 @@ public class SplunkLogEvent {
 
 		return clone;
 	}
-	
 
 	/**
 	 * Add a key value pair
@@ -1331,20 +1327,18 @@ public class SplunkLogEvent {
 	 */
 	public String toString() {
 
-		String event="";
-		
+		String event = "";
+
 		if (useInternalDate) {
 			StringBuffer clonedMessage = new StringBuffer();
 			clonedMessage.append(DATEFORMATTER.format(new Date())).append(
 					PAIRDELIM).append(this.eventMessage);
 			event = clonedMessage.toString();
-		}
-		else
-		  event = eventMessage.toString();
+		} else
+			event = eventMessage.toString();
 		// trim off trailing pair delim char(s)
 		return event.substring(0, event.length() - PAIRDELIM.length());
 	}
-	
 
 	public void setAcManagementDestNtDomain(String acManagementDestNtDomain) {
 		addPair(AC_MANAGEMENT_DEST_NT_DOMAIN, acManagementDestNtDomain);

@@ -2,7 +2,7 @@
 
 The purpose of this project is to create a logging framework to allow developers to as seamlessly as possible
 integrate Splunk best practice logging semantics into their code.
-There are also custom handler/appender implementations for the 3 most prevelent Java logging frameworks in play.
+There are also custom handler/appender implementations for the 3 most prevalent Java logging frameworks in play.
 
 1.	LogBack
 2.	log4j
@@ -12,11 +12,11 @@ This framework contains :
 
 *   Implementation of Splunk CIM(Common Information Model) and best practice logging semantics
 
-*   java.util.logging handler for logging to Splunk REST endpoints
+*   java.util.logging handler for logging to Splunk REST endpoints and Splunk Raw TCP Server Socket
 
-*   log4j appender for logging to Splunk REST endpoints
+*   log4j appender for logging to Splunk REST endpoints  and Splunk Raw TCP Server Socket
 
-*   Logback appender for logging to Splunk REST endpoints
+*   Logback appender for logging to Splunk REST endpoints  and Splunk Raw TCP Server Socket
 
 *   Example logging configuration files
 
@@ -29,10 +29,10 @@ Details can be found in the file LICENSE.
 
 ## Quick Start
 
-1.	Untar releases/splunklogging-0.1.0.tar.gz
+1.	Untar releases/splunklogging-0.2.0.tar.gz
 2.	All the required jar files are in the lib directory..
 3.	Assume you know how to setup your classpath to use your preferred logging framework implementation.
-4.	There is simple code example here https://github.com/damiendallimore/SplunkJavaLogging/blob/master/src/com/dtdsoftware/splunk/logging/examples/Example.java
+4.	There is a simple code example here https://github.com/damiendallimore/SplunkJavaLogging/blob/master/src/com/dtdsoftware/splunk/logging/examples/Example.java
 5.	There are sample logging config files in the config directory for the 3 logging frameworks
 
 ## Splunk

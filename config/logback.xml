@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!--Example logback configuration using a Splunk REST Appender -->
+<!--Example logback configuration using a Splunk REST Appender  or Splunk Raw TCP Appender -->
 
 <configuration>
 
@@ -24,7 +24,7 @@
   </appender>
   
 <!--Send log events to a Splunk Raw TCP server socket-->
-  <appender name="splunkrest" class="com.dtdsoftware.splunk.logging.logback.appender.SplunkRawTCPAppender">
+  <appender name="splunkrawtcp" class="com.dtdsoftware.splunk.logging.logback.appender.SplunkRawTCPAppender">
     <port>5150</port>
     <host>localhost</host>
     <layout class="ch.qos.logback.classic.PatternLayout">

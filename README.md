@@ -20,7 +20,7 @@ This framework contains :
 *   Example logging configuration files
 *   Javadocs
 
-If you want to use UDP to send events to Splunk , then Log4j and Logback  already have Syslog Appenders
+If you want to use UDP to send events to Splunk , then Log4j and Logback  already have Syslog Appenders.
 And of course you can still use any File appenders and have the file monitored by a Splunk Universal Forwarder.
 
 ## Resilience
@@ -28,7 +28,7 @@ And of course you can still use any File appenders and have the file monitored b
 The HTTP REST and Raw TCP handler/appenders have autonomous socket reconnection logic in case of connection failures.
 There is also internal event queuing that is loosely modelled off Splunk's outputs.conf for Universal Forwarders.
 You can set these propertys :
-* maxQueueSize : defaults to 500KB , format [<integer>|<integer>[KB|MB|GB]]
+* maxQueueSize : defaults to 500KB , format [integer|integer[KB|MB|GB]]
 * dropEventsOnQueueFull : defaults to false , format [ true | false]
 
 And you can use a parallel File appender if you absolutely need disk persistence.
@@ -56,7 +56,7 @@ Details can be found in the file LICENSE.
 
 ## Quick Start
 
-1.	Untar releases/splunklogging-0.2.0.tar.gz
+1.	Untar releases/splunklogging-0.3.0.tar.gz
 2.	All the required jar files are in the lib directory..
 3.	Assume you know how to setup your classpath to use your preferred logging framework implementation.
 4.	There is a simple code example here https://github.com/damiendallimore/SplunkJavaLogging/blob/master/src/com/dtdsoftware/splunk/logging/examples/Example.java

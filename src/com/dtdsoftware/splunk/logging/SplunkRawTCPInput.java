@@ -13,7 +13,7 @@ import java.net.Socket;
  * 
  */
 
-public class SplunkRawTCPInput {
+public class SplunkRawTCPInput extends SplunkInput{
 
 	// connection props
 	private String host = "";
@@ -78,17 +78,28 @@ public class SplunkRawTCPInput {
 	 * @param message
 	 */
 	public void streamEvent(String message) {
-
+		
+		String currentMessage = message;
 		try {
 
 			if (writerOut != null) {
 
-				writerOut.write(message + "\n");
-				writerOut.flush();
+				//send the message
+				writerOut.write(currentMessage + "\n");
 
-			}
+				//flush the queue
+				while(queueContainsEvents()){
+					String messageOffQueue = dequeue();
+					currentMessage = messageOffQueue;
+					writerOut.write(currentMessage + "\n");
+				}
+				writerOut.flush();
+			}			
 
 		} catch (IOException e) {
+			
+			//something went wrong , put message on the queue for retry
+			enqueue(currentMessage);
 			try {
 				closeStream();
 			} catch (Exception e1) {

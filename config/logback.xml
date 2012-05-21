@@ -12,6 +12,8 @@
     <user>admin</user>
     <metaSourcetype>testing</metaSourcetype>
     <pass>somepass</pass>
+    <maxQueueSize>5MB</maxQueueSize>
+    <dropEventsOnQueueFull>false</dropEventsOnQueueFull>
     <metaSource>rest</metaSource>
     <metaIndex>main</metaIndex>
     <layout class="ch.qos.logback.classic.PatternLayout">
@@ -27,6 +29,8 @@
   <appender name="splunkrawtcp" class="com.dtdsoftware.splunk.logging.logback.appender.SplunkRawTCPAppender">
     <port>5150</port>
     <host>localhost</host>
+    <maxQueueSize>5MB</maxQueueSize>
+    <dropEventsOnQueueFull>false</dropEventsOnQueueFull>
     <layout class="ch.qos.logback.classic.PatternLayout">
       <pattern>%m%n</pattern>
       <!-- optionally you can enrich the messages with formatting tokens from the logging framework

@@ -18,6 +18,10 @@ public class SplunkRawTCPAppender extends AppenderBase<ILoggingEvent> {
 	private String host = "";
 	private int port = 5150;
 
+	//queuing settings
+	private String maxQueueSize; 
+	private boolean dropEventsOnQueueFull;
+	
 	private SplunkRawTCPInput sri;
 
 	private Layout<ILoggingEvent> layout;
@@ -57,6 +61,8 @@ public class SplunkRawTCPAppender extends AppenderBase<ILoggingEvent> {
 		if (sri == null) {
 			try {
 				sri = new SplunkRawTCPInput(host, port);
+				sri.setMaxQueueSize(maxQueueSize);
+				sri.setDropEventsOnQueueFull(dropEventsOnQueueFull);
 			} catch (Exception e) {
 				addError("Couldn't establish Raw TCP connection for SplunkRawTCPAppender named \""
 						+ this.name + "\".");
@@ -98,6 +104,22 @@ public class SplunkRawTCPAppender extends AppenderBase<ILoggingEvent> {
 		this.port = port;
 	}
 
+	public String getMaxQueueSize() {
+		return maxQueueSize;
+	}
+
+	public void setMaxQueueSize(String maxQueueSize) {
+		this.maxQueueSize = maxQueueSize;
+	}
+
+	public boolean isDropEventsOnQueueFull() {
+		return dropEventsOnQueueFull;
+	}
+
+	public void setDropEventsOnQueueFull(boolean dropEventsOnQueueFull) {
+		this.dropEventsOnQueueFull = dropEventsOnQueueFull;
+	}
+	
 	public Layout<ILoggingEvent> getLayout() {
 		return layout;
 	}

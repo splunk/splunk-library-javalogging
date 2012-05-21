@@ -5,24 +5,49 @@ integrate Splunk best practice logging semantics into their code.
 There are also custom handler/appender implementations for the 3 most prevalent Java logging frameworks in play.
 
 1.	LogBack
-2.	log4j
+2.	Log4j
 3.	java.util logging
 
 This framework contains :
 
 *   Implementation of Splunk CIM(Common Information Model) and best practice logging semantics
-
-*   java.util.logging handler for logging to Splunk REST endpoints and Splunk Raw TCP Server Socket
-
-*   log4j appender for logging to Splunk REST endpoints  and Splunk Raw TCP Server Socket
-
-*   Logback appender for logging to Splunk REST endpoints  and Splunk Raw TCP Server Socket
-
+*   java.util.logging handler for logging to Splunk REST endpoints
+*   java.util.logging handler for logging to Splunk Raw TCP Server Socket
+*   Log4j appender for logging to Splunk REST endpoints
+*   Log4j appender for logging to Splunk Raw TCP Server Socket
+*   Logback appender for logging to Splunk REST endpoints
+*   Logback appender for logging to Splunk Raw TCP Server Socket
 *   Example logging configuration files
-
 *   Javadocs
 
 If you want to use UDP to send events to Splunk , then Log4j and Logback  already have Syslog Appenders
+And of course you can still use any File appenders and have the file monitored by a Splunk Universal Forwarder.
+
+## Resilience
+
+The HTTP REST and Raw TCP handler/appenders have autonomous socket reconnection logic in case of connection failures.
+There is also internal event queuing that is loosely modelled off Splunk's outputs.conf for Universal Forwarders.
+You can set these propertys :
+* maxQueueSize : defaults to 500KB , format [<integer>|<integer>[KB|MB|GB]]
+* dropEventsOnQueueFull : defaults to false , format [ true | false]
+
+And you can use a parallel File appender if you absolutely need disk persistence.
+
+## Data Cloning
+
+If you want "data cloning" functionality, then you can leverage the logging configuration and have (n) different appender
+definitions for your various target Indexers.
+
+## Load Balancing
+
+A wrapper appender for Log4j and Logback is in the works.The design pattern is modelled off the Log4j "AsyncAppender" wrapper.
+So you will be able to define a "LoadBalancedAppender" and specify nested child appenders to Load Balance across.
+This opens up some interesting possibilitys such as load balancing across appenders that use the same or perhaps a 
+mixture of different transports , REST / Raw TCP / Syslog.
+
+## Thread Safety
+
+Log4j and Logback are thread safe.
 
 ## License
 

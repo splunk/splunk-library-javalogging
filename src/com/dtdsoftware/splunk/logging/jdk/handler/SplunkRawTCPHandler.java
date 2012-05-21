@@ -18,6 +18,10 @@ public class SplunkRawTCPHandler extends Handler {
 	// connection settings
 	private String host = "";
 	private int port = 5150;
+	
+	//queuing settings
+	private String maxQueueSize; 
+	private boolean dropEventsOnQueueFull;
 
 	private SplunkRawTCPInput sri;
 
@@ -31,6 +35,8 @@ public class SplunkRawTCPHandler extends Handler {
 		try {
 
 			sri = new SplunkRawTCPInput(this.host, this.port);
+			sri.setMaxQueueSize(maxQueueSize);
+			sri.setDropEventsOnQueueFull(dropEventsOnQueueFull);
 		} catch (Exception e) {
 
 		}
@@ -47,6 +53,8 @@ public class SplunkRawTCPHandler extends Handler {
 
 		setHost(manager.getProperty(cname + ".host"));
 		setPort(Integer.parseInt(manager.getProperty(cname + ".port")));
+		setMaxQueueSize(manager.getProperty(cname + ".maxQueueSize"));
+		setDropEventsOnQueueFull(Boolean.parseBoolean(manager.getProperty(cname + ".dropEventsOnQueueFull")));
 		setLevel(Level.parse(manager.getProperty(cname + ".level")));
 		setFilter(null);
 		setFormatter(new SplunkFormatter());
@@ -116,6 +124,23 @@ public class SplunkRawTCPHandler extends Handler {
 		if (port > 0)
 			this.port = port;
 	}
+	
+	public String getMaxQueueSize() {
+		return maxQueueSize;
+	}
+
+	public void setMaxQueueSize(String maxQueueSize) {
+		this.maxQueueSize = maxQueueSize;
+	}
+
+	public boolean isDropEventsOnQueueFull() {
+		return dropEventsOnQueueFull;
+	}
+
+	public void setDropEventsOnQueueFull(boolean dropEventsOnQueueFull) {
+		this.dropEventsOnQueueFull = dropEventsOnQueueFull;
+	}
+
 
 	@Override
 	public void flush() {

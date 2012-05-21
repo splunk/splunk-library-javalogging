@@ -18,6 +18,10 @@ public class SplunkRawTCPAppender extends AppenderSkeleton {
 	private String host = "";
 	private int port = 5150;
 
+	//queuing settings
+	private String maxQueueSize; 
+	private boolean dropEventsOnQueueFull;
+	
 	private SplunkRawTCPInput sri;
 
 	/**
@@ -46,6 +50,8 @@ public class SplunkRawTCPAppender extends AppenderSkeleton {
 		try {
 			if (sri == null) {
 				sri = new SplunkRawTCPInput(host, port);
+				sri.setMaxQueueSize(maxQueueSize);
+				sri.setDropEventsOnQueueFull(dropEventsOnQueueFull);
 			}
 		} catch (Exception e) {
 			errorHandler
@@ -99,5 +105,21 @@ public class SplunkRawTCPAppender extends AppenderSkeleton {
 	public void setPort(int port) {
 		this.port = port;
 	}
+	public String getMaxQueueSize() {
+		return maxQueueSize;
+	}
+
+	public void setMaxQueueSize(String maxQueueSize) {
+		this.maxQueueSize = maxQueueSize;
+	}
+
+	public boolean isDropEventsOnQueueFull() {
+		return dropEventsOnQueueFull;
+	}
+
+	public void setDropEventsOnQueueFull(boolean dropEventsOnQueueFull) {
+		this.dropEventsOnQueueFull = dropEventsOnQueueFull;
+	}
+
 
 }

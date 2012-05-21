@@ -31,6 +31,10 @@ public class SplunkRestAppender extends AppenderBase<ILoggingEvent> {
 	private String metaIndex = "";;
 	private String metaHostRegex = "";;
 	private String metaHost = "";;
+	
+	//queuing settings
+	private String maxQueueSize; 
+	private boolean dropEventsOnQueueFull;
 
 	private SplunkRestInput sri;
 	private RestEventData red = new RestEventData();
@@ -79,6 +83,8 @@ public class SplunkRestAppender extends AppenderBase<ILoggingEvent> {
 			try {
 				sri = new SplunkRestInput(user, pass, host, port, red, delivery
 						.equals(STREAM) ? true : false);
+				sri.setMaxQueueSize(maxQueueSize);
+				sri.setDropEventsOnQueueFull(dropEventsOnQueueFull);
 			} catch (Exception e) {
 				addError("Couldn't establish REST service for SplunkRestAppender named \""
 						+ this.name + "\".");
@@ -187,6 +193,22 @@ public class SplunkRestAppender extends AppenderBase<ILoggingEvent> {
 	public void setMetaHost(String metaHost) {
 		this.metaHost = metaHost;
 		red.setHost(metaHost);
+	}
+
+	public String getMaxQueueSize() {
+		return maxQueueSize;
+	}
+
+	public void setMaxQueueSize(String maxQueueSize) {
+		this.maxQueueSize = maxQueueSize;
+	}
+
+	public boolean isDropEventsOnQueueFull() {
+		return dropEventsOnQueueFull;
+	}
+
+	public void setDropEventsOnQueueFull(boolean dropEventsOnQueueFull) {
+		this.dropEventsOnQueueFull = dropEventsOnQueueFull;
 	}
 
 	public Layout<ILoggingEvent> getLayout() {

@@ -97,20 +97,20 @@ public abstract class SplunkInput {
 		int multiplier;
 		int factor;
 		
-		if(rawProperty.startsWith("KB")){
+		if(rawProperty.endsWith("KB")){
 			multiplier = KB;
 		}
-		else if(rawProperty.startsWith("MB")){
+		else if(rawProperty.endsWith("MB")){
 			multiplier = MB;
 		}
-		else if(rawProperty.startsWith("GB")){
+		else if(rawProperty.endsWith("GB")){
 			multiplier = GB;
 		}
 		else{
 			return;
 		}
 		try {
-			factor = Integer.parseInt(rawProperty.substring(2));
+			factor = Integer.parseInt(rawProperty.substring(0,rawProperty.length()-2));
 		} catch (NumberFormatException e) {
 			return;
 		}

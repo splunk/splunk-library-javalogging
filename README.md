@@ -23,6 +23,15 @@ This framework contains :
 If you want to use UDP to send events to Splunk , then Log4j and Logback  already have Syslog Appenders.
 And of course you can still use any File appenders and have the file monitored by a Splunk Universal Forwarder.
 
+## Splunk Universal Forwarder vs Splunk Java Logging
+
+I always advocate the best practice of using a Splunk Universal Forwarder(UF) monitoring local files wherever possible.
+Not only do you get the features inherent in the UF, but you get the added resiliency of the persistence of files.
+However, there are going to be situations where, for whatever reason(technical or bureaucratic), that a UF can not
+be deployed.In this case, Splunk Java Logging can be used to forward events to Splunk.
+Furthermore, in either scenario, you can still utilize the SplunkLogEvent class to construct your log events in best practice 
+semantic format.
+
 ## Resilience
 
 The HTTP REST and Raw TCP handler/appenders have autonomous socket reconnection logic in case of connection failures.
@@ -40,10 +49,7 @@ definitions for your various target Indexers.
 
 ## Load Balancing
 
-A wrapper appender for Log4j and Logback is in the works.The design pattern is modelled off the Log4j "AsyncAppender" wrapper.
-So you will be able to define a "LoadBalancedAppender" and specify nested child appenders to Load Balance across.
-This opens up some interesting possibilitys such as load balancing across appenders that use the same or perhaps a 
-mixture of different transports , REST / Raw TCP / Syslog.
+Still in the think tank.
 
 ## Thread Safety
 

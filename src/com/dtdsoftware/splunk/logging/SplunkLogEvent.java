@@ -81,6 +81,13 @@ public class SplunkLogEvent {
 	 */
 	private static final String PREFIX_NAME = "name";
 	private static final String PREFIX_EVENT_ID = "event_id";
+	
+	/**
+	 * Java Throwable type fields
+	 */
+	private static final String THROWABLE_CLASS = "throwable_class";
+	private static final String THROWABLE_MESSAGE = "throwable_messsage";
+	private static final String THROWABLE_STACKTRACE_ELEMENT = "stracktrace_element";
 
 	/**
 	 * Splunk Common Information Model(CIM) Fields
@@ -1302,6 +1309,24 @@ public class SplunkLogEvent {
 	 */
 	public void addPair(String key, Object value) {
 		addPair(key, value.toString());
+	}
+	
+	/**
+	 * Utility method for formatting Throwable,Error,Exception objects
+	 * in a more linear and Splunk friendly manner than printStackTrace
+	 * 
+	 * @param key
+	 * @param value
+	 */
+	public void addThrowable(Throwable throwable) {
+		
+		
+		addPair(THROWABLE_CLASS, throwable.getClass().getCanonicalName());
+		addPair(THROWABLE_MESSAGE, throwable.getMessage());
+		StackTraceElement [] elements = throwable.getStackTrace();
+		for(StackTraceElement element : elements){
+			addPair(THROWABLE_STACKTRACE_ELEMENT, element.toString());
+		}
 	}
 
 	/**

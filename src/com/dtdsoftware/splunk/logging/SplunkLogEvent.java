@@ -1315,17 +1315,52 @@ public class SplunkLogEvent {
 	 * Utility method for formatting Throwable,Error,Exception objects in a more
 	 * linear and Splunk friendly manner than printStackTrace
 	 * 
-	 * @param key
-	 * @param value
+	 * @param throwable
+	 *            the Throwable object to add to the event
 	 */
 	public void addThrowable(Throwable throwable) {
+
+		addThrowableObject(throwable, -1);
+	}
+
+	/**
+	 * Utility method for formatting Throwable,Error,Exception objects in a more
+	 * linear and Splunk friendly manner than printStackTrace
+	 * 
+	 * @param throwable
+	 *            the Throwable object to add to the event
+	 * @param stackTraceDepth
+	 *            maximum number of stacktrace elements to log
+	 */
+	public void addThrowable(Throwable throwable, int stackTraceDepth) {
+
+		addThrowableObject(throwable, stackTraceDepth);
+	}
+
+	/**
+	 * Internal private method for formatting Throwable,Error,Exception objects
+	 * in a more linear and Splunk friendly manner than printStackTrace
+	 * 
+	 * @param throwable
+	 *            the Throwable object to add to the event
+	 * @param stackTraceDepth
+	 *            maximum number of stacktrace elements to log, -1 for all
+	 */
+
+	private void addThrowableObject(Throwable throwable, int stackTraceDepth) {
 
 		addPair(THROWABLE_CLASS, throwable.getClass().getCanonicalName());
 		addPair(THROWABLE_MESSAGE, throwable.getMessage());
 		StackTraceElement[] elements = throwable.getStackTrace();
 		StringBuffer sb = new StringBuffer();
+		int depth = 0;
 		for (StackTraceElement element : elements) {
-			sb.append(element.toString()).append(",");
+			depth++;
+			if (stackTraceDepth == -1 || stackTraceDepth >= depth)
+				sb.append(element.toString()).append(",");
+			else
+				break;
+
 		}
 		addPair(THROWABLE_STACKTRACE_ELEMENTS, sb.toString());
 	}

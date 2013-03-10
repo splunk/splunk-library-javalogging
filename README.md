@@ -62,7 +62,7 @@ Details can be found in the file LICENSE.
 
 ## Quick Start
 
-1.	Untar releases/splunklogging-0.3.0.tar.gz
+1.	Untar releases/splunklogging-1.0.tar.gz
 2.	All the required jar files are in the lib directory..
 3.	Assume you know how to setup your classpath to use your preferred logging framework implementation.
 4.	There is a simple code example here https://github.com/damiendallimore/SplunkJavaLogging/blob/master/src/com/dtdsoftware/splunk/logging/examples/Example.java
@@ -103,7 +103,7 @@ This project was initiated by Damien Dallimore
 
 <tr>
 <td><em>Email</em></td>
-<td>damien@dtdsoftware.com</td>
+<td>ddallimore@splunk.com.com</td>
 </tr>
 
 <tr>

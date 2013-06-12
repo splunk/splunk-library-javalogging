@@ -67,7 +67,7 @@
 
 		<jar jarfile="${temp_build}/${lib}/${main_jar}">
 			<fileset dir="${temp_build}/${classes}" includes="com/dtdsoftware/splunk/**" />
-
+			<fileset dir="src" includes="**/*" />
 		</jar>
 
 		<delete dir="${temp_build}/${classes}" />

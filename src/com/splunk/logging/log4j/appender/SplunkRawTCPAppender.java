@@ -1,18 +1,18 @@
-package com.dtdsoftware.splunk.logging.logback.appender;
+package com.splunk.logging.log4j.appender;
 
-import com.dtdsoftware.splunk.logging.SplunkRawTCPInput;
+import org.apache.log4j.AppenderSkeleton;
+import org.apache.log4j.Layout;
+import org.apache.log4j.spi.LoggingEvent;
 
-import ch.qos.logback.classic.spi.ILoggingEvent;
-import ch.qos.logback.core.AppenderBase;
-import ch.qos.logback.core.Layout;
+import com.splunk.logging.SplunkRawTCPInput;
 
 /**
- * LogBack Appender for sending events to Splunk via Raw TCP
+ * Log4j Appender for sending events to Splunk via Raw TCP
  * 
  * @author Damien Dallimore damien@dtdsoftware.com
  * 
  */
-public class SplunkRawTCPAppender extends AppenderBase<ILoggingEvent> {
+public class SplunkRawTCPAppender extends AppenderSkeleton {
 
 	// connection settings
 	private String host = "";
@@ -24,8 +24,6 @@ public class SplunkRawTCPAppender extends AppenderBase<ILoggingEvent> {
 	
 	private SplunkRawTCPInput sri;
 
-	private Layout<ILoggingEvent> layout;
-
 	/**
 	 * Constructor
 	 */
@@ -33,49 +31,48 @@ public class SplunkRawTCPAppender extends AppenderBase<ILoggingEvent> {
 	}
 
 	/**
-	 * Log the message
+	 * Constructor
+	 * 
+	 * @param layout
+	 *            the layout to apply to the log event
 	 */
-	@Override
-	protected void append(ILoggingEvent event) {
+	public SplunkRawTCPAppender(Layout layout) {
 
-		if (sri != null) {
-
-			String formatted = layout.doLayout(event);
-
-			sri.streamEvent(formatted);
-
-		}
+		this.layout = layout;
 	}
 
 	/**
-	 * Initialisation logic
+	 * Log the message
 	 */
 	@Override
-	public void start() {
+	protected void append(LoggingEvent event) {
 
-		if (this.layout == null) {
-			addError("No layout set for the appender named [" + name + "].");
-			return;
-		}
-
-		if (sri == null) {
-			try {
+		try {
+			if (sri == null) {
 				sri = new SplunkRawTCPInput(host, port);
 				sri.setMaxQueueSize(maxQueueSize);
 				sri.setDropEventsOnQueueFull(dropEventsOnQueueFull);
-			} catch (Exception e) {
-				addError("Couldn't establish Raw TCP connection for SplunkRawTCPAppender named \""
-						+ this.name + "\".");
 			}
+		} catch (Exception e) {
+			errorHandler
+					.error("Couldn't establish Raw TCP connection for SplunkRawTCPAppender named \""
+							+ this.name + "\".");
+			return;
 		}
-		super.start();
+
+		String formatted = layout.format(event);
+
+		sri.streamEvent(formatted);
+
 	}
 
 	/**
 	 * Clean up resources
 	 */
 	@Override
-	public void stop() {
+	synchronized public void close() {
+
+		closed = true;
 		if (sri != null) {
 			try {
 				sri.closeStream();
@@ -85,7 +82,12 @@ public class SplunkRawTCPAppender extends AppenderBase<ILoggingEvent> {
 				sri = null;
 			}
 		}
-		super.stop();
+
+	}
+
+	@Override
+	public boolean requiresLayout() {
+		return true;
 	}
 
 	public String getHost() {
@@ -103,7 +105,6 @@ public class SplunkRawTCPAppender extends AppenderBase<ILoggingEvent> {
 	public void setPort(int port) {
 		this.port = port;
 	}
-
 	public String getMaxQueueSize() {
 		return maxQueueSize;
 	}
@@ -119,13 +120,6 @@ public class SplunkRawTCPAppender extends AppenderBase<ILoggingEvent> {
 	public void setDropEventsOnQueueFull(boolean dropEventsOnQueueFull) {
 		this.dropEventsOnQueueFull = dropEventsOnQueueFull;
 	}
-	
-	public Layout<ILoggingEvent> getLayout() {
-		return layout;
-	}
 
-	public void setLayout(Layout<ILoggingEvent> layout) {
-		this.layout = layout;
-	}
 
 }

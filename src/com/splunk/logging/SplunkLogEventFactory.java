@@ -1,4 +1,4 @@
-package com.dtdsoftware.splunk.logging;
+package com.splunk.logging;
 
 import java.util.HashMap;
 import java.util.Map;

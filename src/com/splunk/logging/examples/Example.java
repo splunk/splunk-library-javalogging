@@ -1,9 +1,9 @@
-package com.dtdsoftware.splunk.logging.examples;
+package com.splunk.logging.examples;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.dtdsoftware.splunk.logging.SplunkLogEvent;
+import com.splunk.logging.SplunkLogEvent;
 
 /**
  * <pre>

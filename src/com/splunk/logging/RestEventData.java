@@ -1,4 +1,4 @@
-package com.dtdsoftware.splunk.logging;
+package com.splunk.logging;
 
 /**
  * A helper class to encapsulate URL parameters for submitting events to Splunk

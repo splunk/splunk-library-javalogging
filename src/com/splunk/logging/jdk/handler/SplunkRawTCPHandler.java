@@ -1,11 +1,11 @@
-package com.dtdsoftware.splunk.logging.jdk.handler;
+package com.splunk.logging.jdk.handler;
 
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.LogRecord;
 
-import com.dtdsoftware.splunk.logging.SplunkRawTCPInput;
+import com.splunk.logging.SplunkRawTCPInput;
 
 /**
  * java.util.logging handler for sending events to Splunk via Raw TCP

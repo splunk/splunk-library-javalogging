@@ -1,4 +1,4 @@
-package com.dtdsoftware.splunk.logging.jdk.handler;
+package com.splunk.logging.jdk.handler;
 
 import java.util.logging.Formatter;
 import java.util.logging.LogRecord;

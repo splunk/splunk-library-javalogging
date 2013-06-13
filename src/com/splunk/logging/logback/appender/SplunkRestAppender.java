@@ -1,7 +1,7 @@
-package com.dtdsoftware.splunk.logging.logback.appender;
+package com.splunk.logging.logback.appender;
 
-import com.dtdsoftware.splunk.logging.RestEventData;
-import com.dtdsoftware.splunk.logging.SplunkRestInput;
+import com.splunk.logging.RestEventData;
+import com.splunk.logging.SplunkRestInput;
 
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.AppenderBase;

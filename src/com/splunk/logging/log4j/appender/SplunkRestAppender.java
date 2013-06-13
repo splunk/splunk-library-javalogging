@@ -1,11 +1,11 @@
-package com.dtdsoftware.splunk.logging.log4j.appender;
+package com.splunk.logging.log4j.appender;
 
 import org.apache.log4j.AppenderSkeleton;
 import org.apache.log4j.Layout;
 import org.apache.log4j.spi.LoggingEvent;
 
-import com.dtdsoftware.splunk.logging.RestEventData;
-import com.dtdsoftware.splunk.logging.SplunkRestInput;
+import com.splunk.logging.RestEventData;
+import com.splunk.logging.SplunkRestInput;
 
 /**
  * Log4j Appender for sending events to Splunk via REST

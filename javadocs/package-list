@@ -1,5 +1,0 @@
-com.dtdsoftware.splunk.logging
-com.dtdsoftware.splunk.logging.examples
-com.dtdsoftware.splunk.logging.jdk.handler
-com.dtdsoftware.splunk.logging.log4j.appender
-com.dtdsoftware.splunk.logging.logback.appender

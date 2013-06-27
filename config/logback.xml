@@ -5,7 +5,7 @@
 <configuration>
 
 <!--Send log events to a Splunk REST endpoint-->
-  <appender name="splunkrest" class="com.dtdsoftware.splunk.logging.logback.appender.SplunkRestAppender">
+  <appender name="splunkrest" class="com.splunk.logging.logback.appender.SplunkRestAppender">
     <port>8089</port>
     <host>localhost</host>
     <delivery>stream</delivery>
@@ -26,7 +26,7 @@
   </appender>
   
 <!--Send log events to a Splunk Raw TCP server socket-->
-  <appender name="splunkrawtcp" class="com.dtdsoftware.splunk.logging.logback.appender.SplunkRawTCPAppender">
+  <appender name="splunkrawtcp" class="com.splunk.logging.logback.appender.SplunkRawTCPAppender">
     <port>5150</port>
     <host>localhost</host>
     <maxQueueSize>5MB</maxQueueSize>

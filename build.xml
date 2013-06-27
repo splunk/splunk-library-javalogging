@@ -1,15 +1,15 @@
-<project name="Splunk plug-in for SLF4J" default="all" basedir=".">
-  <description>Splunk plug-in for SLF4J</description>
+<project name="Splunk library for Java logging" default="all" basedir=".">
+  <description>Splunk library for Java logging</description>
 
   <property name="version" value="1.0" />
 
   <property name="src" value="src" />
   <property name="lib" value="lib" />
-  <property name="jar" value="build/splunk-plugin-slf4j.jar" />
+  <property name="jar" value="build/splunk-library-javalogging.jar" />
   <property name="build" value="build" />
   <property name="docs" value="${build}/docs" />
   <property name="classes" value="${build}/classes" />
-  <property name="release" value="${build}/splunk-plugin-slf4j-${version}.tar.gz" />
+  <property name="release" value="${build}/splunk-library-javalogging-${version}.tar.gz" />
 
   <path id="project.class.path">
     <fileset dir="${lib}">

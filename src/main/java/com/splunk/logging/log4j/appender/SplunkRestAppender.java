@@ -93,7 +93,6 @@ public class SplunkRestAppender extends AppenderSkeleton {
 	/**
 	 * Clean up resources
 	 */
-	@Override
 	synchronized public void close() {
 
 		closed = true;
@@ -109,7 +108,6 @@ public class SplunkRestAppender extends AppenderSkeleton {
 
 	}
 
-	@Override
 	public boolean requiresLayout() {
 		return true;
 	}

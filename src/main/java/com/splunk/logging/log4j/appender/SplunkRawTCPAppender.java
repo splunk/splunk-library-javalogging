@@ -69,7 +69,6 @@ public class SplunkRawTCPAppender extends AppenderSkeleton {
 	/**
 	 * Clean up resources
 	 */
-	@Override
 	synchronized public void close() {
 
 		closed = true;
@@ -85,7 +84,6 @@ public class SplunkRawTCPAppender extends AppenderSkeleton {
 
 	}
 
-	@Override
 	public boolean requiresLayout() {
 		return true;
 	}

@@ -66,7 +66,7 @@ Details can be found in the file LICENSE.
 1.	Untar releases/splunklogging-1.0.tar.gz
 2.	All the required jar files are in the lib directory..
 3.	Assume you know how to setup your classpath to use your preferred logging framework implementation.
-4.	There is a simple code example here https://github.com/splunk/splunk-library-javalogging/blob/master/src/com/splunk/logging/examples/Example.java
+4.	There is a simple code example [here](https://github.com/splunk/splunk-library-javalogging/blob/master/src/main/java/com/splunk/logging/examples/Example.java).
 5.	There are sample logging config files in the config directory for the 3 logging frameworks
 
 ## Splunk

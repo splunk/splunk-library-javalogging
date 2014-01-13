@@ -2,8 +2,6 @@ package com.splunk.logging;
 
 import java.util.Date;
 
-import org.apache.commons.lang.time.FastDateFormat;
-
 /**
  * <pre>
  * This is a class to encapsulate a Splunk Log Event Message using Splunk best practice logging semantics.
@@ -14,7 +12,7 @@ import org.apache.commons.lang.time.FastDateFormat;
  * 
  * <code>
  * Logger logger = LoggerFactory.getLogger("splunk.logger");
- * SplunkLogEvent event = new SplunkLogEvent("Failed Login","sshd:failure");
+ * SplunkCimLogEvent event = new SplunkCimLogEvent("Failed Login","sshd:failure");
  * event.setAuthApp("jane");
  * event.setAuthUser("jane");
  * event.addPair("somefieldname", "foobar");
@@ -22,7 +20,7 @@ import org.apache.commons.lang.time.FastDateFormat;
  * </code>
  * 
  * The underlying log framework will also have a grammar for declaring a log message pattern.
- * Therefore you can either just log the SplunkLogEvent string as is, or augment it with other log pattern pattern variables when configuring your logger appenders/handlers.
+ * Therefore you can either just log the SplunkCimLogEvent string as is, or augment it with other log pattern pattern variables when configuring your logger appenders/handlers.
  * 
  * </pre>
  * 
@@ -37,7 +35,7 @@ import org.apache.commons.lang.time.FastDateFormat;
  * @author Damien Dallimore damien@dtdsoftware.com
  * 
  */
-public class SplunkLogEvent {
+public class SplunkCimLogEvent {
 
 	/**
 	 * Contents of the event message
@@ -1205,8 +1203,8 @@ public class SplunkLogEvent {
 	 * @param quoteValues
 	 *            Whether or not to put quotes around values
 	 */
-	public SplunkLogEvent(String eventName, String eventID,
-			boolean useInternalDate, boolean quoteValues) {
+	public SplunkCimLogEvent(String eventName, String eventID,
+                             boolean useInternalDate, boolean quoteValues) {
 
 		this.eventMessage = new StringBuffer();
 		this.quoteValues = quoteValues;
@@ -1225,7 +1223,7 @@ public class SplunkLogEvent {
 	 * @param eventID
 	 *            the event ID
 	 */
-	public SplunkLogEvent(String eventName, String eventID) {
+	public SplunkCimLogEvent(String eventName, String eventID) {
 
 		this(eventName, eventID, true, true);
 	}
@@ -1233,7 +1231,7 @@ public class SplunkLogEvent {
 	/**
 	 * Default constructor
 	 */
-	public SplunkLogEvent() {
+	public SplunkCimLogEvent() {
 
 		this.eventMessage = new StringBuffer();
 	}
@@ -1241,9 +1239,9 @@ public class SplunkLogEvent {
 	/**
 	 * Simple shallow cloning method
 	 */
-	public SplunkLogEvent clone() {
+	public SplunkCimLogEvent clone() {
 
-		SplunkLogEvent clone = new SplunkLogEvent();
+		SplunkCimLogEvent clone = new SplunkCimLogEvent();
 		clone.quoteValues = this.quoteValues;
 		clone.useInternalDate = this.useInternalDate;
 		clone.eventMessage.append(this.eventMessage);

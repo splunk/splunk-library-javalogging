@@ -1,14 +1,24 @@
+/*
+ * Copyright 2014 Splunk, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"): you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+
 import com.splunk.logging.SplunkCimLogEvent;
 import org.junit.Assert;
 import org.junit.Test;
 
-/**
- * Created by fross on 1/13/14.
- */
 public class SplunkCimLogEventUnitTest {
-    // Testing: char, byte, short, int, long, float, double, boolean, String
-
-
     @Test
     public void addFieldWithCharValue() {
         SplunkCimLogEvent event = new SplunkCimLogEvent("name", "event-id");
@@ -94,8 +104,47 @@ public class SplunkCimLogEventUnitTest {
         Assert.assertEquals("\"name=name\" \"event_id=event-id\" \"key=" + valueString + "\"", event.toString());
     }
 
+    @Test
+    public void addFieldWithStringValueContainingDoubleQuotes() {
+        SplunkCimLogEvent event = new SplunkCimLogEvent("name", "event-id");
+        event.addField("key", "I contain \" double quotes");
 
+        Assert.assertEquals("\"name=name\" \"event_id=event-id\" \"key=I contain \\\" double quotes\"", event.toString());
+    }
 
+    @Test
+    public void addThrowableWorks() {
+        SplunkCimLogEvent event = new SplunkCimLogEvent("name", "event-id");
 
+        try {
+           throw new Exception("This is a test of the Java emergency broadcast system.");
+        } catch (Exception e) {
+            event.addThrowableWithStacktrace(e);
+        }
+
+        String expectedPrefix = "\"name=name\" \"event_id=event-id\" " +
+                "\"throwable_class=java.lang.Exception\" \"throwable_message=This is a test of the Java " +
+                "emergency broadcast system.\" \"stacktrace_elements=SplunkCimLogEventUnitTest." +
+                "addThrowableWorks(SplunkCimLogEventUnitTest.java:107),";
+        Assert.assertEquals(expectedPrefix, event.toString().substring(0, expectedPrefix.length()));
+
+    }
+
+    @Test
+    public void addThrowableWorksWithDepth() {
+        SplunkCimLogEvent event = new SplunkCimLogEvent("name", "event-id");
+
+        try {
+            throw new Exception("This is a test of the Java emergency broadcast system.");
+        } catch (Exception e) {
+            event.addThrowableWithStacktrace(e, 1);
+        }
+
+        String expectedPrefix = "\"name=name\" \"event_id=event-id\" " +
+                "\"throwable_class=java.lang.Exception\" \"throwable_message=This is a test of the Java " +
+                "emergency broadcast system.\" \"stacktrace_elements=SplunkCimLogEventUnitTest." +
+                "addThrowableWorksWithDepth(SplunkCimLogEventUnitTest.java:125)\"";
+        Assert.assertEquals(expectedPrefix, event.toString());
+    }
 
 }

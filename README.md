@@ -1,4 +1,4 @@
-# Splunk Java Logging Framework
+# Splunk Semantic Logging Library for Java
 
 The purpose of this project is to create a logging framework to allow developers to as seamlessly as possible
 integrate Splunk best practice logging semantics into their code.

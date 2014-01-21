@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--Example logback configuration using a SocketAppender -->
+
+<configuration>
+    <!--
+      You should send data to Splunk using TCP inputs. You can find the documentation
+      on how to open TCP inputs on Splunk at
+
+          http://docs.splunk.com/Documentation/Splunk/6.0.1/Data/Monitornetworkports
+
+      You can find the documentation on using a SocketAppender at
+
+          http://logback.qos.ch/manual/appenders.html#SocketAppender
+
+      This example assumes that you have Splunk running on your local machine (127.0.0.1) with a
+      TCP input configured on port 10000. Note that TCP inputs are *not* the same as
+      Splunk's management port.
+
+      You can control the format of what is logged by changing the encoder (see
+
+          http://logback.qos.ch/manual/encoders.html
+
+      for details), but the pattern below produces a simple timestamp, followed by
+      the full message and a newline, rather like
+
+          2012-04-26 14:54:38,461 [%thread] %level text of my event
+    -->
+    <!--<appender name="splunk_tcp_input" class="ch.qos.logback.classic.net.SocketAppender">
+        <remoteHost>127.0.0.1</remoteHost>
+        <port>10000</port>
+        <reconnectionDelay>1000</reconnectionDelay>                                                              s
+        <includeCallerData>true</includeCallerData>
+        <layout class="ch.qos.logback.classic.PatternLayout">
+            <pattern>%d [%thread] %level %logger{35} - %msg%n</pattern>
+        </layout>
+    </appender>   -->
+
+    <!-- Send log events to a console -->
+    <appender name="stdout" class="ch.qos.logback.core.ConsoleAppender">
+        <Target>System.out</Target>
+        <encoder>
+            <pattern>%d [%thread] %level %logger{35} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Now create a logger that writes to both stdout and to the Splunk TCP input. -->
+    <logger name="splunk.logger" additivity="false" level="INFO">
+    <!--    <appender-ref ref="splunk_tcp_input"/>-->
+        <appender-ref ref="stdout"/>
+    </logger>
+
+    <!--Root logger-->
+    <root level="INFO">
+        <appender-ref ref="stdout"/>
+    </root>
+</configuration>

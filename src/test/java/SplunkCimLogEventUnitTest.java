@@ -18,6 +18,9 @@ import com.splunk.logging.SplunkCimLogEvent;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 public class SplunkCimLogEventUnitTest {
     @Test
     public void addFieldWithCharValue() {
@@ -122,11 +125,14 @@ public class SplunkCimLogEventUnitTest {
             event.addThrowableWithStacktrace(e);
         }
 
-        String expectedPrefix = "\"name=name\" \"event_id=event-id\" " +
+        String expectedString = "\"name=name\" \"event_id=event-id\" " +
                 "\"throwable_class=java.lang.Exception\" \"throwable_message=This is a test of the Java " +
                 "emergency broadcast system.\" \"stacktrace_elements=SplunkCimLogEventUnitTest." +
-                "addThrowableWorks(SplunkCimLogEventUnitTest.java:107),";
-        Assert.assertEquals(expectedPrefix, event.toString().substring(0, expectedPrefix.length()));
+                "addThrowableWorks(SplunkCimLogEventUnitTest.java:???),";
+        String foundString = event.toString();
+        foundString = foundString.replaceAll(":\\d+\\)", ":???)"); // Get rid of line numbers.
+
+        Assert.assertEquals(expectedString, foundString.substring(0, expectedString.length()));
 
     }
 
@@ -140,11 +146,11 @@ public class SplunkCimLogEventUnitTest {
             event.addThrowableWithStacktrace(e, 1);
         }
 
-        String expectedPrefix = "\"name=name\" \"event_id=event-id\" " +
+        String expected = "\"name=name\" \"event_id=event-id\" " +
                 "\"throwable_class=java.lang.Exception\" \"throwable_message=This is a test of the Java " +
                 "emergency broadcast system.\" \"stacktrace_elements=SplunkCimLogEventUnitTest." +
-                "addThrowableWorksWithDepth(SplunkCimLogEventUnitTest.java:125)\"";
-        Assert.assertEquals(expectedPrefix, event.toString());
+                "addThrowableWorksWithDepth(SplunkCimLogEventUnitTest.java:???)\"";
+        Assert.assertEquals(expected, event.toString().replaceAll(":\\d+\\)", ":???)"));
     }
 
 }

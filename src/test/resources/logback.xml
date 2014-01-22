@@ -26,32 +26,19 @@
 
           2012-04-26 14:54:38,461 [%thread] %level text of my event
     -->
-    <!--<appender name="splunk_tcp_input" class="ch.qos.logback.classic.net.SocketAppender">
-        <remoteHost>127.0.0.1</remoteHost>
-        <port>10000</port>
-        <reconnectionDelay>1000</reconnectionDelay>                                                              s
-        <includeCallerData>true</includeCallerData>
+    <appender name="socket" class="com.splunk.logging.TcpAppender">
+        <RemoteHost>127.0.0.1</RemoteHost>
+        <Port>15000</Port>
         <layout class="ch.qos.logback.classic.PatternLayout">
-            <pattern>%d [%thread] %level %logger{35} - %msg%n</pattern>
+            <pattern>%level: %msg%n</pattern>
         </layout>
-    </appender>   -->
-
-    <!-- Send log events to a console -->
-    <appender name="stdout" class="ch.qos.logback.core.ConsoleAppender">
-        <Target>System.out</Target>
-        <encoder>
-            <pattern>%d [%thread] %level %logger{35} - %msg%n</pattern>
-        </encoder>
     </appender>
 
-    <!-- Now create a logger that writes to both stdout and to the Splunk TCP input. -->
     <logger name="splunk.logger" additivity="false" level="INFO">
-    <!--    <appender-ref ref="splunk_tcp_input"/>-->
-        <appender-ref ref="stdout"/>
+        <appender-ref ref="socket"/>
     </logger>
 
-    <!--Root logger-->
     <root level="INFO">
-        <appender-ref ref="stdout"/>
+        <appender-ref ref="socket"/>
     </root>
 </configuration>

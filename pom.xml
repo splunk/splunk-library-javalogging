@@ -6,7 +6,7 @@
 
   <groupId>com.splunk.dev</groupId>
   <artifactId>splunk-library-javalogging</artifactId>
-  <version>1.0</version>
+  <version>1.0.0</version>
   <packaging>jar</packaging>
 
   <name>Splunk Logging for Java</name>
@@ -24,74 +24,16 @@
                 <target>1.6</target>
             </configuration>
         </plugin>
-
         <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-surefire-plugin</artifactId>
-            <version>2.16</version>
-            <executions>
-                <execution>
-                    <id>default-test</id>
-                    <goals><goal>test</goal></goals>
-                    <phase>test</phase>
-                    <configuration>
-                        <includes>
-                            <include>**/*UnitTest.java</include>
-                        </includes>
-                    </configuration>
-                </execution>
-
-                <execution>
-                    <id>logback-test</id>
-                    <goals><goal>test</goal></goals>
-                    <phase>test</phase>
-                    <configuration>
-                        <includes>
-                            <include>**/*FunctionalTest.java</include>
-                        </includes>
-                        <classpathDependencyExcludes>
-                            <classpathDependencyExclude>org.slf4j:slf4j-jdk14</classpathDependencyExclude>
-                            <classpathDependencyExclude>org.slf4j:log4j-to-slf4j</classpathDependencyExclude>
-                        </classpathDependencyExcludes>
-                    </configuration>
-                </execution>
-
-                <execution>
-                    <id>jul-test</id>
-                    <goals><goal>test</goal></goals>
-                    <phase>test</phase>
-                    <configuration>
-                        <includes>
-                            <include>**/*FunctionalTest.java</include>
-                        </includes>
-                        <systemProperties>
-                            <property>
-                                <name>java.util.logging.config.file</name>
-                                <value>${project.build.directory}/test-classes/jdklogging.properties</value>
-                            </property>
-                        </systemProperties>
-                        <classpathDependencyExcludes>
-                            <classpathDependencyExclude>ch.qos.logback:logback-classic</classpathDependencyExclude>
-                            <classpathDependencyExclude>org.slf4j:log4j-to-slf4j</classpathDependencyExclude>
-                        </classpathDependencyExcludes>
-                   </configuration>
-                </execution>
-
-                <execution>
-                    <id>log4j-test</id>
-                    <goals><goal>test</goal></goals>
-                    <phase>test</phase>
-                    <configuration>
-                        <includes>
-                            <include>**/*FunctionalTest.java</include>
-                        </includes>
-                        <classpathDependencyExcludes>
-                            <classpathDependencyExclude>ch.qos.logback:logback-classic</classpathDependencyExclude>
-                            <classpathDependencyExclude>org.slf4j:log4j-to-slf4j</classpathDependencyExclude>
-                        </classpathDependencyExcludes>
-                    </configuration>
-                </execution>
-            </executions>
+            <configuration>
+                <systemProperties>
+                    <property>
+                        <name>java.util.logging.config.file</name>
+                        <value>${project.build.directory}/test-classes/jdklogging.properties</value>
+                    </property>
+                </systemProperties>
+            </configuration>
         </plugin>
     </plugins>
   </build>
@@ -114,16 +56,17 @@
           <groupId>ch.qos.logback</groupId>
           <artifactId>logback-classic</artifactId>
           <version>1.0.13</version>
-          <scope>test</scope>
+          <scope>provided</scope>
       </dependency>
       <dependency>
-          <groupId>org.slf4j</groupId>
-          <artifactId>slf4j-jdk14</artifactId>
-          <version>1.7.5</version>
+          <groupId>ch.qos.logback</groupId>
+          <artifactId>logback-core</artifactId>
+          <version>1.0.13</version>
+
       </dependency>
       <dependency>
           <groupId>org.apache.logging.log4j</groupId>
-          <artifactId>log4j-to-slf4j</artifactId>
+          <artifactId>log4j-core</artifactId>
           <version>2.0-beta9</version>
       </dependency>
   </dependencies>

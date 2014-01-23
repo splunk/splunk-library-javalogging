@@ -21,6 +21,9 @@ import org.junit.Test;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * Check that SplunkCimLogEvent produces what we expect it to.
+ */
 public class SplunkCimLogEventUnitTest {
     @Test
     public void addFieldWithCharValue() {

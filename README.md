@@ -1,57 +1,47 @@
-# Splunk Semantic Logging Library for Java
+# Splunk Logging for Java
 
-The purpose of this project is to create a logging framework to allow developers to as seamlessly as possible
-integrate Splunk best practice logging semantics into their code.
-There are also custom handler/appender implementations for the 3 most prevalent Java logging frameworks in play.
+This project provides utilities to easily log data using Splunk's recommended best practices to any
+supported logger, using any of the three major Java logging frameworks (Logback, Log4J 2, and
+java.uti.logging), and to Splunk TCP inputs.
 
-1.	LogBack
-2.	Log4j
-3.	java.util logging
+In particular, it provides
 
-This framework contains :
+* A class SplunkCimLogEvent which encapsulates Splunk's CIM (Common Information Model) and best
+  practices for semantic logging.
+* A TCP appender for Logback, which is the only one of the three frameworks above that doesn't provide
+  native support for writing to TCP ports.
+* Example configuration files for all three frameworks showing how to configure them to write
+  to Splunk TCP ports.
 
-*   Implementation of Splunk CIM(Common Information Model) and best practice logging semantics
-*   java.util.logging handler for logging to Splunk REST endpoints
-*   java.util.logging handler for logging to Splunk Raw TCP Server Socket
-*   Log4j appender for logging to Splunk REST endpoints
-*   Log4j appender for logging to Splunk Raw TCP Server Socket
-*   Logback appender for logging to Splunk REST endpoints
-*   Logback appender for logging to Splunk Raw TCP Server Socket
-*   Example logging configuration files
-*   Javadocs
+## Advice
 
-If you want to use UDP to send events to Splunk , then Log4j and Logback  already have Syslog Appenders.
-And of course you can still use any File appenders and have the file monitored by a Splunk Universal Forwarder.
+### Splunk Universal Forwarder vs Splunk TCP Inputs
 
-## Splunk Universal Forwarder vs Splunk Java Logging
+If you can, it is better to log to files and monitor the files with a Splunk Universal Forwarder. This provides you
+with the features of the Universal Forwarder, and added robustness from having persistent files. However, there
+are situations where a Universal Forwarder is not a possibility. In these cases, writing directly to a TCP input
+is a reasonable approach.
 
-I always advocate the best practice of using a Splunk Universal Forwarder(UF) monitoring local files wherever possible.
-Not only do you get the features inherent in the UF, but you get the added resiliency of the persistence of files.
-However, there are going to be situations where, for whatever reason(technical or bureaucratic), that a UF can not
-be deployed.In this case, Splunk Java Logging can be used to forward events to Splunk.
-Furthermore, in either scenario, you can still utilize the SplunkLogEvent class to construct your log events in best practice 
-semantic format.
+In either scenario we recommend using the SplunkCimLogEvent class provided by this library to construct your
+log events according to Splunk's recommended best practices.
 
-## Resilience
+### Resilience
 
-The HTTP REST and Raw TCP handler/appenders have autonomous socket reconnection logic in case of connection failures.
-There is also internal event queuing that is loosely modelled off Splunk's outputs.conf for Universal Forwarders.
-You can set these propertys :
-* maxQueueSize : defaults to 500KB , format [integer|integer[KB|MB|GB]]
-* dropEventsOnQueueFull : defaults to false , format [ true | false]
+All of the TCP appenders we show config files for (SocketHandler for java.util.logging, SocketAppender for log4j 2,
+and the TCPAppender provided with this library for Logback) will attempt to reconnect in case of dropped connections.
 
-And you can use a parallel File appender if you absolutely need disk persistence.
+### Data Cloning
 
-## Data Cloning
+You can have "data cloning" by providing multiple instances of your TCP handler in your logging configuration, each
+instance pointing to different indexers.
 
-If you want "data cloning" functionality, then you can leverage the logging configuration and have (n) different appender
-definitions for your various target Indexers.
+### Load Balancing
 
-## Load Balancing
+Rather than trying to reinvent load balancing across your indexers in your log configuration, set up a Splunk
+Universal Forwarder with a TCP input. Have all your logging sources write to that TCP input, and use the
+Universal Forwarder's load balancing features to distribute the data from there to a set of indexers.
 
-Still in the think tank.
-
-## Thread Safety
+### Thread Safety
 
 Log4j and Logback are thread safe.
 
@@ -61,13 +51,19 @@ The Splunk Java Logging Framework is licensed under the Apache License 2.0.
 
 Details can be found in the file LICENSE.
 
-## Quick Start
+## Using Splunk Logging for Java
 
-1.	Untar releases/splunklogging-1.0.tar.gz
-2.	All the required jar files are in the lib directory..
-3.	Assume you know how to setup your classpath to use your preferred logging framework implementation.
-4.	There is a simple code example here https://github.com/splunk/splunk-library-javalogging/blob/master/src/com/splunk/logging/examples/Example.java
-5.	There are sample logging config files in the config directory for the 3 logging frameworks
+### With Logback
+
+[TODO: Write this]
+
+### With Log4J
+
+[TODO: Write this]
+
+### With java.util.logging
+
+[TODO: Write this]
 
 ## Splunk
 
@@ -99,27 +95,7 @@ Introduction to the Splunk product and some of its capabilities
 
 ## Contact
 
-This project was initiated by Damien Dallimore
-<table>
-
-<tr>
-<td><em>Email</em></td>
-<td>ddallimore@splunk.com</td>
-</tr>
-
-<tr>
-<td><em>Twitter</em>
-<td>@damiendallimore</td>
-</tr>
-
-<tr>
-<td><em>Splunkbase.com</em>
-<td>damiend</td>
-</tr>
-
-</table>
-
-
+You can reach the Dev Platform team at [devinfo@splunk.com](mailto:devinfo@splunk.com).
 
 
 

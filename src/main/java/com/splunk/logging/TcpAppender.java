@@ -1,4 +1,19 @@
 package com.splunk.logging;
+/*
+ * Copyright 2013-2014 Splunk, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"): you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
 
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.AppenderBase;
@@ -13,6 +28,12 @@ import java.io.OutputStreamWriter;
 import java.net.*;
 import java.util.concurrent.*;
 
+/**
+ * Logback Appender which writes its events to a TCP port.
+ *
+ * This class is based on the logic of Logback's SocketAppender, but does not try to serialize Java
+ * objects for deserialization and logging elsewhere.
+ */
 public class TcpAppender extends AppenderBase<ILoggingEvent> implements Runnable, SocketConnector.ExceptionHandler {
     public static final int DEFAULT_RECONNECTION_DELAY = 30000; // in ms
     public static final int DEFAULT_QUEUE_SIZE = 0;
@@ -32,6 +53,18 @@ public class TcpAppender extends AppenderBase<ILoggingEvent> implements Runnable
 
     private BlockingQueue<ILoggingEvent> queue;
     private volatile Socket socket;
+
+    // The appender is created by Logback calling a superclass constructor with no arguments.
+    // Then it calls setters (and the setters defined by the class define what arguments are
+    // understood. Once all the fields have been set, Logback calls start(), When shutting down,
+    // Logback calls stop().
+    //
+    // start() queues the appender as a Runnable, so run() eventually gets invoked to do the
+    // actual work. run() opens a port using Logback utilities that reconnect when a connection
+    // is lost, and then block on a queue of events, writing them to TCP as soon as they
+    // become available.
+    //
+    // The append method, which Logback logging calls invoke, pushes events to that queue and nothing else.
 
     @Override
     public void connectionFailed(SocketConnector socketConnector, Exception e) {

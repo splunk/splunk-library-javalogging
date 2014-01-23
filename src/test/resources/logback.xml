@@ -1,6 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+Copyright 2013-2014 Splunk, Inc.
 
-<!--Example logback configuration using a SocketAppender -->
+Licensed under the Apache License, Version 2.0 (the "License"): you may
+not use this file except in compliance with the License. You may obtain
+a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+License for the specific language governing permissions and limitations
+under the License.
+-->
 
 <configuration>
     <!--
@@ -9,12 +22,12 @@
 
           http://docs.splunk.com/Documentation/Splunk/6.0.1/Data/Monitornetworkports
 
-      You can find the documentation on using a SocketAppender at
-
-          http://logback.qos.ch/manual/appenders.html#SocketAppender
+      Logback does not ship with a usable appender for TCP sockets (its SocketAppender
+      seriealizes Java objects for deserialization by a server elsewhere). Instead, use
+      the TcpAppender provided with this library.
 
       This example assumes that you have Splunk running on your local machine (127.0.0.1) with a
-      TCP input configured on port 10000. Note that TCP inputs are *not* the same as
+      TCP input configured on port 15000. Note that TCP inputs are *not* the same as
       Splunk's management port.
 
       You can control the format of what is logged by changing the encoder (see

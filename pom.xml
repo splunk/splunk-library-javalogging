@@ -10,7 +10,7 @@
   <packaging>jar</packaging>
 
   <name>Splunk Logging for Java</name>
-  <url>http://dev.splunk.com/... (TODO: Fixme)</url>
+  <url>http://dev.splunk.com/goto/sdk-slj</url>
 
   <description>Library for structured, semantic logging of Common Information Model compliant events, meant for use with SLF4J.</description>
 

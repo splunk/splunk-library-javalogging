@@ -81,6 +81,10 @@ resources to your computer. For example, use the following command:
 
 ## Resources
 
+Documentation for this library
+
+* http://dev.splunk.com/goto/sdk-slj
+
 Splunk Common Information Model
 
 * http://docs.splunk.com/Documentation/Splunk/latest/Knowledge/UnderstandandusetheCommonInformationModel

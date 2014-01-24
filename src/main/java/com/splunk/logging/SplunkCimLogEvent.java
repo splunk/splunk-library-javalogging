@@ -53,7 +53,7 @@ public class SplunkCimLogEvent {
     private static final String PAIRDELIM = " ";
     private static final char QUOTE = '"';
 
-    LinkedHashMap<String, Object> entries;
+    private LinkedHashMap<String, Object> entries;
 
     /**
      * @param eventName

@@ -35,8 +35,8 @@ import java.util.concurrent.*;
  * objects for deserialization and logging elsewhere.
  */
 public class TcpAppender extends AppenderBase<ILoggingEvent> implements Runnable, SocketConnector.ExceptionHandler {
-    public static final int DEFAULT_RECONNECTION_DELAY = 30000; // in ms
-    public static final int DEFAULT_QUEUE_SIZE = 0;
+    private static final int DEFAULT_RECONNECTION_DELAY = 30000; // in ms
+    private static final int DEFAULT_QUEUE_SIZE = 0;
     private static final int DEFAULT_ACCEPT_CONNECTION_DELAY = 5000;
 
     private String host;
@@ -52,6 +52,9 @@ public class TcpAppender extends AppenderBase<ILoggingEvent> implements Runnable
     private int acceptConnectionTimeout = DEFAULT_ACCEPT_CONNECTION_DELAY;
 
     private BlockingQueue<ILoggingEvent> queue;
+
+    // The socket will be modified by the another thread (in SocketConnector) which
+    // handles reconnection of dropped connections.
     private volatile Socket socket;
 
     // The appender is created by Logback calling a superclass constructor with no arguments.
@@ -122,15 +125,16 @@ public class TcpAppender extends AppenderBase<ILoggingEvent> implements Runnable
                 }
             }
         } catch (InterruptedException ex) {
-            assert true;    // ok... we'll exit now
+            // Exiting.
         }
         addInfo("shutting down");
     }
 
     @Override
     public void start() {
-        if (started)
+        if (started) {
             return;
+        }
 
         boolean errorPresent = false;
 
@@ -192,8 +196,9 @@ public class TcpAppender extends AppenderBase<ILoggingEvent> implements Runnable
 
         CloseUtil.closeQuietly(socket);
         task.cancel(true);
-        if(connectorTask != null)
+        if(connectorTask != null) {
             connectorTask.cancel(true);
+        }
         super.stop();
     }
 
@@ -203,6 +208,9 @@ public class TcpAppender extends AppenderBase<ILoggingEvent> implements Runnable
             queue.offer(event);
     }
 
+    // The setters are peculiar here. They are used by Logback (via reflection) to set
+    // the parameters of the appender, but they should never be called except by
+    // Logback before start() is called.
     public void setRemoteHost(String host) { this.host = host; }
     public String getRemoteHost() { return this.host; }
 

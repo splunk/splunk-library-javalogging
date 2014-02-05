@@ -62,7 +62,7 @@
           <groupId>ch.qos.logback</groupId>
           <artifactId>logback-core</artifactId>
           <version>1.0.13</version>
-          <scope>test</scope>
+          <scope>provided</scope>
       </dependency>
       <dependency>
           <groupId>org.apache.logging.log4j</groupId>

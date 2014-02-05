@@ -23,7 +23,7 @@ under the License.
           http://docs.splunk.com/Documentation/Splunk/6.0.1/Data/Monitornetworkports
 
       Logback does not ship with a usable appender for TCP sockets (its SocketAppender
-      seriealizes Java objects for deserialization by a server elsewhere). Instead, use
+      serializes Java objects for deserialization by a server elsewhere). Instead, use
       the TcpAppender provided with this library.
 
       This example assumes that you have Splunk running on your local machine (127.0.0.1) with a
@@ -32,12 +32,9 @@ under the License.
 
       You can control the format of what is logged by changing the encoder (see
 
-          http://logback.qos.ch/manual/encoders.html
+          http://logback.qos.ch/manual/layouts.html#ClassicPatternLayout
 
-      for details), but the pattern below produces a simple timestamp, followed by
-      the full message and a newline, rather like
-
-          2012-04-26 14:54:38,461 [%thread] %level text of my event
+      for details).
     -->
     <appender name="socket" class="com.splunk.logging.TcpAppender">
         <RemoteHost>127.0.0.1</RemoteHost>

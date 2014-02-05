@@ -13,6 +13,7 @@
 * License for the specific language governing permissions and limitations
 * under the License.
 */
+import java.net.Inet4Address;
 import java.util.logging.Formatter;
 import java.util.logging.LogRecord;
 

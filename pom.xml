@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.splunk</groupId>
 	<artifactId>logging</artifactId>
-	<version>1.0</version>
+	<version>1.0-SNAPSHOT</version>
 	<name>Splunk Java Logging Framework</name>
 	<description>The purpose of this project is to create a logging framework to allow developers to as seamlessly as possible integrate Splunk best practice logging semantics into their code. There are also custom handler/appender implementations for the 3 most prevalent Java logging frameworks in play.</description>
 	<organization>

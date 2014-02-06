@@ -1,7 +1,8 @@
 # Splunk Logging for Java
 
 This project provides utilities to easily log data using Splunk's recommended 
-best practices to any supported logger, using any of the three major Java logging frameworks (Logback, Log4J 2, and java.uti.logging), and to Splunk TCP 
+best practices to any supported logger, using any of the three major Java 
+logging frameworks (Logback, Log4J 2, and java.util.logging), and to Splunk TCP 
 inputs.
 
 In particular, it provides:
@@ -264,14 +265,15 @@ entries.
 ## Splunk
 
 If you haven't already installed Splunk, download it here: 
-[http://www.splunk.com/download](http://www.splunk.com/download). For more about installing and running Splunk 
-and system requirements, see [Installing & Running Splunk](http://dev.splunk.com/view/SP-CAAADRV).
+[http://www.splunk.com/download](http://www.splunk.com/download). 
+For more about installing and running Splunk and system requirements, 
+see [Installing & Running Splunk](http://dev.splunk.com/view/SP-CAAADRV).
 
 ## Contribute
 
-[Get the Splunk Java Logging Framework from 
-GitHub](https://github.com/splunk/splunk-library-javalogging) and clone the 
-resources to your computer. For example, use the following command: 
+[Get the Splunk Java Logging Framework from GitHub](https://github.com/splunk/splunk-library-javalogging) 
+and clone the resources to your computer. For example, use the following 
+command: 
 
     git clone https://github.com/splunk/splunk-library-javalogging.git
 

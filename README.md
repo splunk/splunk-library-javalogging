@@ -81,16 +81,16 @@ entries.
     ```
 
    If you are using Ant, download the corresponding JAR file from 
-   [http://dev.splunk.com/goto/sdk-slj](http://dev.splunk.com/goto/sdk-slj).
+   [http://dev.splunk.com/goto/sdk-slj](http://dev.splunk.com/goto/sdk-slj).</li>
 
 2. Add the logging framework you plan to use. The three big ones in use today 
    are *Logback*, *Log4J 2.x*, and *java.util.logging* (which comes with your 
    JDK). If you are using Maven, add the corresponding dependencies below to 
    your **pom.xml**:
 
-   * Logback:
+    * Logback:
 
-        ```
+    ```
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
@@ -106,22 +106,21 @@ entries.
             <artifactId>logback-core</artifactId>
             <version>1.0.13</version>
         </dependency>
-        ```
-    
-   * Log4J 2.x:
+    ```
+    * Log4J 2.x:
 
-        ```
+    ```
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-core</artifactId>
             <version>2.0-beta9</version>
         </dependency>
-        ```
+    ```
+    
+    * java.util.logging ships with the JDK.</li></li>
 
-   * java.util.logging ships with the JDK.
-
-3. Create a TCP input in Splunk that you will write to. To learn how, see [Get   
-   data from TCP and UDP ports](http://docs.splunk.com/Documentation/Splunk/latest/Data/Monitornetworkports).
+3. Create a TCP input in Splunk that you will write to. To learn how, see
+   [Get data from TCP and UDP ports](http://docs.splunk.com/Documentation/Splunk/latest/Data/Monitornetworkports).</li>
 
 4. Configure your logging system. Here are simple example configurations for 
    each of the three systems. The **log4j2.xml** and **logback.xml** files 
@@ -129,49 +128,51 @@ entries.
    jdklogging.properties should be specified to your program by passing the 
    following to the Java executable:
 
-       -Djava.util.logging.config.file=/path/to/jdklogging.properties
+   ```
+   -Djava.util.logging.config.file=/path/to/jdklogging.properties
+   ```
 
    * Logback (to be put in **logback.xml** on the classpath)
 
     ```
         <configuration>
-        <!--
-        You should send data to Splunk using TCP inputs. You can find the 
-        documentation on how to open TCP inputs on Splunk at http://docs.splunk.com/Documentation/Splunk/latest/Data/Monitornetworkports.
-
-        Logback does not ship with a usable appender for TCP sockets (its 
-        SocketAppender serializes Java objects for deserialization by a 
-        server elsewhere). Instead, use the TcpAppender provided with this 
-        library.
-
-        This example assumes that you have Splunk running on your local 
-        machine (127.0.0.1) with a TCP input configured on port 15000. 
-        Note that TCP inputs are *not* the same as Splunk's management 
-        port.
-
-        You can control the format of what is logged by changing the 
-        encoder (see http://logback.qos.ch/manual/layouts.html#ClassicPatternLayout 
-        for details), but the pattern below produces a simple timestamp, 
-        followed by the full message and a newline, like the following:
-
-            2012-04-26 14:54:38,461 [%thread] %level text of my event
-        -->
-        
-        <appender name="socket" class="com.splunk.logging.TcpAppender">
-            <RemoteHost>127.0.0.1</RemoteHost>
-            <Port>15000</Port>
-            <layout class="ch.qos.logback.classic.PatternLayout">
-            <pattern>%date{ISO8601} [%thread] %level: %msg%n</pattern>
-            </layout>
-        </appender>
-
-        <logger name="splunk.logger" additivity="false" level="INFO">
-            <appender-ref ref="socket"/>
-        </logger>
-
-        <root level="INFO">
-            <appender-ref ref="socket"/>
-        </root>
+            <!--
+            You should send data to Splunk using TCP inputs. You can find the 
+            documentation on how to open TCP inputs on Splunk at http://docs.splunk.com/Documentation/Splunk/latest/Data/Monitornetworkports.
+    
+            Logback does not ship with a usable appender for TCP sockets (its 
+            SocketAppender serializes Java objects for deserialization by a 
+            server elsewhere). Instead, use the TcpAppender provided with this 
+            library.
+    
+            This example assumes that you have Splunk running on your local 
+            machine (127.0.0.1) with a TCP input configured on port 15000. 
+            Note that TCP inputs are *not* the same as Splunk's management 
+            port.
+    
+            You can control the format of what is logged by changing the 
+            encoder (see http://logback.qos.ch/manual/layouts.html#ClassicPatternLayout 
+            for details), but the pattern below produces a simple timestamp, 
+            followed by the full message and a newline, like the following:
+    
+                2012-04-26 14:54:38,461 [%thread] %level text of my event
+            -->
+            
+            <appender name="socket" class="com.splunk.logging.TcpAppender">
+                <RemoteHost>127.0.0.1</RemoteHost>
+                <Port>15000</Port>
+                <layout class="ch.qos.logback.classic.PatternLayout">
+                <pattern>%date{ISO8601} [%thread] %level: %msg%n</pattern>
+                </layout>
+            </appender>
+    
+            <logger name="splunk.logger" additivity="false" level="INFO">
+                <appender-ref ref="socket"/>
+            </logger>
+    
+            <root level="INFO">
+                <appender-ref ref="socket"/>
+            </root>
         </configuration>
     ```
 
@@ -179,27 +180,27 @@ entries.
 
     ```
         <Configuration status="info" name="example" packages="">
-        <!-- Define an appender that writes to a TCP socket. We use Log4J's 
-        SocketAppender, which is documented at https://logging.apache.org/log4j/2.x/manual/appenders.html#SocketAppender.
-
-        You can find the documentation on how to open TCP inputs on Splunk 
-        at http://docs.splunk.com/Documentation/Splunk/latest/Data/Monitornetworkports. 
-        Note that TCP inputs are *not* the same as Splunk's management port.
-        -->
-        
-        <Appenders>
-            <Socket name="socket" host="127.0.0.1" port="15000">
-            <PatternLayout pattern="%p: %m%n" charset="UTF-8"/>
-            </Socket>
-        </Appenders>
-        <!-- Define a logger named 'splunk.logger' which writes to the socket appender we defined above. -->
-        <Loggers>
-            <Root level="INFO">
-            </Root>
-            <Logger name="splunk.logger" level="info">
-            <AppenderRef ref="socket"/>
-            </Logger>
-        </Loggers>
+            <!-- Define an appender that writes to a TCP socket. We use Log4J's 
+            SocketAppender, which is documented at https://logging.apache.org/log4j/2.x/manual/appenders.html#SocketAppender.
+    
+            You can find the documentation on how to open TCP inputs on Splunk 
+            at http://docs.splunk.com/Documentation/Splunk/latest/Data/Monitornetworkports. 
+            Note that TCP inputs are *not* the same as Splunk's management port.
+            -->
+            
+            <Appenders>
+                <Socket name="socket" host="127.0.0.1" port="15000">
+                <PatternLayout pattern="%p: %m%n" charset="UTF-8"/>
+                </Socket>
+            </Appenders>
+            <!-- Define a logger named 'splunk.logger' which writes to the socket appender we defined above. -->
+            <Loggers>
+                <Root level="INFO">
+                </Root>
+                <Logger name="splunk.logger" level="info">
+                <AppenderRef ref="socket"/>
+                </Logger>
+            </Loggers>
         </Configuration>
     ```
 
@@ -245,22 +246,22 @@ entries.
    events. This example code uses Logback as the logger, but the part 
    relevant to **SplunkCimLogEvent** will be unchanged for other frameworks:
 
-    ```
-    logger.info(new SplunkCimLogEvent("Event name", "event-id") {{
-        // You can add an arbitrary key=value pair with addField.
-        addField("name", "value");
-
-        // If you are logging exceptions, use addThrowable, which
-        // does nice formatting. If ex is an exception you have caught
-        // you would log it with
-        addThrowableWithStacktrace(ex);
-
-        // SplunkCimLogEvent provides lots of convenience methods for
-        // fields defined by Splunk's Common Information Model. See
-        // the SplunkCimLogEvent JavaDoc for a complete list.
-        setAuthAction("deny");
-    }});
-    ```
+        logger.info(new SplunkCimLogEvent("Event name", "event-id") {{
+            // You can add an arbitrary key=value pair with addField.
+            addField("name", "value");
+    
+            // If you are logging exceptions, use addThrowable, which
+            // does nice formatting. If ex is an exception you have caught
+            // you would log it with
+            addThrowableWithStacktrace(ex);
+    
+            // SplunkCimLogEvent provides lots of convenience methods for
+            // fields defined by Splunk's Common Information Model. See
+            // the SplunkCimLogEvent JavaDoc for a complete list.
+            setAuthAction("deny");
+        }});
+</li>
+</ol>
 
 ## Splunk
 

@@ -242,7 +242,7 @@ entries.
     ```
 
 5. Import **com.splunk.logging.SplunkCimLogEvent** and use it to create 
-   events. This example code uses Logback, as the logger, but the part 
+   events. This example code uses Logback as the logger, but the part 
    relevant to **SplunkCimLogEvent** will be unchanged for other frameworks:
 
     ```

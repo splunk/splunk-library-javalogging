@@ -40,7 +40,7 @@ under the License.
         <RemoteHost>127.0.0.1</RemoteHost>
         <Port>15000</Port>
         <layout class="ch.qos.logback.classic.PatternLayout">
-            <pattern>%level: %msg%n</pattern>
+            <pattern>%thread %level: %msg%n</pattern>
         </layout>
     </appender>
 

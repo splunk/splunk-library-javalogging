@@ -37,6 +37,6 @@ public class LogbackFunctionalTest {
         }
 
         Assert.assertNotNull(container.value);
-        Assert.assertEquals("INFO: " + helloChina, container.value);
+        Assert.assertEquals(Thread.currentThread().getName() + " INFO: " + helloChina, container.value);
     }
 }

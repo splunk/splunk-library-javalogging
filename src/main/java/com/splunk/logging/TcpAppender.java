@@ -204,6 +204,13 @@ public class TcpAppender extends AppenderBase<ILoggingEvent> implements Runnable
 
     @Override
     protected void append(ILoggingEvent event) {
+        // Get runtime information now, rather than when
+        // the event is actually logged, so that it has
+        // the right thread and environment information.
+        event.prepareForDeferredProcessing();
+        event.getCallerData();
+
+        // Append to the queue to be logged.
         if (event != null && started)
             queue.offer(event);
     }

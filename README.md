@@ -246,6 +246,7 @@ entries.
    events. This example code uses Logback as the logger, but the part 
    relevant to **SplunkCimLogEvent** will be unchanged for other frameworks:
 
+   ```
         logger.info(new SplunkCimLogEvent("Event name", "event-id") {{
             // You can add an arbitrary key=value pair with addField.
             addField("name", "value");
@@ -260,6 +261,8 @@ entries.
             // the SplunkCimLogEvent JavaDoc for a complete list.
             setAuthAction("deny");
         }});
+   ```
+
 </li>
 </ol>
 

@@ -15,7 +15,6 @@
   <description>Library for structured, semantic logging of Common Information Model compliant events, meant for use with SLF4J.</description>
 
   <build>
-    <sourceDirectory>java/com/splunk/logging</sourceDirectory>
     <plugins>
         <plugin>
             <artifactId>maven-compiler-plugin</artifactId>

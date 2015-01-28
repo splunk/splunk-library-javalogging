@@ -15,6 +15,7 @@
   <description>Library for structured, semantic logging of Common Information Model compliant events, meant for use with SLF4J.</description>
 
   <build>
+    <sourceDirectory>java/com/splunk/logging</sourceDirectory>
     <plugins>
         <plugin>
             <artifactId>maven-compiler-plugin</artifactId>
@@ -26,6 +27,7 @@
         </plugin>
         <plugin>
             <artifactId>maven-surefire-plugin</artifactId>
+            <version>2.18.1</version>          
             <configuration>
                 <systemProperties>
                     <property>
@@ -64,13 +66,32 @@
           <version>1.0.13</version>
           <scope>provided</scope>
       </dependency>
+
       <dependency>
-          <groupId>org.apache.logging.log4j</groupId>
-          <artifactId>log4j-core</artifactId>
-          <version>2.0-beta9</version>
-          <scope>test</scope>
-      </dependency>
-  </dependencies>
+        <groupId>org.apache.httpcomponents</groupId>
+        <artifactId>httpclient</artifactId>
+        <version>4.3.6</version>
+       </dependency>
+
+     <dependency>
+       <groupId>org.apache.logging.log4j</groupId>
+         <artifactId>log4j-api</artifactId>
+         <version>2.1</version>
+     </dependency>
+   
+     <dependency>
+       <groupId>org.apache.logging.log4j</groupId>
+       <artifactId>log4j-core</artifactId>
+       <version>2.1</version>
+     </dependency>
+
+     <dependency>
+	<groupId>com.googlecode.json-simple</groupId>
+	<artifactId>json-simple</artifactId>
+	<version>1.1.1</version>
+     </dependency>
+
+</dependencies>
 
   <licenses>
     <license>

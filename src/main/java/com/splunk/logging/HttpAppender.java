@@ -55,9 +55,7 @@ public final class HttpAppender extends AbstractAppender
 	private final String _source;
 	private final String _sourcetype;
 	private final String _index;
-	
-	private CloseableHttpClient _client = HttpClients.createDefault();
-	
+		
 	private HttpAppender(final String name, final String url, final String token, 
 			             final String source, final String sourcetype, final String index, final Filter filter, 
 			             final Layout<? extends Serializable> layout, final boolean ignoreExceptions)
@@ -158,37 +156,22 @@ public final class HttpAppender extends AbstractAppender
     		
     		String msg = obj.toJSONString();
     		
+    		CloseableHttpClient client = HttpClients.createDefault();    		
     		HttpPost post = new HttpPost(_url);
 	    	post.setHeader("Authorization", "Splunk " + _token);
 	    	StringEntity entity = new StringEntity(msg, "utf-8");
 	    	entity.setContentType("text/plain; charset=utf-8"); 
 	    	post.setEntity(entity);
 
-	    	HttpResponse response = _client.execute(post);    	
+	    	HttpResponse response = client.execute(post);    	
 	    	int responseCode = response.getStatusLine().getStatusCode();
+	    	
+	    	client.close();
     	}
     	catch(IOException e )
     	{
     		LOGGER.error("IO exception when sending requests");		
     	}
-    }
-    
-    /**
-     * Stop the appender. Close the connection.
-     */
-    @Override
-    public void stop()
-    {
-		try
-		{
-			_client.close();
-		}
-		catch(IOException e)
-		{
-    		LOGGER.error("IO exception when closing");			
-		}
-		
-		super.stop();
     }    
 }
 

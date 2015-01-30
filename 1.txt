@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--This is to override browser formatting; see server.conf[httpServer] to disable. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .-->
+<?xml-stylesheet type="text/xml" href="/static/atom.xsl"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xmlns:s="http://dev.splunk.com/ns/rest" xmlns:opensearch="http://a9.com/-/spec/opensearch/1.1/">
+  <title>http</title>
+  <id>https://localhost:8089/services/data/inputs/http</id>
+  <updated>2015-01-30T10:54:32-08:00</updated>
+  <generator build="250734" version="6.3"/>
+  <author>
+    <name>Splunk</name>
+  </author>
+  <link href="/services/data/inputs/http/_new" rel="create"/>
+  <link href="/services/data/inputs/http/_reload" rel="_reload"/>
+  <opensearch:totalResults>1</opensearch:totalResults>
+  <opensearch:itemsPerPage>30</opensearch:itemsPerPage>
+  <opensearch:startIndex>0</opensearch:startIndex>
+  <s:messages/>
+  <entry>
+    <title>http</title>
+    <id>https://localhost:8089/servicesNS/nobody/system/data/inputs/http/http</id>
+    <updated>2015-01-30T10:54:32-08:00</updated>
+    <link href="/servicesNS/nobody/system/data/inputs/http/http" rel="alternate"/>
+    <author>
+      <name>nobody</name>
+    </author>
+    <link href="/servicesNS/nobody/system/data/inputs/http/http" rel="list"/>
+    <link href="/servicesNS/nobody/system/data/inputs/http/http/_reload" rel="_reload"/>
+    <link href="/servicesNS/nobody/system/data/inputs/http/http" rel="edit"/>
+    <link href="/servicesNS/nobody/system/data/inputs/http/http/enable" rel="enable"/>
+    <content type="text/xml">
+      <s:dict>
+        <s:key name="_rcvbuf">1572864</s:key>
+        <s:key name="disabled">1</s:key>
+        <s:key name="eai:acl">
+          <s:dict>
+            <s:key name="app">system</s:key>
+            <s:key name="can_change_perms">1</s:key>
+            <s:key name="can_list">1</s:key>
+            <s:key name="can_share_app">1</s:key>
+            <s:key name="can_share_global">1</s:key>
+            <s:key name="can_share_user">0</s:key>
+            <s:key name="can_write">1</s:key>
+            <s:key name="modifiable">1</s:key>
+            <s:key name="owner">nobody</s:key>
+            <s:key name="perms">
+              <s:dict>
+                <s:key name="read">
+                  <s:list>
+                    <s:item>*</s:item>
+                  </s:list>
+                </s:key>
+                <s:key name="write">
+                  <s:list>
+                    <s:item>admin</s:item>
+                  </s:list>
+                </s:key>
+              </s:dict>
+            </s:key>
+            <s:key name="removable">0</s:key>
+            <s:key name="sharing">system</s:key>
+          </s:dict>
+        </s:key>
+        <s:key name="eai:appName">search</s:key>
+        <s:key name="eai:userName">admin</s:key>
+        <s:key name="evt_dc_name"></s:key>
+        <s:key name="evt_dns_name"></s:key>
+        <s:key name="evt_resolve_ad_obj">0</s:key>
+        <s:key name="host">ljiangvm1</s:key>
+        <s:key name="index">default</s:key>
+      </s:dict>
+    </content>
+  </entry>
+</feed>

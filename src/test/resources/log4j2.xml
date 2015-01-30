@@ -15,7 +15,7 @@ License for the specific language governing permissions and limitations
 under the License.
 -->
 
-<Configuration status="info" name="example" packages="">
+<Configuration status="info" name="example" packages="com.splunk.logging">
     <!-- Define an appender that writes to a TCP socket. We use Log4J's SocketAppender, which
          is documented at
 
@@ -28,12 +28,17 @@ under the License.
          Note that TCP inputs are *not* the same as Splunk's management port.
     -->
 
-    <Loggers>
-        <Root level="INFO">
-        </Root>
-        <Logger name="splunk.httplogger" level="info">
-            <AppenderRef ref="com.splunk.logging.HttpAppender"/>
-        </Logger>
-    </Loggers>
+    <Appenders>
+        <Http name="Http" url="localhost:8089/services/logging" protocol="https" token="F501321B-B39E-46C3-B3C4-025B688CA65D" source="splunktest" sourcetype="battlecat">
+            <PatternLayout pattern="%m"/>
+        </Http>
+    </Appenders>
+    <loggers>
+        <root level="debug"/>
+        <logger name ="splunkHttpLogger" level="INFO">
+            <appender-ref ref="Http" />
+        </logger>
+    </loggers>
+
 
 </Configuration>

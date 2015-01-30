@@ -93,11 +93,19 @@
        <version>2.1</version>
      </dependency>
 
+<<<<<<< HEAD
      <dependency>
         <groupId>com.googlecode.json-simple</groupId>
         <artifactId>json-simple</artifactId>
         <version>1.1.1</version>
      </dependency>
+=======
+    <dependency>
+	    <groupId>com.googlecode.json-simple</groupId>
+	    <artifactId>json-simple</artifactId>
+	    <version>1.1.1</version>
+    </dependency>
+>>>>>>> 18dee27b6696abdf45946be4953428e64f1463d1
 
       <dependency>
           <groupId>com.splunk</groupId>

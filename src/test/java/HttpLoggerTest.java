@@ -13,17 +13,20 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-
 import org.junit.Assert;
 import org.junit.Test;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.logging.Logger;
+//import java.util.logging.Logger;
 import com.splunk.Event;
 import com.splunk.ResultsReaderXml;
 import com.splunk.Service;
 import com.splunk.ServiceArgs;
+import com.splunk.logging.HttpAppender;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 
 public class HttpLoggerTest {
 
@@ -32,6 +35,13 @@ public class HttpLoggerTest {
      */
     @Test
     public void httpAppenderTest() throws IOException,InterruptedException {
+        //user httplogger
+        //Logger logger = Logger.getLogger("splunkHttpLogger");
+        Logger logger=LogManager.getLogger("splunkHttpLogger");
+
+        logger.info("use httplogger");
+        logger.info("new use of httplogger");
+
         //connect to localhost
         ServiceArgs serviceArgs = new ServiceArgs();
         serviceArgs.setUsername("admin");
@@ -50,11 +60,6 @@ public class HttpLoggerTest {
             System.out.println("---------------");
             System.out.println(event.getSegmentedRaw());
         }
-
-        //user httplogger
-        Logger logger = Logger.getLogger("splunk.httplogger");
-        logger.info("use httplogger");
-        logger.info("new use of httplogger");
 
         //now should be able to read the new info from splunk
         splunkSearchstr="search httplogger*";

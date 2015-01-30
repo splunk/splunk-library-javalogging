@@ -36,19 +36,16 @@ under the License.
 
       for details).
     -->
-    <appender name="socket" class="com.splunk.logging.TcpAppender">
-        <RemoteHost>127.0.0.1</RemoteHost>
-        <Port>15000</Port>
-        <layout class="ch.qos.logback.classic.PatternLayout">
-            <pattern>%thread %level: %msg%n</pattern>
-        </layout>
-    </appender>
 
-    <logger name="splunk.logger" additivity="false" level="INFO">
-        <appender-ref ref="socket"/>
-    </logger>
 
-    <root level="INFO">
-        <appender-ref ref="socket"/>
-    </root>
+
+    <Loggers>
+        <Root level="INFO">
+        </Root>
+        <Logger name="splunk.httplogger" level="info">
+            <AppenderRef ref="com.splunk.logging.HttpAppender"/>
+        </Logger>
+    </Loggers>
+
+
 </configuration>

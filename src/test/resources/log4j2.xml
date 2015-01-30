@@ -27,17 +27,12 @@ under the License.
 
          Note that TCP inputs are *not* the same as Splunk's management port.
     -->
-    <Appenders>
-        <Socket name="socket" host="127.0.0.1" port="15000">
-            <PatternLayout pattern="%p: %m%n" charset="UTF-8"/>
-        </Socket>
-    </Appenders>
-    <!-- Define a logger named 'splunk.logger' which writes to the socket appender we defined above. -->
+
     <Loggers>
         <Root level="INFO">
         </Root>
-        <Logger name="splunk.logger" level="info">
-            <AppenderRef ref="socket"/>
+        <Logger name="splunk.httplogger" level="info">
+            <AppenderRef ref="com.splunk.logging.HttpAppender"/>
         </Logger>
     </Loggers>
 

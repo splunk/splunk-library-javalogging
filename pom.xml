@@ -15,7 +15,6 @@
   <description>Library for structured, semantic logging of Common Information Model compliant events, meant for use with SLF4J.</description>
 
   <build>
-    <sourceDirectory>java/com/splunk/logging</sourceDirectory>
     <plugins>
         <plugin>
             <artifactId>maven-compiler-plugin</artifactId>
@@ -85,11 +84,11 @@
        <version>2.1</version>
      </dependency>
 
-     <dependency>
-	<groupId>com.googlecode.json-simple</groupId>
-	<artifactId>json-simple</artifactId>
-	<version>1.1.1</version>
-     </dependency>
+    <dependency>
+	    <groupId>com.googlecode.json-simple</groupId>
+	    <artifactId>json-simple</artifactId>
+	    <version>1.1.1</version>
+    </dependency>
 
 </dependencies>
 

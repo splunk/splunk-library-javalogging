@@ -18,6 +18,7 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 import java.io.IOException;
+import java.nio.charset.Charset;
 
 import org.apache.logging.log4j.core.appender.AbstractAppender;
 import org.apache.logging.log4j.core.Filter;
@@ -33,12 +34,9 @@ import org.apache.logging.log4j.core.layout.PatternLayout;
 import org.apache.logging.log4j.core.util.Booleans;
 
 import org.apache.http.HttpResponse;
-import org.apache.http.NameValuePair;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.entity.StringEntity;
 
 import org.json.simple.JSONArray;
@@ -56,9 +54,15 @@ public final class HttpAppender extends AbstractAppender
 	private final String _sourcetype;
 	private final String _index;
 		
-	private HttpAppender(final String name, final String url, final String token, 
-			             final String source, final String sourcetype, final String index, final Filter filter, 
-			             final Layout<? extends Serializable> layout, final boolean ignoreExceptions)
+	private HttpAppender(final String name, 
+			             final String url, 
+			             final String token, 
+			             final String source, 
+			             final String sourcetype, 
+			             final String index, 
+			             final Filter filter, 
+			             final Layout<? extends Serializable> layout, 
+			             final boolean ignoreExceptions)
 	{
 		super(name, filter, layout, ignoreExceptions);
 		_url = url;
@@ -70,18 +74,12 @@ public final class HttpAppender extends AbstractAppender
 			
 	/**
      * Create a Http Appender.
-     * @param Url: The Url of the splunk instance to log events to.
-     * @param Token: The token of the application 
-     * @param ignore If {@code "true"} (default) exceptions encountered when appending events are logged; otherwise
-     *               they are propagated to the caller.
-     * @param layout The layout to use to format the event. If no layout is provided the default PatternLayout
-     * will be used.
-     * @return The Splunk-Http Appender.
+     * @return The Http Appender.
      */
     @PluginFactory
     public static HttpAppender createAppender(
             // @formatter:off
-            @PluginAttribute("Url") final String url,
+            @PluginAttribute("url") final String url,
             @PluginAttribute("protocol") final String protocol,            
             @PluginAttribute("token") final String token,
             @PluginAttribute("name") final String name,
@@ -117,8 +115,9 @@ public final class HttpAppender extends AbstractAppender
             return null;
         }
     	
-    	if (layout == null) {
-            layout = PatternLayout.createDefaultLayout();
+    	if (layout == null)
+    	{
+    		layout = PatternLayout.createLayout("%m", null, null, Charset.forName("UTF-8"), true, false, null, null);    		
         }
     	
     	final boolean ignoreExceptions = true;
@@ -146,31 +145,30 @@ public final class HttpAppender extends AbstractAppender
     	
     		if (_index != null)
     			obj.put("index", _index);
-    		
-    		JSONObject obj2 = new JSONObject();
-    		    	
-        	String evt = new String(getLayout().toByteArray(event), "UTF-8");
-    		obj2.put("message", evt);
-    		
-    		obj.put("event", obj2);
-    		
-    		String msg = obj.toJSONString();
-    		
+    		    		    	
+        	String evt = new String(getLayout().toByteArray(event), "UTF-8");    		
+    		obj.put("event", evt);
+    		    		
     		CloseableHttpClient client = HttpClients.createDefault();    		
     		HttpPost post = new HttpPost(_url);
 	    	post.setHeader("Authorization", "Splunk " + _token);
-	    	StringEntity entity = new StringEntity(msg, "utf-8");
-	    	entity.setContentType("text/plain; charset=utf-8"); 
+	    	StringEntity entity = new StringEntity(obj.toJSONString(), "utf-8");
+	    	entity.setContentType("application/json; charset=utf-8"); 
 	    	post.setEntity(entity);
 
 	    	HttpResponse response = client.execute(post);    	
 	    	int responseCode = response.getStatusLine().getStatusCode();
 	    	
+	    	if (responseCode != 200)
+	    	{
+	    		LOGGER.error("http server responded with error code %d", responseCode);			    		
+	    	}
+	    	
 	    	client.close();
     	}
     	catch(IOException e )
     	{
-    		LOGGER.error("IO exception when sending requests");		
+    		LOGGER.error(e.getMessage());		
     	}
     }    
 }

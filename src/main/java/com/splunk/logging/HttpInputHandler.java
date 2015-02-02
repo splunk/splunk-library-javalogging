@@ -85,7 +85,7 @@ import org.json.simple.JSONObject;
 public final class HttpInputHandler extends Handler {
     private final String DefaultScheme = "https";
     private final String DefaultPort = "8089";
-    private final String HttpInputUrlPath = "/services/logging";
+    private final String HttpInputUrlPath = "/services/receivers/token";
     private final String MetadataTimeTag = "time";
     private final String MetadataIndexTag = "index";
     private final String MetadataSourceTag = "source";

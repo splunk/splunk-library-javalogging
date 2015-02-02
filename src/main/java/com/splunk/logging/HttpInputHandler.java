@@ -69,11 +69,12 @@ import java.io.IOException;
 import java.util.logging.Handler;
 import java.util.logging.LogManager;
 import java.util.logging.LogRecord;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.concurrent.FutureCallback;
 import org.apache.http.entity.StringEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
+import org.apache.http.impl.nio.client.HttpAsyncClients;
 import org.json.simple.JSONObject;
 
 /**
@@ -100,6 +101,8 @@ public final class HttpInputHandler extends Handler {
     private String source;
     private String sourceType;
 
+    private CloseableHttpAsyncClient httpClient;
+
     /** HttpInputHandler c-or */
     public HttpInputHandler() {
         readConfiguration();
@@ -114,11 +117,24 @@ public final class HttpInputHandler extends Handler {
         String severity = record.getLevel().toString();
         String message = record.getMessage();
         String event = createEvent(severity, message);
-        postEvent(event);
+        postEventAsync(event);
     }
 
-    private void postEvent(final String event) {
-        CloseableHttpClient httpClient = HttpClients.createDefault();
+    /**
+     * java.util.logging data handler close callback
+     * @throws SecurityException
+     */
+    @Override public void close() throws SecurityException {
+        if (httpClient != null) {
+            try {
+                httpClient.close();
+            } catch (IOException e) {}
+            httpClient = null;
+        }
+    }
+
+    private void postEventAsync(final String event) {
+        startHttpClient();
         HttpPost httpPost = new HttpPost(httpInputUrl);
         httpPost.setHeader(
                 AuthorizationHeaderTag,
@@ -126,15 +142,21 @@ public final class HttpInputHandler extends Handler {
         StringEntity entity = new StringEntity(event, "utf-8");
         entity.setContentType("application/json; charset=utf-8");
         httpPost.setEntity(entity);
-        HttpResponse response = null;
-        try {
-            response = httpClient.execute(httpPost);
-            int responseCode = response.getStatusLine().getStatusCode();
-            // @todo - handle error response code
-            httpClient.close();
-        } catch (IOException e) {
-            // @todo - handle possible errors
+        httpClient.execute(httpPost, new FutureCallback<HttpResponse>() {
+            // @todo - handle reply
+            public void completed(final HttpResponse response) {}
+            public void failed(final Exception ex) {}
+            public void cancelled() {}
+        });
+    }
+
+    private void startHttpClient() {
+        if (httpClient != null) {
+            // http client is already started
+            return;
         }
+        httpClient = HttpAsyncClients.createDefault();
+        httpClient.start();
     }
 
     private String createEvent(final String severity, final String message) {
@@ -191,5 +213,4 @@ public final class HttpInputHandler extends Handler {
 
     // java.util.logging.Handler abstract methods
     @Override public void flush() {}
-    @Override public void close() throws SecurityException {}
 }

@@ -16,20 +16,11 @@ under the License.
 -->
 
 <Configuration status="info" name="example" packages="com.splunk.logging">
-    <!-- Define an appender that writes to a TCP socket. We use Log4J's SocketAppender, which
-         is documented at
-
-             https://logging.apache.org/log4j/2.x/manual/appenders.html#SocketAppender
-
-         You can find the documentation on how to open TCP inputs on Splunk at
-
-             http://docs.splunk.com/Documentation/Splunk/6.0.1/Data/Monitornetworkports
-
-         Note that TCP inputs are *not* the same as Splunk's management port.
-    -->
-
+    <!--need the "token=..." line to be a single line for parsing purpose-->
     <Appenders>
-        <Http name="Http" url="localhost:8089/services/logging" protocol="https" token="F501321B-B39E-46C3-B3C4-025B688CA65D" source="splunktest" sourcetype="battlecat">
+        <Http name="Http" url="localhost:8089/services/logging" protocol="http"
+              token="%user_defined_httpinput_token%"
+              source="splunktest" sourcetype="battlecat">
             <PatternLayout pattern="%m"/>
         </Http>
     </Appenders>
@@ -39,6 +30,4 @@ under the License.
             <appender-ref ref="Http" />
         </logger>
     </loggers>
-
-
 </Configuration>

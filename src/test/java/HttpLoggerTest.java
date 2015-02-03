@@ -13,64 +13,141 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
+import com.splunk.*;
+import java.io.*;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.util.*;
 import org.junit.Assert;
 import org.junit.Test;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-//import java.util.logging.Logger;
-import com.splunk.Event;
-import com.splunk.ResultsReaderXml;
-import com.splunk.Service;
-import com.splunk.ServiceArgs;
-import com.splunk.logging.HttpAppender;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+public final class HttpLoggerTest {
 
-public class HttpLoggerTest {
+    private ServiceArgs serviceArgs;
+    private String httpinputName = "newhttpinput";
 
-    /**
-     * Try writing a message via TCP to java.util.logging to validate the example configuration.
-     */
-    @Test
-    public void httpAppenderTest() throws IOException,InterruptedException {
-        //user httplogger
-        //Logger logger = Logger.getLogger("splunkHttpLogger");
-        Logger logger=LogManager.getLogger("splunkHttpLogger");
-
-        logger.info("use httplogger");
-        logger.info("new use of httplogger");
-
+    private void setup() throws IOException {
         //connect to localhost
-        ServiceArgs serviceArgs = new ServiceArgs();
+        serviceArgs = new ServiceArgs();
         serviceArgs.setUsername("admin");
         serviceArgs.setPassword("changeme");
         serviceArgs.setHost("localhost");
         serviceArgs.setPort(8089);
+        serviceArgs.setScheme("http");
         Service service = Service.connect(serviceArgs);
         service.login();
 
-        //do simple search and read result
-        String splunkSearchstr="search index=_internal | head 3";
-        InputStream resultsStream = service.oneshotSearch(splunkSearchstr);
-        ResultsReaderXml resultsReader = new ResultsReaderXml(resultsStream);
+        //enable logging endpoint
+        Map args = new HashMap();
+        args.put("disabled", 0);
+        service.post("/servicesNS/admin/search/data/inputs/http/http", args);
 
-        for (Event event : resultsReader) {
-            System.out.println("---------------");
-            System.out.println(event.getSegmentedRaw());
+        //create a httpinput
+        args = new HashMap();
+        args.put("name", httpinputName);
+        args.put("description", "test http input");
+
+        try {
+            service.delete("/services/data/inputs/http/" + httpinputName);
+        } catch (Exception e){}
+
+        service.post("/services/data/inputs/http", args);
+
+        //get httpinput token
+        args = new HashMap();
+        ResponseMessage response = service.get("/services/data/inputs/http/" + httpinputName, args);
+        BufferedReader reader = new BufferedReader(new InputStreamReader(response.getContent(), "UTF-8"));
+        String token = "";
+        while (true) {
+            String line = reader.readLine();
+            if (line == null) break;
+
+            if (line.contains("name=\"token\"")) {
+                token = line.split(">")[1];
+                token = token.split("<")[0];
+                break;
+            }
+        }
+        reader.close();
+
+        if (token.isEmpty()) {
+            Assert.fail("no httpinput token is created");
         }
 
-        //now should be able to read the new info from splunk
-        splunkSearchstr="search httplogger*";
-        resultsStream = service.oneshotSearch(splunkSearchstr);
-        resultsReader = new ResultsReaderXml(resultsStream);
-
-        System.out.println("----- search httplogger result:----------");
-        for (Event event : resultsReader) {
-            System.out.println(event.getSegmentedRaw());
+        //modify the config file with the generated token
+        String configFileDir = HttpLoggerTest.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+        String configFilePath = new File(configFileDir, "log4j2.xml").getPath();
+        List<String> lines = Files.readAllLines(new File(configFileDir, "log4j2.xml").toPath(), Charset.defaultCharset());
+        for (int i = 0; i < lines.size(); i++) {
+            if (lines.get(i).contains("%user_defined_httpinput_token%")) {
+                lines.set(i, lines.get(i).replace("%user_defined_httpinput_token%", token));
+                break;
+            }
         }
 
+        FileWriter fw = new FileWriter(configFilePath);
+        for (String line : lines) {
+            fw.write(line);
+        }
+        fw.flush();
+        fw.close();
+    }
+
+    private void teardown() throws IOException {
+        Service service = Service.connect(serviceArgs);
+        service.login();
+
+        //remove a httpinput
+        try {
+            service.delete("/services/data/inputs/http/" + httpinputName);
+        } catch (Exception e){}
+    }
+
+    /**
+     * sending a message via httplogging to splunk
+     */
+    @Test
+    public void httpAppenderTest() throws Exception, IOException, InterruptedException {
+        this.setup();
+
+        //use httplogger
+        Date date = new Date();
+        String jsonMsg = String.format("{EventDate:%s, EventMsg:'this is a test event", date.toString());
+        Logger logger = LogManager.getLogger("splunkHttpLogger");
+        logger.info(jsonMsg);
+
+        //verify the event is send to splunk and can be searched
+        Service service = Service.connect(serviceArgs);
+        service.login();
+        long startTime = System.currentTimeMillis();
+        int eventCount = 0;
+
+        InputStream resultsStream=null;
+        ResultsReaderXml resultsReader=null;
+        while (System.currentTimeMillis()-startTime < 30 * 1000)/*wait for up to 30s*/ {
+            resultsStream = service.oneshotSearch("search " + jsonMsg);
+            resultsReader = new ResultsReaderXml(resultsStream);
+
+            //verify has one and only one record return
+            for (Event event : resultsReader) {
+                eventCount++;
+                System.out.println("---------------");
+                System.out.println(event.getSegmentedRaw());
+            }
+
+            if (eventCount > 0)
+                break;
+
+        }
+
+        resultsReader.close();
+        resultsStream.close();
+
+        Assert.assertTrue(eventCount == 1);
+        this.teardown();
         System.out.println("====================== Test pass=========================");
     }
 }

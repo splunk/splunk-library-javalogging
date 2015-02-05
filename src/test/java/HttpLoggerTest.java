@@ -29,14 +29,74 @@ public final class HttpLoggerTest {
     private ServiceArgs serviceArgs;
     private String httpinputName = "newhttpinput";
 
-    private void setup() throws IOException {
-        //connect to localhost
+    /**
+     *   read splunk host info from .splunkrc file
+     */
+    private void getSplunkHostInfo()throws IOException {
+        String splunkhostfile = System.getProperty("user.home") + File.separator + ".splunkrc";
         serviceArgs = new ServiceArgs();
+
         serviceArgs.setUsername("admin");
         serviceArgs.setPassword("changeme");
         serviceArgs.setHost("localhost");
         serviceArgs.setPort(8089);
-        serviceArgs.setScheme("http");
+        serviceArgs.setScheme("https");
+
+        List<String> lines = Files.readAllLines(new File(splunkhostfile).toPath(), Charset.defaultCharset());
+
+        for (String line : lines) {
+            if (line.toLowerCase().contains("host")) {
+                serviceArgs.setHost(line.split("=")[1]);
+            }
+            if (line.toLowerCase().contains("admin")) {
+                serviceArgs.setUsername(line.split("=")[1]);
+            }
+            if (line.toLowerCase().contains("password")) {
+                serviceArgs.setPassword(line.split("=")[1]);
+            }
+            if (line.toLowerCase().contains("scheme")) {
+                serviceArgs.setScheme(line.split("=")[1]);
+            }
+            if (line.toLowerCase().contains("port")) {
+                serviceArgs.setPort(Integer.parseInt(line.split("=")[1]));
+            }
+        }
+    }
+
+    /**
+     *   modify the config file with the generated token, and configured splunk host
+     */
+    private void updateConfigFile(String token) throws  IOException{
+        String configFileDir = HttpLoggerTest.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+        String configFilePath = new File(configFileDir, "log4j2.xml").getPath();
+        List<String> lines = Files.readAllLines(new File(configFileDir, "log4j2.xml").toPath(), Charset.defaultCharset());
+        for (int i = 0; i < lines.size(); i++) {
+            if (lines.get(i).contains("%user_defined_httpinput_token%")) {
+                lines.set(i, lines.get(i).replace("%user_defined_httpinput_token%", token));
+            }
+
+            if (lines.get(i).contains("%host:port%")) {
+                lines.set(i, lines.get(i).replace("%host:port%", String.format("%s:%d", this.serviceArgs.host, this.serviceArgs.port)));
+            }
+
+            if (lines.get(i).contains("%scheme%")) {
+                lines.set(i, lines.get(i).replace("%scheme%", this.serviceArgs.scheme));
+            }
+        }
+
+        FileWriter fw = new FileWriter(configFilePath);
+        for (String line : lines) {
+            fw.write(line);
+        }
+
+        fw.flush();
+        fw.close();
+    }
+
+    private void setup() throws IOException{
+        this.getSplunkHostInfo();
+
+        //connect to splunk server
         Service service = Service.connect(serviceArgs);
         service.login();
 
@@ -77,23 +137,7 @@ public final class HttpLoggerTest {
             Assert.fail("no httpinput token is created");
         }
 
-        //modify the config file with the generated token
-        String configFileDir = HttpLoggerTest.class.getProtectionDomain().getCodeSource().getLocation().getPath();
-        String configFilePath = new File(configFileDir, "log4j2.xml").getPath();
-        List<String> lines = Files.readAllLines(new File(configFileDir, "log4j2.xml").toPath(), Charset.defaultCharset());
-        for (int i = 0; i < lines.size(); i++) {
-            if (lines.get(i).contains("%user_defined_httpinput_token%")) {
-                lines.set(i, lines.get(i).replace("%user_defined_httpinput_token%", token));
-                break;
-            }
-        }
-
-        FileWriter fw = new FileWriter(configFilePath);
-        for (String line : lines) {
-            fw.write(line);
-        }
-        fw.flush();
-        fw.close();
+        this.updateConfigFile(token);
     }
 
     private void teardown() throws IOException {

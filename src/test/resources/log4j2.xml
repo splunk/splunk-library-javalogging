@@ -18,7 +18,9 @@ under the License.
 <Configuration status="info" name="example" packages="com.splunk.logging">
     <!--need the "token=..." line to be a single line for parsing purpose-->
     <Appenders>
-        <Http name="Http" url="localhost:8089/services/logging" protocol="http"
+        <Http name="Http"
+              url="%host:port%/services/logging"
+              protocol="%scheme%"
               token="%user_defined_httpinput_token%"
               source="splunktest" sourcetype="battlecat">
             <PatternLayout pattern="%m"/>

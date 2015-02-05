@@ -19,7 +19,7 @@ package com.splunk.logging;
  */
 
 /**
- * @brief A hadler for java.util.logging that works with Splunk http input.
+ * @brief A handler for java.util.logging that works with Splunk http input.
  *
  * @details
  * This is a Splunk custom java.util.logging handler that intercepts logging
@@ -50,6 +50,17 @@ package com.splunk.logging;
  * com.splunk.logging.HttpInputHandler.source
  * com.splunk.logging.HttpInputHandler.sourcetype
  *
+ * # Events batching parameters:
+ * # Delay in millisecond between sending events, by default this value is 0, i.e., and events
+ * # are sending immediately
+ * com.splunk.logging.HttpInputHandler.delay
+ *
+ * # Max number of events in a batch. By default - 0, i.e., no batching
+ * com.splunk.logging.HttpInputHandler.batchCount
+ *
+ * # Max size of events in a batch. By default - 0, i.e., no batching
+ * com.splunk.logging.HttpInputHandler.batchSize
+ *
  * An example of logging properties file:
  * handlers = com.splunk.logging.HttpInputHandler
  * com.splunk.logging.HttpInputHandler.token=81029a58-63db-4bef-9c6f-f6b7e500f098
@@ -63,19 +74,20 @@ package com.splunk.logging;
  * com.splunk.logging.HttpInputHandler.index=default
  * com.splunk.logging.HttpInputHandler.source=localhost
  * com.splunk.logging.HttpInputHandler.sourcetype=syslog
+ *
+ * # Batching
+ * com.splunk.logging.HttpInputHandler.delay = 500
+ * com.splunk.logging.HttpInputHandler.batchCount = 1000
+ * com.splunk.logging.HttpInputHandler.batchSize = 65536
  */
 
 import java.io.IOException;
+import java.util.Dictionary;
+import java.util.Hashtable;
 import java.util.logging.Handler;
 import java.util.logging.LogManager;
 import java.util.logging.LogRecord;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.concurrent.FutureCallback;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.HttpResponse;
 import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
-import org.apache.http.impl.nio.client.HttpAsyncClients;
-import org.json.simple.JSONObject;
 
 /**
  * An input handler for Splunk http input logging. This handler can be used by
@@ -83,29 +95,48 @@ import org.json.simple.JSONObject;
  * properties file.
  */
 public final class HttpInputHandler extends Handler {
+    HttpInputEventSender eventSender;
+
+    private final String BatchDelayConfTag = "delay";
+    private final String BatchCountConfTag = "batchCount";
+    private final String BatchSizeConfTag = "batchSize";
+
     private final String DefaultScheme = "https";
     private final String DefaultPort = "8089";
     private final String HttpInputUrlPath = "/services/receivers/token";
-    private final String MetadataTimeTag = "time";
-    private final String MetadataIndexTag = "index";
-    private final String MetadataSourceTag = "source";
-    private final String MetadataSourceTypeTag = "sourcetype";
-    private final String AuthorizationHeaderTag = "Authorization";
-    private final String AuthorizationHeaderScheme = "Splunk %s";
 
-    private String httpInputUrl; // full url of an http input endpoint
-    private String token; // http input application token
-
-    // events metadata information
-    private String index;
-    private String source;
-    private String sourceType;
-
-    private CloseableHttpAsyncClient httpClient;
 
     /** HttpInputHandler c-or */
     public HttpInputHandler() {
-        readConfiguration();
+        // read configuration settings
+        Dictionary<String, String> metadata = new Hashtable<String, String>();
+        metadata.put(HttpInputEventSender.MetadataIndexTag,
+            getConfigurationProperty(HttpInputEventSender.MetadataIndexTag, ""));
+
+        metadata.put(HttpInputEventSender.MetadataSourceTag,
+            getConfigurationProperty(HttpInputEventSender.MetadataSourceTag, ""));
+
+        metadata.put(HttpInputEventSender.MetadataSourceTypeTag,
+            getConfigurationProperty(HttpInputEventSender.MetadataSourceTypeTag, ""));
+
+        // http input endpoint properties
+        String scheme = getConfigurationProperty("scheme", DefaultScheme);
+        String host = getConfigurationProperty("host", null);
+        String port = getConfigurationProperty("port", DefaultPort);
+        String httpInputUrl = String.format("%s://%s:%s%s",
+            scheme, host, port, HttpInputUrlPath);
+
+        // app token
+        String token = getConfigurationProperty("token", null);
+
+        // batching properties
+        long delay = getConfigurationNumericProperty(BatchDelayConfTag, 0);
+        long batchCount = getConfigurationNumericProperty(BatchCountConfTag, 0);
+        long batchSize = getConfigurationNumericProperty(BatchSizeConfTag, 0);
+
+        // delegate all configuration params to event sender
+        eventSender = new HttpInputEventSender(
+            httpInputUrl, token, delay, batchCount, batchSize, metadata);
     }
 
     /**
@@ -114,10 +145,15 @@ public final class HttpInputHandler extends Handler {
      */
     @Override
     public void publish(LogRecord record) {
-        String severity = record.getLevel().toString();
-        String message = record.getMessage();
-        String event = createEvent(severity, message);
-        postEventAsync(event);
+        eventSender.send(record.getLevel().toString(), record.getMessage());
+    }
+
+    /**
+     * java.util.logging data handler callback
+     */
+    @Override
+    public void flush() {
+        eventSender.flush();
     }
 
     /**
@@ -125,74 +161,9 @@ public final class HttpInputHandler extends Handler {
      * @throws SecurityException
      */
     @Override public void close() throws SecurityException {
-        if (httpClient != null) {
-            try {
-                httpClient.close();
-            } catch (IOException e) {}
-            httpClient = null;
-        }
+        eventSender.close();
     }
 
-    private void postEventAsync(final String event) {
-        startHttpClient();
-        HttpPost httpPost = new HttpPost(httpInputUrl);
-        httpPost.setHeader(
-                AuthorizationHeaderTag,
-                String.format(AuthorizationHeaderScheme, token));
-        StringEntity entity = new StringEntity(event, "utf-8");
-        entity.setContentType("application/json; charset=utf-8");
-        httpPost.setEntity(entity);
-        httpClient.execute(httpPost, new FutureCallback<HttpResponse>() {
-            // @todo - handle reply
-            public void completed(final HttpResponse response) {}
-            public void failed(final Exception ex) {}
-            public void cancelled() {}
-        });
-    }
-
-    private void startHttpClient() {
-        if (httpClient != null) {
-            // http client is already started
-            return;
-        }
-        httpClient = HttpAsyncClients.createDefault();
-        httpClient.start();
-    }
-
-    private String createEvent(final String severity, final String message) {
-        // create event json content
-        JSONObject event = new JSONObject();
-        // event timestamp and metadata
-        event.put(MetadataTimeTag, String.format("%d", System.currentTimeMillis() / 1000));
-        if (index.length() > 0)
-            event.put(MetadataIndexTag, index);
-        if (source.length() > 0)
-            event.put(MetadataSourceTag, source);
-        if (sourceType.length() > 0)
-            event.put(MetadataSourceTypeTag, sourceType);
-        // event body
-        JSONObject body = new JSONObject();
-        body.put("severity", severity);
-        body.put("message", message);
-        // join event and body
-        event.put("event", body);
-        return event.toString();
-    }
-
-    private void readConfiguration() {
-        // reconstruct http endpoint url
-        String scheme = getConfigurationProperty("scheme", DefaultScheme);
-        String host = getConfigurationProperty("host", null);
-        String port = getConfigurationProperty("port", DefaultPort);
-        httpInputUrl = String.format("%s://%s:%s%s",
-                scheme, host, port, HttpInputUrlPath);
-        // app token
-        token = getConfigurationProperty("token", null);
-        // metadata
-        index = getConfigurationProperty(MetadataIndexTag, "");
-        source = getConfigurationProperty(MetadataSourceTag, "");
-        sourceType = getConfigurationProperty(MetadataSourceTypeTag, "");
-    }
 
     // get configuration property from java.util.logging properties file,
     // defaultValue == null means that property is mandatory
@@ -211,6 +182,9 @@ public final class HttpInputHandler extends Handler {
         return value;
     }
 
-    // java.util.logging.Handler abstract methods
-    @Override public void flush() {}
+    private long getConfigurationNumericProperty(
+        final String property, long defaultValue) {
+        return Integer.parseInt(
+            getConfigurationProperty(property, String.format("%d", defaultValue)));
+    }
 }

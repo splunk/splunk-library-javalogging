@@ -95,7 +95,7 @@ import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
  * properties file.
  */
 public final class HttpInputHandler extends Handler {
-    HttpInputEventSender eventSender;
+    private HttpInputEventSender eventSender;
 
     private final String BatchDelayConfTag = "delay";
     private final String BatchCountConfTag = "batchCount";

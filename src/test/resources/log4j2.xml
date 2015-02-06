@@ -19,7 +19,7 @@ under the License.
     <!--need the "token=..." line to be a single line for parsing purpose-->
     <Appenders>
         <Http name="Http"
-              url="%host:port%/services/logging"
+              url="%host%:%port%/services/logging"
               protocol="%scheme%"
               token="%user_defined_httpinput_token%"
               source="splunktest" sourcetype="battlecat">

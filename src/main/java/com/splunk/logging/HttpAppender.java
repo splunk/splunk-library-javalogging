@@ -37,18 +37,18 @@ public final class HttpAppender extends AbstractAppender
 {
     private HttpInputEventSender _eventSender;
 
-	private HttpAppender(final String name,
-			             final String url, 
-			             final String token, 
-			             final String source, 
-			             final String sourcetype, 
-			             final String index, 
-			             final Filter filter, 
-			             final Layout<? extends Serializable> layout, 
-			             final boolean ignoreExceptions,
+    private HttpAppender(final String name,
+                         final String url,
+                         final String token,
+                         final String source,
+                         final String sourcetype,
+                         final String index,
+                         final Filter filter,
+                         final Layout<? extends Serializable> layout,
+                         final boolean ignoreExceptions,
                          final String disableCertificateValidation)
-	{
-     	super(name, filter, layout, ignoreExceptions);
+    {
+        super(name, filter, layout, ignoreExceptions);
         // init events sender
         Dictionary<String, String> metadata = new Hashtable<String, String>();
         metadata.put(HttpInputEventSender.MetadataIndexTag, index);
@@ -59,9 +59,9 @@ public final class HttpAppender extends AbstractAppender
         if (disableCertificateValidation.equalsIgnoreCase("true")) {
             _eventSender.disableCertificateValidation();
         }
-	}
-			
-	/**
+    }
+
+    /**
      * Create a Http Appender.
      * @return The Http Appender.
      */
@@ -79,40 +79,40 @@ public final class HttpAppender extends AbstractAppender
             @PluginAttribute("disableCertificateValidation") final String disableCertificateValidation,
             @PluginElement("Layout") Layout<? extends Serializable> layout,
             @PluginElement("Filter") final Filter filter
-    		)
+            )
     {
-    	if (name == null)
-    	{
+        if (name == null)
+        {
             LOGGER.error("No name provided for HttpAppender");
             return null;
         }
-    	
-    	if (url == null)
-    	{
+
+        if (url == null)
+        {
             LOGGER.error("No Splunk URL provided for HttpAppender");
             return null;
         }
-    	
-    	if (token == null)
-    	{
-    	    LOGGER.error("No token provided for HttpAppender");
+
+        if (token == null)
+        {
+            LOGGER.error("No token provided for HttpAppender");
             return null;
         }
-    	
-    	if (protocol == null)
-    	{
-    	    LOGGER.error("No valid protocol provided for HttpAppender");
+
+        if (protocol == null)
+        {
+            LOGGER.error("No valid protocol provided for HttpAppender");
             return null;
         }
-    	
-    	if (layout == null)
-    	{
-    		layout = PatternLayout.createLayout("%m", null, null, Charset.forName("UTF-8"), true, false, null, null);    		
+
+        if (layout == null)
+        {
+            layout = PatternLayout.createLayout("%m", null, null, Charset.forName("UTF-8"), true, false, null, null);
         }
-    	
-    	final boolean ignoreExceptions = true;
-    	
-    	return new HttpAppender(name, protocol + "://" + url, token, source, sourcetype, index, filter, layout, ignoreExceptions, disableCertificateValidation);
+
+        final boolean ignoreExceptions = true;
+
+        return new HttpAppender(name, protocol + "://" + url, token, source, sourcetype, index, filter, layout, ignoreExceptions, disableCertificateValidation);
     }
     
    

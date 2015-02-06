@@ -137,6 +137,10 @@ public final class HttpInputHandler extends Handler {
         // delegate all configuration params to event sender
         eventSender = new HttpInputEventSender(
             httpInputUrl, token, delay, batchCount, batchSize, metadata);
+
+        if (getConfigurationProperty("disableCertificateValidation", "false").equalsIgnoreCase("true")) {
+            eventSender.disableCertificateValidation();
+        }
     }
 
     /**

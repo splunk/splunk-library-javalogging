@@ -45,7 +45,8 @@ public final class HttpAppender extends AbstractAppender
 			             final String index, 
 			             final Filter filter, 
 			             final Layout<? extends Serializable> layout, 
-			             final boolean ignoreExceptions)
+			             final boolean ignoreExceptions,
+                         final String disableCertificateValidation)
 	{
      	super(name, filter, layout, ignoreExceptions);
         // init events sender
@@ -55,6 +56,9 @@ public final class HttpAppender extends AbstractAppender
         metadata.put(HttpInputEventSender.MetadataSourceTypeTag, sourcetype);
         // @todo - batching SPL-96375
         _eventSender = new HttpInputEventSender(url, token, 0, 0, 0, metadata);
+        if (disableCertificateValidation.equalsIgnoreCase("true")) {
+            _eventSender.disableCertificateValidation();
+        }
 	}
 			
 	/**
@@ -72,6 +76,7 @@ public final class HttpAppender extends AbstractAppender
             @PluginAttribute("sourcetype") final String sourcetype, 
             @PluginAttribute("index") final String index,             
             @PluginAttribute("ignoreExceptions") final String ignore,
+            @PluginAttribute("disableCertificateValidation") final String disableCertificateValidation,
             @PluginElement("Layout") Layout<? extends Serializable> layout,
             @PluginElement("Filter") final Filter filter
     		)
@@ -107,7 +112,7 @@ public final class HttpAppender extends AbstractAppender
     	
     	final boolean ignoreExceptions = true;
     	
-    	return new HttpAppender(name, protocol + "://" + url, token, source, sourcetype, index, filter, layout, ignoreExceptions);    	
+    	return new HttpAppender(name, protocol + "://" + url, token, source, sourcetype, index, filter, layout, ignoreExceptions, disableCertificateValidation);
     }
     
    

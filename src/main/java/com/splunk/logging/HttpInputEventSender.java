@@ -21,14 +21,25 @@ package com.splunk.logging;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.concurrent.FutureCallback;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.conn.ssl.SSLContexts;
+import org.apache.http.conn.ssl.TrustStrategy;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
 import org.apache.http.impl.nio.client.HttpAsyncClients;
+import org.apache.http.nio.client.HttpAsyncClient;
 import org.json.simple.JSONObject;
+
+import javax.net.ssl.SSLContext;
 import java.io.IOException;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.X509Certificate;
 import java.util.Dictionary;
 import java.util.Timer;
 import java.util.TimerTask;
+
 
 /**
  * This is an internal helper class that sends logging events to Splunk http
@@ -51,6 +62,7 @@ public final class HttpInputEventSender extends TimerTask {
     private StringBuilder eventsBatch = new StringBuilder();
     private long eventsCount = 0; // count of events in events batch
     private CloseableHttpAsyncClient httpClient;
+    private boolean disableCertificateValidation = false;
 
     /**
      * Initialize HttpInputEventSender
@@ -121,6 +133,14 @@ public final class HttpInputEventSender extends TimerTask {
         flush();
     }
 
+    /**
+     * Disable https certificate validation of the splunk server.
+     * This functionality is for development purpose only.
+     */
+    public void disableCertificateValidation() {
+        disableCertificateValidation = true;
+    }
+
     private String createEvent(final String severity, final String message) {
         // create event json content
         JSONObject event = new JSONObject();
@@ -149,7 +169,26 @@ public final class HttpInputEventSender extends TimerTask {
             // http client is already started
             return;
         }
-        httpClient = HttpAsyncClients.createDefault();
+        if (! disableCertificateValidation) {
+            // create an http client that validates certificates
+            httpClient = HttpAsyncClients.createDefault();
+        } else {
+            // create strategy that accepts all certificates
+            TrustStrategy acceptingTrustStrategy = new TrustStrategy() {
+                public boolean isTrusted(X509Certificate[] certificate,
+                                         String type) {
+                    return true;
+                }
+            };
+            SSLContext sslContext = null;
+            try {
+                sslContext = SSLContexts.custom().loadTrustMaterial(
+                   null, acceptingTrustStrategy).build();
+                httpClient = HttpAsyncClients.custom()
+                    .setHostnameVerifier(SSLConnectionSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER)
+                    .setSSLContext(sslContext).build();
+            } catch (Exception e) { }
+        }
         httpClient.start();
     }
 

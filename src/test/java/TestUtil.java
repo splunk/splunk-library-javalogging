@@ -13,29 +13,23 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-
+import com.splunk.*;
 import org.junit.Assert;
-import org.junit.Test;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.logging.Logger;
-import com.splunk.Event;
-import com.splunk.ResultsReaderXml;
-import com.splunk.Service;
-import com.splunk.ServiceArgs;
+import java.io.*;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-public class HttpLoggerTest {
-
-    private ServiceArgs serviceArgs;
-    private String httpinputName = "newhttpinput";
-
+public class TestUtil {
     /**
      *   read splunk host info from .splunkrc file
      */
-    private void getSplunkHostInfo()throws IOException {
+    public static ServiceArgs getSplunkHostInfo()throws IOException {
         String splunkhostfile = System.getProperty("user.home") + File.separator + ".splunkrc";
-        serviceArgs = new ServiceArgs();
+
+        ServiceArgs serviceArgs = new ServiceArgs();
 
         serviceArgs.setUsername("admin");
         serviceArgs.setPassword("changeme");
@@ -62,41 +56,14 @@ public class HttpLoggerTest {
                 serviceArgs.setPort(Integer.parseInt(line.split("=")[1]));
             }
         }
+
+        return serviceArgs;
     }
 
     /**
-     *   modify the config file with the generated token, and configured splunk host
+     *   create http input token
      */
-    private void updateConfigFile(String token) throws  IOException{
-        String configFileDir = HttpLoggerTest.class.getProtectionDomain().getCodeSource().getLocation().getPath();
-        String configFilePath = new File(configFileDir, "log4j2.xml").getPath();
-        List<String> lines = Files.readAllLines(new File(configFileDir, "log4j2.xml").toPath(), Charset.defaultCharset());
-        for (int i = 0; i < lines.size(); i++) {
-            if (lines.get(i).contains("%user_defined_httpinput_token%")) {
-                lines.set(i, lines.get(i).replace("%user_defined_httpinput_token%", token));
-            }
-
-            if (lines.get(i).contains("%host:port%")) {
-                lines.set(i, lines.get(i).replace("%host:port%", String.format("%s:%d", this.serviceArgs.host, this.serviceArgs.port)));
-            }
-
-            if (lines.get(i).contains("%scheme%")) {
-                lines.set(i, lines.get(i).replace("%scheme%", this.serviceArgs.scheme));
-            }
-        }
-
-        FileWriter fw = new FileWriter(configFilePath);
-        for (String line : lines) {
-            fw.write(line);
-        }
-
-        fw.flush();
-        fw.close();
-    }
-
-    private void setup() throws IOException{
-        this.getSplunkHostInfo();
-
+    public static String createHttpinput(ServiceArgs serviceArgs,String httpinputName) throws IOException{
         //connect to splunk server
         Service service = Service.connect(serviceArgs);
         service.login();
@@ -138,6 +105,7 @@ public class HttpLoggerTest {
             Assert.fail("no httpinput token is created");
         }
 
+<<<<<<< HEAD:src/test/java/HttpLoggerTest.java
 <<<<<<< HEAD
 <<<<<<< HEAD
         //user httplogger
@@ -171,9 +139,15 @@ public class HttpLoggerTest {
 =======
         this.updateConfigFile(token);
 >>>>>>> read splunk host from .splunkrc; update the log4j2.xml
+=======
+        return token;
+>>>>>>> refactoring tests, add TestUtil class for common methods; add tests for java logging:src/test/java/TestUtil.java
     }
 
-    private void teardown() throws IOException {
+    /**
+     *   delete http input token
+     */
+    public static void deleteHttpinput(ServiceArgs serviceArgs,String httpinputName) throws IOException {
         Service service = Service.connect(serviceArgs);
         service.login();
 
@@ -184,28 +158,51 @@ public class HttpLoggerTest {
     }
 
     /**
-     * sending a message via httplogging to splunk
+     *   modify the config file with the generated token, and configured splunk host
      */
-    @Test
-    public void httpAppenderTest() throws Exception, IOException, InterruptedException {
-        this.setup();
+    public static void updateConfigFile(String configFileName, ServiceArgs serviceArgs, String token) throws  IOException{
+        String configFileDir = TestUtil.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+        String configFilePath = new File(configFileDir, configFileName).getPath();
+        List<String> lines = Files.readAllLines(new File(configFileDir, configFileName).toPath(), Charset.defaultCharset());
+        for (int i = 0; i < lines.size(); i++) {
+            if (lines.get(i).contains("%user_defined_httpinput_token%")) {
+                lines.set(i, lines.get(i).replace("%user_defined_httpinput_token%", token));
+            }
 
-        //use httplogger
-        Date date = new Date();
-        String jsonMsg = String.format("{EventDate:%s, EventMsg:'this is a test event", date.toString());
-        Logger logger = LogManager.getLogger("splunkHttpLogger");
-        logger.info(jsonMsg);
+            if (lines.get(i).contains("%host%")) {
+                lines.set(i, lines.get(i).replace("%host%", serviceArgs.host));
+            }
 
+            if (lines.get(i).contains("%port%")) {
+                lines.set(i, lines.get(i).replace("%port%",serviceArgs.port.toString()));
+            }
+
+            if (lines.get(i).contains("%scheme%")) {
+                lines.set(i, lines.get(i).replace("%scheme%", serviceArgs.scheme));
+            }
+        }
+
+        FileWriter fw = new FileWriter(configFilePath);
+        for (String line : lines) {
+            fw.write(line);
+            fw.write(System.getProperty("line.separator"));
+        }
+
+        fw.flush();
+        fw.close();
+    }
+
+    public static void verifyOneAndOnlyOneEventSendToSplunk(ServiceArgs serviceArgs, String msg) throws IOException {
         //verify the event is send to splunk and can be searched
         Service service = Service.connect(serviceArgs);
         service.login();
+
         long startTime = System.currentTimeMillis();
         int eventCount = 0;
-
         InputStream resultsStream=null;
         ResultsReaderXml resultsReader=null;
         while (System.currentTimeMillis()-startTime < 30 * 1000)/*wait for up to 30s*/ {
-            resultsStream = service.oneshotSearch("search " + jsonMsg);
+            resultsStream = service.oneshotSearch("search " + msg);
             resultsReader = new ResultsReaderXml(resultsStream);
 
             //verify has one and only one record return
@@ -217,14 +214,11 @@ public class HttpLoggerTest {
 
             if (eventCount > 0)
                 break;
-
         }
 
         resultsReader.close();
         resultsStream.close();
 
         Assert.assertTrue(eventCount == 1);
-        this.teardown();
-        System.out.println("====================== Test pass=========================");
     }
 }

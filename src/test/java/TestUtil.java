@@ -40,19 +40,19 @@ public class TestUtil {
         List<String> lines = Files.readAllLines(new File(splunkhostfile).toPath(), Charset.defaultCharset());
 
         for (String line : lines) {
-            if (line.toLowerCase().contains("host")) {
+            if (line.toLowerCase().contains("host=")) {
                 serviceArgs.setHost(line.split("=")[1]);
             }
-            if (line.toLowerCase().contains("admin")) {
+            if (line.toLowerCase().contains("admin=")) {
                 serviceArgs.setUsername(line.split("=")[1]);
             }
-            if (line.toLowerCase().contains("password")) {
+            if (line.toLowerCase().contains("password=")) {
                 serviceArgs.setPassword(line.split("=")[1]);
             }
-            if (line.toLowerCase().contains("scheme")) {
+            if (line.toLowerCase().contains("scheme=")) {
                 serviceArgs.setScheme(line.split("=")[1]);
             }
-            if (line.toLowerCase().contains("port")) {
+            if (line.toLowerCase().contains("port=")) {
                 serviceArgs.setPort(Integer.parseInt(line.split("=")[1]));
             }
         }
@@ -71,7 +71,7 @@ public class TestUtil {
         //enable logging endpoint
         Map args = new HashMap();
         args.put("disabled", 0);
-        service.post("/servicesNS/admin/search/data/inputs/http/http", args);
+        service.post("/servicesNS/admin/search/data/inputs/token/http/http", args);
 
         //create a httpinput
         args = new HashMap();
@@ -79,14 +79,14 @@ public class TestUtil {
         args.put("description", "test http input");
 
         try {
-            service.delete("/services/data/inputs/http/" + httpinputName);
+            service.delete("/services/data/inputs/token/http/" + httpinputName);
         } catch (Exception e){}
 
-        service.post("/services/data/inputs/http", args);
+        service.post("/services/data/inputs/token/http", args);
 
         //get httpinput token
         args = new HashMap();
-        ResponseMessage response = service.get("/services/data/inputs/http/" + httpinputName, args);
+        ResponseMessage response = service.get("/services/data/inputs/token/http/" + httpinputName, args);
         BufferedReader reader = new BufferedReader(new InputStreamReader(response.getContent(), "UTF-8"));
         String token = "";
         while (true) {

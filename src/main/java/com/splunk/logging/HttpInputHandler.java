@@ -95,7 +95,7 @@ import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
  * properties file.
  */
 public final class HttpInputHandler extends Handler {
-    HttpInputEventSender eventSender;
+    private HttpInputEventSender eventSender;
 
     private final String BatchDelayConfTag = "delay";
     private final String BatchCountConfTag = "batchCount";
@@ -137,6 +137,10 @@ public final class HttpInputHandler extends Handler {
         // delegate all configuration params to event sender
         eventSender = new HttpInputEventSender(
             httpInputUrl, token, delay, batchCount, batchSize, metadata);
+
+        if (getConfigurationProperty("disableCertificateValidation", "false").equalsIgnoreCase("true")) {
+            eventSender.disableCertificateValidation();
+        }
     }
 
     /**

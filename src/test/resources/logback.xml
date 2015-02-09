@@ -38,14 +38,19 @@ under the License.
     -->
 
 
-
-    <Loggers>
-        <Root level="INFO">
-        </Root>
-        <Logger name="splunk.httplogger" level="info">
-            <AppenderRef ref="com.splunk.logging.HttpAppender"/>
-        </Logger>
-    </Loggers>
+    <Appenders>
+        <Http name="Http" url="localhost:8089/services/logging" protocol="http"
+              token="%user_defined_httpinput_token%"
+              source="splunktest" sourcetype="battlecat">
+            <PatternLayout pattern="%m"/>
+        </Http>
+    </Appenders>
+    <loggers>
+        <root level="debug"/>
+        <logger name ="splunkHttpLoggerLogback" level="INFO">
+            <appender-ref ref="Http" />
+        </logger>
+    </loggers>
 
 
 </configuration>

@@ -83,7 +83,13 @@
         <groupId>org.apache.httpcomponents</groupId>
         <artifactId>httpclient</artifactId>
         <version>4.3.6</version>
-      </dependency>
+      </dependency>       
+      
+	  <dependency>
+         <groupId>org.apache.httpcomponents</groupId>
+         <artifactId>httpasyncclient</artifactId>
+         <version>4.0</version>
+        </dependency>
 
       <dependency>
           <groupId>org.apache.httpcomponents</groupId>
@@ -150,7 +156,5 @@
     <developerConnection>scm:git:git@github.com:splunk/splunk-library-javalogging.git</developerConnection>
     <tag>HEAD</tag>
     <url>https://github.com/splunk/splunk-library-javalogging</url>
-  </scm>
-
-
+  </scm>  
 </project>

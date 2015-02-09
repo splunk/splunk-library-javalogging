@@ -39,7 +39,7 @@ under the License.
               source="splunktest" 
               sourcetype="battlecat"
               disableCertificateValidation="true">
-            <PatternLayout pattern="%m" /> 
+            <PatternLayout pattern="%m"/>
         </Http> 
     </Appenders>
     <!-- Define a logger named 'splunk.logger' which writes to the socket appender we defined above. -->

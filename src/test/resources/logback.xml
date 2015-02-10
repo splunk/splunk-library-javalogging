@@ -52,15 +52,15 @@ under the License.
         <appender-ref ref="socket"/>
     </root>
 
-    <appender name="http" class="com.splunk.logging.HttpLogbackAppender">
-        <url>http://localhost:5555/services/logging</url>
+    <Loggers>
+        <Root level="INFO">
         <token>22C712B0-E6EE-4355-98DD-2DDE23D968D7</token>
-        <source>splunktest</source>
-        <sourcetype>battlecat</sourcetype>
+        </Root>
+        <Logger name="splunk.httplogger" level="info">
         <layout class="ch.qos.logback.classic.PatternLayout">
-            <pattern>%msg</pattern>
-        </layout>
-    </appender>
+            <AppenderRef ref="com.splunk.logging.HttpAppender"/>
+        </Logger>
+    </Loggers>
 
     <logger name="splunk.logger" additivity="false" level="INFO">
         <appender-ref ref="http"/>
@@ -68,5 +68,5 @@ under the License.
 
     <root level="INFO">
         <appender-ref ref="http"/>
-    </root>
+</configuration>
 </configuration>

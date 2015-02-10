@@ -153,7 +153,7 @@ public class HttpLogbackAppender extends AppenderBase<ILoggingEvent> {
 
     private static long parseLong(String string, int defaultValue) {
         try {
-            return Long.parseUnsignedLong(string);
+            return Long.parseLong(string);
         }
         catch (NumberFormatException e ) {
             return defaultValue;

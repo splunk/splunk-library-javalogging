@@ -33,8 +33,8 @@ under the License.
         </Socket>
         
         <Http name="http-input" 
-              url="localhost:8089/services/receivers/token"
-              protocol="https" token="22C712B0-E6EE-4355-98DD-2DDE23D968D7"
+              url="localhost:5555/services/receivers/token"
+              protocol="http" token="22C712B0-E6EE-4355-98DD-2DDE23D968D7"
               index=""
               source="splunktest" 
               sourcetype="battlecat"

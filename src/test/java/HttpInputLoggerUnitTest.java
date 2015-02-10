@@ -38,6 +38,7 @@ import java.util.logging.LogManager;
 public class HttpInputLoggerUnitTest {
     private final static java.util.logging.Logger LOGGER = java.util.logging.Logger.getLogger("splunk.java.util");
     private final static org.apache.logging.log4j.Logger LOG4J = org.apache.logging.log4j.LogManager.getLogger("splunk.log4j");
+    private final static org.slf4j.Logger LOGBACK = org.slf4j.LoggerFactory.getLogger("splunk.logback");
 
     private static class TestHttpServerHandler implements HttpHandler {
         private List<JSONObject> jsonObjects = new LinkedList<JSONObject>();
@@ -122,12 +123,30 @@ public class HttpInputLoggerUnitTest {
 
     @Test
     public void simpleLogging() {
+        // java.util.logger
         LOGGER.info("this is info");
         shortSleep();
         LOGGER.warning("this is warning");
         sleep(); // wait for http server to receive all data
         testEvent(httpHandler.pop(), "INFO", "this is info");
         testEvent(httpHandler.pop(), "WARNING", "this is warning");
+
+        // log4j
+        LOG4J.info("this is info");
+        shortSleep();
+        LOG4J.error("this is error");
+        sleep();
+        testEvent(httpHandler.pop(), "INFO", "this is info");
+        testEvent(httpHandler.pop(), "ERROR", "this is error");
+
+        // logback
+        LOGBACK.info("this is info");
+        sleep();
+        shortSleep();
+        LOGBACK.error("this is error");
+        sleep(); // wait for http server to receive all data
+        testEvent(httpHandler.pop(), "INFO", "this is info");
+        testEvent(httpHandler.pop(), "ERROR", "this is error");
     }
 
     private void testEvent(JSONObject json, String severity, String message) {

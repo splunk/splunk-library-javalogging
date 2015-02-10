@@ -88,13 +88,8 @@ public class HttpInputLoggerUnitTest {
 
     private final String LoggerConf =
         "handlers=com.splunk.logging.HttpInputHandler\n" +
-        "com.splunk.logging.HttpInputHandler.scheme=http\n" +
-        "com.splunk.logging.HttpInputHandler.host=localhost\n" +
-        "com.splunk.logging.HttpInputHandler.port=5555\n" +
+        "com.splunk.logging.HttpInputHandler.url=http://localhost:5555/services/logging\n" +
         "com.splunk.logging.HttpInputHandler.token=22C712B0-E6EE-4355-98DD-2DDE23D968D7\n" +
-        "com.splunk.logging.HttpInputHandler.delay=0\n" +
-        "com.splunk.logging.HttpInputHandler.batchCount=0\n" +
-        "com.splunk.logging.HttpInputHandler.batchSize=0\n" +
         "com.splunk.logging.HttpInputHandler.disableCertificateValidation=true";
 
     public HttpInputLoggerUnitTest() {

@@ -46,6 +46,9 @@ public final class HttpAppender extends AbstractAppender
                          final Filter filter,
                          final Layout<? extends Serializable> layout,
                          final boolean ignoreExceptions,
+                         long batchInterval,
+                         long batchCount,
+                         long batchSize,
                          final String disableCertificateValidation)
     {
         super(name, filter, layout, ignoreExceptions);
@@ -55,7 +58,8 @@ public final class HttpAppender extends AbstractAppender
         metadata.put(HttpInputEventSender.MetadataSourceTag, source);
         metadata.put(HttpInputEventSender.MetadataSourceTypeTag, sourcetype);
         // @todo - batching SPL-96375
-        _eventSender = new HttpInputEventSender(url, token, 0, 0, 0, metadata);
+        _eventSender = new HttpInputEventSender(
+            url, token, batchInterval, batchCount, batchSize, metadata);
         if (disableCertificateValidation.equalsIgnoreCase("true")) {
             _eventSender.disableCertificateValidation();
         }
@@ -69,13 +73,15 @@ public final class HttpAppender extends AbstractAppender
     public static HttpAppender createAppender(
             // @formatter:off
             @PluginAttribute("url") final String url,
-            @PluginAttribute("protocol") final String protocol,            
             @PluginAttribute("token") final String token,
             @PluginAttribute("name") final String name,
             @PluginAttribute("source") final String source,
             @PluginAttribute("sourcetype") final String sourcetype, 
             @PluginAttribute("index") final String index,             
             @PluginAttribute("ignoreExceptions") final String ignore,
+            @PluginAttribute("batch_size_bytes") final String batchSize,
+            @PluginAttribute("batch_size_count") final String batchCount,
+            @PluginAttribute("batch_interval") final String batchInterval,
             @PluginAttribute("disableCertificateValidation") final String disableCertificateValidation,
             @PluginElement("Layout") Layout<? extends Serializable> layout,
             @PluginElement("Filter") final Filter filter
@@ -99,12 +105,6 @@ public final class HttpAppender extends AbstractAppender
             return null;
         }
 
-        if (protocol == null)
-        {
-            LOGGER.error("No valid protocol provided for HttpAppender");
-            return null;
-        }
-
         if (layout == null)
         {
             layout = PatternLayout.createLayout("%m", null, null, Charset.forName("UTF-8"), true, false, null, null);
@@ -112,7 +112,12 @@ public final class HttpAppender extends AbstractAppender
 
         final boolean ignoreExceptions = true;
 
-        return new HttpAppender(name, protocol + "://" + url, token, source, sourcetype, index, filter, layout, ignoreExceptions, disableCertificateValidation);
+        return new HttpAppender(
+                name, url, token,
+                source, sourcetype, index,
+                filter, layout, ignoreExceptions,
+                parseInt(batchInterval, 0), parseInt(batchCount, 1), parseInt(batchSize, 0),
+                disableCertificateValidation);
     }
     
    

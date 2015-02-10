@@ -36,14 +36,8 @@ package com.splunk.logging;
  * # Http input application token
  * com.splunk.logging.HttpInputHandler.token=<token guid>
  *
- * # Splunk server scheme. This parameter is optional and its default value is https.
- * com.splunk.logging.HttpInputHandler.scheme=http|https
- *
- * # Splunk server host name. Host parameter is mandatory and cannot be omitted.
- * com.splunk.logging.HttpInputHandler.host=<host>
- *
- * # Splunk server port id. Default port value is 8089.
- * com.splunk.logging.HttpInputHandler.port=<port>
+ * # Splunk logging input url.
+ * com.splunk.logging.HttpInputHandler.url
  *
  * # Logging events metadata.
  * com.splunk.logging.HttpInputHandler.index
@@ -53,22 +47,20 @@ package com.splunk.logging;
  * # Events batching parameters:
  * # Delay in millisecond between sending events, by default this value is 0, i.e., and events
  * # are sending immediately
- * com.splunk.logging.HttpInputHandler.delay
+ * com.splunk.logging.HttpInputHandler.batch_interval
  *
  * # Max number of events in a batch. By default - 0, i.e., no batching
- * com.splunk.logging.HttpInputHandler.batchCount
+ * com.splunk.logging.HttpInputHandler.batch_size_count
  *
  * # Max size of events in a batch. By default - 0, i.e., no batching
- * com.splunk.logging.HttpInputHandler.batchSize
+ * com.splunk.logging.HttpInputHandler.batch_size_bytes
  *
  * An example of logging properties file:
  * handlers = com.splunk.logging.HttpInputHandler
  * com.splunk.logging.HttpInputHandler.token=81029a58-63db-4bef-9c6f-f6b7e500f098
  *
  * # Splunk server
- * com.splunk.logging.HttpInputHandler.scheme=https
- * com.splunk.logging.HttpInputHandler.host=localhost
- * com.splunk.logging.HttpInputHandler.port=8089
+ * com.splunk.logging.HttpInputHandler.url=https://localhost:8089
  *
  * # Metadata
  * com.splunk.logging.HttpInputHandler.index=default
@@ -97,14 +89,10 @@ import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
 public final class HttpInputHandler extends Handler {
     private HttpInputEventSender eventSender;
 
-    private final String BatchDelayConfTag = "delay";
-    private final String BatchCountConfTag = "batchCount";
-    private final String BatchSizeConfTag = "batchSize";
-
-    private final String DefaultScheme = "https";
-    private final String DefaultPort = "8089";
-    private final String HttpInputUrlPath = "/services/receivers/token";
-
+    private final String BatchDelayConfTag = "batch_interval";
+    private final String BatchCountConfTag = "batch_size_count";
+    private final String BatchSizeConfTag = "batch_size_bytes";
+    private final String UrlConfTag = "url";
 
     /** HttpInputHandler c-or */
     public HttpInputHandler() {
@@ -120,11 +108,7 @@ public final class HttpInputHandler extends Handler {
             getConfigurationProperty(HttpInputEventSender.MetadataSourceTypeTag, ""));
 
         // http input endpoint properties
-        String scheme = getConfigurationProperty("scheme", DefaultScheme);
-        String host = getConfigurationProperty("host", null);
-        String port = getConfigurationProperty("port", DefaultPort);
-        String httpInputUrl = String.format("%s://%s:%s%s",
-            scheme, host, port, HttpInputUrlPath);
+        String httpInputUrl = getConfigurationProperty(UrlConfTag, null);
 
         // app token
         String token = getConfigurationProperty("token", null);

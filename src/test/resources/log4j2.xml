@@ -29,7 +29,7 @@ under the License.
     -->
     <Appenders>
         <Http name="Http"
-              url="%host%:%port%/services/logging"
+              url="%host%:%port%/services/receivers/token"
               protocol="%scheme%"
               token="%user_defined_httpinput_token%"
               source="splunktest" sourcetype="battlecat">

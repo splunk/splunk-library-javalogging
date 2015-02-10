@@ -149,7 +149,9 @@ public class HttpLoggerStressTest {
             fw.write("        <Http name=\"Http\"\r\n");
             fw.write("              url=\"127.0.0.1:8089/services/receivers/token\"\r\n");
             fw.write("              protocol=\"http\"\r\n");
+            fw.write("              index=\"\"\r\n");
             fw.write(String.format("              token=\"%s\"\r\n", token));
+            fw.write("              disableCertificateValidation=\"true\"\r\n");
             fw.write("              source=\"splunktest\" sourcetype=\"battlecat\">\r\n");
             fw.write("            <PatternLayout pattern=\"%m\"/>\r\n");
             fw.write("        </Http>\r\n");
@@ -171,15 +173,23 @@ public class HttpLoggerStressTest {
     @Test
     public void canSendEventUsingJavaLogging() throws Exception {
         int numberOfThreads = 100;
-        int eventsPerThread = 5000;
+        int eventsPerThread = 500;
 
         setupHttpInput();
         generateData(numberOfThreads, eventsPerThread);
-        Thread.sleep(5000);
+        // Wait for indexing to complete
+        int eventCount = getEventsCount("search *|stats count");
+        do {
+            Thread.sleep(15000);
+            int updatedEventCount = getEventsCount("search *|stats count");
+            if(updatedEventCount == eventCount)
+                break;
+            eventCount = updatedEventCount;
+        }while(true);
         Boolean testPassed = true;
         for (int i = 0; i < numberOfThreads; i++) {
             String arguments = String.format("search Thread%d | stats count", i);
-            int eventCount = getEventsCount(arguments);
+            eventCount = getEventsCount(arguments);
             System.out.printf("Thread %d, expected %d events, actually %d\r\n", i, eventsPerThread, eventCount);
             if (eventCount != eventsPerThread)
                 testPassed = false;

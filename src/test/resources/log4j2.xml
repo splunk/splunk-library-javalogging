@@ -18,18 +18,46 @@ under the License.
 <Configuration status="info" name="example" packages="com.splunk.logging">
     <!--need the "token=..." line to be a single line for parsing purpose-->
     <Appenders>
+        <Socket name="socket" host="127.0.0.1" port="15000">
+            <PatternLayout pattern="%p: %m%n" charset="UTF-8"/>
+        </Socket>
+
         <Http name="Http"
-              url="%host%:%port%/services/logging"
+              url="%host%:%port%/services/receivers/token"
               protocol="%scheme%"
               token="%user_defined_httpinput_token%"
-              source="splunktest" sourcetype="battlecat">
+              source="splunktest_accept" sourcetype="battlecat_test">
             <PatternLayout pattern="%m"/>
         </Http>
+
+        <Http name="http-input"
+              url="localhost:8089/services/receivers/token"
+              protocol="https" token="22C712B0-E6EE-4355-98DD-2DDE23D968D7"
+              index=""
+              source="splunktest" 
+              sourcetype="battlecat"
+              disableCertificateValidation="true">
+            <PatternLayout pattern="%m" /> 
+        </Http>
+
+
     </Appenders>
-    <loggers>
-        <root level="debug"/>
-        <logger name ="splunkHttpLogger" level="INFO">
+
+    <!-- Define a logger named 'splunk.logger' which writes to the socket appender we defined above. -->
+    <Loggers>
+        <Root level="INFO"/>
+
+        <Logger name="splunk.logger" level="info">
+            <AppenderRef ref="socket"/>
+        </Logger>
+
+        <Logger name="splunk.log4j" level="info">
+            <AppenderRef ref="http-input"/>
+        </Logger>
+
+        <Logger name ="splunkHttpLogger" level="INFO">
             <appender-ref ref="Http" />
-        </logger>
-    </loggers>
+        </Logger>
+
+    </Loggers>
 </Configuration>

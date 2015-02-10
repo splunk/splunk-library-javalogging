@@ -122,12 +122,12 @@ public class TestUtil {
     }
 
     /**
-     *   modify the config file with the generated token, and configured splunk host
+     *   modify the config file with the generated token, and configured splunk host,
+     *   read the template from configFileTemplate, and create the updated configfile to configFile
      */
-    public static void updateConfigFile(String configFileName, ServiceArgs serviceArgs, String token) throws  IOException{
+    public static void updateConfigFile(String configFileTemplate, String configFile, ServiceArgs serviceArgs, String token) throws  IOException{
         String configFileDir = TestUtil.class.getProtectionDomain().getCodeSource().getLocation().getPath();
-        String configFilePath = new File(configFileDir, configFileName).getPath();
-        List<String> lines = Files.readAllLines(new File(configFileDir, configFileName).toPath(), Charset.defaultCharset());
+        List<String> lines = Files.readAllLines(new File(configFileDir, configFileTemplate).toPath(), Charset.defaultCharset());
         for (int i = 0; i < lines.size(); i++) {
             if (lines.get(i).contains("%user_defined_httpinput_token%")) {
                 lines.set(i, lines.get(i).replace("%user_defined_httpinput_token%", token));
@@ -146,6 +146,7 @@ public class TestUtil {
             }
         }
 
+        String configFilePath = new File(configFileDir, configFile).getPath();
         FileWriter fw = new FileWriter(configFilePath);
         for (String line : lines) {
             fw.write(line);

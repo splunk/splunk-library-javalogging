@@ -33,7 +33,7 @@ public final class Log4j2Test {
 
         ServiceArgs serviceArgs = TestUtil.getSplunkHostInfo();
         String token = TestUtil.createHttpinput(serviceArgs, httpinputName);
-        TestUtil.updateConfigFile("log4j2.xml", serviceArgs, token);
+        TestUtil.updateConfigFile("log4j2_template.xml","log4j2.xml", serviceArgs, token);
 
         //use httplogger
         Date date = new Date();

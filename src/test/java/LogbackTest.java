@@ -32,7 +32,7 @@ public final class LogbackTest {
     public void canSendEventUsingLogback() throws Exception {
         ServiceArgs serviceArgs = TestUtil.getSplunkHostInfo();
         String token = TestUtil.createHttpinput(serviceArgs, httpinputName);
-        TestUtil.updateConfigFile("logback.xml", serviceArgs, token);
+        TestUtil.updateConfigFile("logback_template.xml", "logback.xml",serviceArgs, token);
 
         Date date = new Date();
         String jsonMsg = String.format("{EventDate:%s, EventMsg:'this is a test event for Logback Test", date.toString());

@@ -37,20 +37,18 @@ under the License.
       for details).
     -->
 
-
-    <Appenders>
-        <Http name="Http" url="localhost:8089/services/logging" protocol="http"
+    <Appender name="Http"
+              url="%host%:%port%/services/logging"
+              protocol="%scheme%"
               token="%user_defined_httpinput_token%"
-              source="splunktest" sourcetype="battlecat">
+              source="splunktest" sourcetype="battlecat"
+              class="com.splunk.logging.HttpLogbackAppender">
             <PatternLayout pattern="%m"/>
-        </Http>
-    </Appenders>
-    <loggers>
-        <root level="debug"/>
-        <logger name ="splunkHttpLoggerLogback" level="INFO">
-            <appender-ref ref="Http" />
-        </logger>
-    </loggers>
 
+    </Appender>
+
+    <logger name ="splunkLogback" level="INFO">
+        <appender-ref ref="Http" />
+    </logger>
 
 </configuration>

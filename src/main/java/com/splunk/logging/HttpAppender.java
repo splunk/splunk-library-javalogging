@@ -133,4 +133,10 @@ public final class HttpAppender extends AbstractAppender
             event.getMessage().getFormattedMessage()
         );
     }
+
+    @Override
+    public void stop() {
+        _eventSender.flush();
+        super.stop();
+    }
 }

@@ -70,7 +70,7 @@ public class HttpLogbackAppender extends AppenderBase<ILoggingEvent> {
     public void stop() {
         if (!started)
             return;
-
+        _eventSender.flush();
         super.stop();
     }
 

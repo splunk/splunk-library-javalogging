@@ -122,6 +122,7 @@ public class HttpInputLoggerUnitTest {
         LOGGER.info("this is info");
         shortSleep();
         LOGGER.warning("this is warning");
+
         sleep(); // wait for http server to receive all data
         testEvent(httpHandler.pop(), "INFO", "this is info");
         testEvent(httpHandler.pop(), "WARNING", "this is warning");

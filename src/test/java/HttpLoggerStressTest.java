@@ -13,45 +13,28 @@ import java.lang.reflect.*;
 
 import com.splunk.logging.*;
 import com.splunk.*;
-import javax.net.ssl.X509TrustManager;
-import java.security.cert.X509Certificate;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.SSLSession;
-import javax.net.ssl.HostnameVerifier;
 
 public class HttpLoggerStressTest {
-    public class TrustAllX509TrustManager implements X509TrustManager {
-        public X509Certificate[] getAcceptedIssuers() {
-            return new X509Certificate[0];
-        }
-
-        public void checkClientTrusted(java.security.cert.X509Certificate[] certs,
-                                       String authType) {
-        }
-
-        public void checkServerTrusted(java.security.cert.X509Certificate[] certs,
-                                       String authType) {
-        }
-
-    }
-
     private static class DataSender implements Runnable {
         private String threadName;
-        private int eventsPerThread;
+        private int eventsGenerated = 0, testDurationInSecs = 300;
         Logger logger;
 
-        public DataSender(String threadName, int eventsPerThread) {
+        public DataSender(String threadName, int testDurationInSecs) {
             this.threadName = threadName;
-            this.eventsPerThread = eventsPerThread;
+            this.testDurationInSecs = testDurationInSecs;
             this.logger = LogManager.getLogger("splunkHttpLogger");
         }
 
         public void run() {
-            for (int i = 0; i < this.eventsPerThread; i++) {
-                String message = String.format("Thread: %s, event: %d", this.threadName, i);
+            Date dCurrent = new Date();
+            Date dEnd = new Date();
+            dEnd.setTime(dCurrent.getTime() + testDurationInSecs * 1000);
+            int eventId = 0;
+            while(dCurrent.before(dEnd)) {
+                String message = String.format("Thread: %s, event: %d", this.threadName, eventId++);
                 this.logger.info(message);
+                dCurrent = new Date();
             }
         }
     }
@@ -194,13 +177,14 @@ public class HttpLoggerStressTest {
 
     @Test
     public void canSendEventUsingJavaLogging() throws Exception {
-        int numberOfThreads = 100;
-        int eventsPerThread = 500;
+        int numberOfThreads = 25;
+        int eventsPerThread = 1000;
+        int testDurationInSecs = 300;
 
         System.out.printf("\tSetting up http inputs ... ");
         setupHttpInput();
         System.out.printf("Inserting data ... ");
-        generateData(numberOfThreads, eventsPerThread);
+        generateData(numberOfThreads, testDurationInSecs);
         System.out.printf("Done.\r\n");
         // Wait for indexing to complete
         int eventCount = getEventsCount("search *|stats count");

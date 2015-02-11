@@ -15,26 +15,6 @@ import com.splunk.logging.*;
 import com.splunk.*;
 
 public class HttpLoggerStressTest {
-    private  static  class  GcCaller implements  Runnable
-    {
-        private int testDurationInSecs = 0;
-        public GcCaller(int testDurationInSecs) {
-            this.testDurationInSecs = testDurationInSecs;
-        }
-        public void run() {
-            Date dCurrent = new Date();
-            Date dEnd = new Date();
-            dEnd.setTime(dCurrent.getTime() + testDurationInSecs * 1000);
-            while(dCurrent.before(dEnd)) {
-                try {
-                    Thread.sleep(5000);
-                }
-                catch (Exception e){}
-                //System.gc();
-                dCurrent = new Date();
-            }
-        }
-    }
     private static class DataSender implements Runnable {
         private String threadName;
         public int eventsGenerated = 0, testDurationInSecs = 300;
@@ -47,12 +27,19 @@ public class HttpLoggerStressTest {
         }
 
         public void run() {
+            Random rand = new Random();
             Date dCurrent = new Date();
             Date dEnd = new Date();
             dEnd.setTime(dCurrent.getTime() + testDurationInSecs * 1000);
             while(dCurrent.before(dEnd)) {
                 this.logger.info(String.format("Thread: %s, event: %d", this.threadName, eventsGenerated++));
                 dCurrent = new Date();
+                int nextRandom =rand.nextInt(100);
+                if(nextRandom<5) // Wait 5 sec with 5% probability
+                try {
+                    Thread.sleep(500);
+                }
+                catch (Exception e){}
             }
         }
     }
@@ -198,8 +185,8 @@ public class HttpLoggerStressTest {
 
     @Test
     public void canSendEventUsingJavaLogging() throws Exception {
-        int numberOfThreads = 50;
-        int testDurationInSecs = 600;
+        int numberOfThreads = 300;
+        int testDurationInSecs = 900;
 
         System.out.printf("\tSetting up http inputs ... ");
         setupHttpInput();
@@ -210,17 +197,14 @@ public class HttpLoggerStressTest {
             dsList[i] = new DataSender(String.format("Thread%s", i), testDurationInSecs);
             tList[i] = new Thread(dsList[i]);;
         }
-        Thread tGc = new Thread(new GcCaller(testDurationInSecs));
-        tGc.start();
         for (Thread t : tList)
             t.start();
         for (Thread t : tList)
             t.join();
-        tGc.join();
         System.out.printf("Done.\r\n");
         // Wait for indexing to complete
         int eventCount = getEventsCount("search *|stats count");
-        for(int i=0; i<3; i++) {
+        for(int i=0; i<4; i++) {
             do {
                 System.out.printf("\tWaiting for indexing to complete, %d events so far\r\n", eventCount);
                 Thread.sleep(10000);

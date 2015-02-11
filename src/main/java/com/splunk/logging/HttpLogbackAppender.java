@@ -37,6 +37,7 @@ public class HttpLogbackAppender extends AppenderBase<ILoggingEvent> {
     private long _batchInterval = 0;
     private long _batchCount = 1;
     private long _batchSize = 0;
+    private long _retriesOnError = 0;
 
     @Override
     public void start() {
@@ -57,7 +58,7 @@ public class HttpLogbackAppender extends AppenderBase<ILoggingEvent> {
 
         _eventSender = new HttpInputEventSender(
             _url, _token,
-            _batchInterval, _batchCount, _batchSize,
+            _batchInterval, _batchCount, _batchSize, _retriesOnError,
             metadata);
 
         if (_disableCertificateValidation != null && _disableCertificateValidation.equalsIgnoreCase("true"))
@@ -145,6 +146,10 @@ public class HttpLogbackAppender extends AppenderBase<ILoggingEvent> {
 
     public void setbatch_interval(String value) {
         _batchInterval = parseLong(value, 0);
+    }
+
+    public void setretries_o_error(String value) {
+        _retriesOnError = parseLong(value, 0);
     }
 
     public String getDisableCertificateValidation() {

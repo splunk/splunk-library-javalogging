@@ -66,8 +66,8 @@ public class HttpInputLoggerUnitTest {
                     begin = end;
                 }
             }
-            // reply with ok
-            String response = "ok";
+            // reply with success
+            String response = "{\"text\":\"Success\",\"code\":0}";
             httpExchange.sendResponseHeaders(200, response.length());
             OutputStream os = httpExchange.getResponseBody();
             os.write(response.getBytes());

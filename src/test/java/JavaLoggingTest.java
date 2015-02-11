@@ -32,7 +32,7 @@ public final class JavaLoggingTest {
     public void canSendEventUsingJavaLogging() throws Exception {
         ServiceArgs serviceArgs = TestUtil.getSplunkHostInfo();
         String token = TestUtil.createHttpinput(serviceArgs, httpinputName);
-        TestUtil.updateConfigFile("logging.properties.template","logging.properties", serviceArgs, token);
+        TestUtil.updateConfigFile("logging_template.properties","logging.properties", serviceArgs, token);
 
         Date date = new Date();
         String jsonMsg = String.format("{EventDate:%s, EventMsg:'this is a test event for java logging", date.toString());

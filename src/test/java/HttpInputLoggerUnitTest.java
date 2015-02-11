@@ -19,6 +19,8 @@
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
+
+import com.splunk.logging.HttpInputErrorHandler;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
@@ -38,6 +40,9 @@ public class HttpInputLoggerUnitTest {
     private final static java.util.logging.Logger LOGGER = java.util.logging.Logger.getLogger("splunk.java.util");
     private final static org.apache.logging.log4j.Logger LOG4J = org.apache.logging.log4j.LogManager.getLogger("splunk.log4j");
     private final static org.slf4j.Logger LOGBACK = org.slf4j.LoggerFactory.getLogger("splunk.logback");
+    private String lastReply = "";
+    private static final String SuccessReply = "{\"text\":\"Success\",\"code\":0}";
+    private static final String ErrorReply = "{\"text\":\"Error\",\"code\":1}";
 
     private static class TestHttpServerHandler implements HttpHandler {
         private List<JSONObject> jsonObjects = new LinkedList<JSONObject>();
@@ -49,6 +54,7 @@ public class HttpInputLoggerUnitTest {
             String body = new String(bodyBytes);
             System.out.println(body);
             // extract individual json documents and parse
+            boolean error = body.contains("fail");
             int bracketBalance = 0;
             int begin = 0, end = 0;
             for (end = 0; end < body.length(); end ++) {
@@ -66,9 +72,9 @@ public class HttpInputLoggerUnitTest {
                     begin = end;
                 }
             }
-            // reply with success
-            String response = "{\"text\":\"Success\",\"code\":0}";
-            httpExchange.sendResponseHeaders(200, response.length());
+            // reply
+            String response = error ? ErrorReply : SuccessReply;;
+            httpExchange.sendResponseHeaders(error ? 500 : 200, response.length());
             OutputStream os = httpExchange.getResponseBody();
             os.write(response.getBytes());
             os.close();
@@ -117,6 +123,15 @@ public class HttpInputLoggerUnitTest {
 
     @Test
     public void simpleLogging() {
+
+        HttpInputErrorHandler.onError(new HttpInputErrorHandler.ErrorCallback() {
+
+            public void exception(final String data, final Exception ex) {}
+            public void error(final String data, final String reply) {
+                lastReply = reply;
+            }
+        });
+
         // java.util.logger
         LOGGER.info("this is info");
         shortSleep();
@@ -142,6 +157,12 @@ public class HttpInputLoggerUnitTest {
         sleep(); // wait for http server to receive all data
         testEvent(httpHandler.pop(), "INFO", "this is info");
         testEvent(httpHandler.pop(), "ERROR", "this is error");
+
+        // error detection
+        Assert.assertFalse(lastReply.equalsIgnoreCase(ErrorReply));
+        LOGGER.info("fail");
+        sleep();
+        Assert.assertTrue(lastReply.equalsIgnoreCase(ErrorReply));
     }
 
     private void testEvent(JSONObject json, String severity, String message) {

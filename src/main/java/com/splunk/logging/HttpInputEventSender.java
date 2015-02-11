@@ -224,13 +224,13 @@ public final class HttpInputEventSender extends TimerTask {
                     reply = EntityUtils.toString(response.getEntity(), encoding);
                 } catch (IOException e) {}
                 if (! isHttpInputReplySuccess(reply)) {
-                    // @todo - report error
+                    HttpInputErrorHandler.error(eventsBatch, reply);
                 }
             }
 
             public void failed(final Exception ex) {
                 if (retriesCount >= retriesOnError) {
-                    // @todo - report network failure
+                    HttpInputErrorHandler.exception(eventsBatch, ex);
                 } else {
                     // retry
                     retriesCount ++;

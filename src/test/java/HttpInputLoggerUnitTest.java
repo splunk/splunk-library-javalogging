@@ -22,7 +22,6 @@ import java.net.InetSocketAddress;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
-import jdk.nashorn.api.scripting.JSObject;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
@@ -88,13 +87,8 @@ public class HttpInputLoggerUnitTest {
 
     private final String LoggerConf =
         "handlers=com.splunk.logging.HttpInputHandler\n" +
-        "com.splunk.logging.HttpInputHandler.scheme=http\n" +
-        "com.splunk.logging.HttpInputHandler.host=localhost\n" +
-        "com.splunk.logging.HttpInputHandler.port=5555\n" +
+        "com.splunk.logging.HttpInputHandler.url=http://localhost:5555/services/logging\n" +
         "com.splunk.logging.HttpInputHandler.token=22C712B0-E6EE-4355-98DD-2DDE23D968D7\n" +
-        "com.splunk.logging.HttpInputHandler.delay=0\n" +
-        "com.splunk.logging.HttpInputHandler.batchCount=0\n" +
-        "com.splunk.logging.HttpInputHandler.batchSize=0\n" +
         "com.splunk.logging.HttpInputHandler.disableCertificateValidation=true";
 
     public HttpInputLoggerUnitTest() {
@@ -127,6 +121,7 @@ public class HttpInputLoggerUnitTest {
         LOGGER.info("this is info");
         shortSleep();
         LOGGER.warning("this is warning");
+
         sleep(); // wait for http server to receive all data
         testEvent(httpHandler.pop(), "INFO", "this is info");
         testEvent(httpHandler.pop(), "WARNING", "this is warning");

@@ -14,23 +14,27 @@ import java.lang.reflect.*;
 import com.splunk.logging.*;
 import com.splunk.*;
 
-
 public class HttpLoggerStressTest {
-
     private static class DataSender implements Runnable {
         private String threadName;
-        private int eventsPerThread;
+        private int eventsGenerated = 0, testDurationInSecs = 300;
         Logger logger;
 
-        public DataSender(String threadName, int eventsPerThread) {
+        public DataSender(String threadName, int testDurationInSecs) {
             this.threadName = threadName;
-            this.eventsPerThread = eventsPerThread;
+            this.testDurationInSecs = testDurationInSecs;
             this.logger = LogManager.getLogger("splunkHttpLogger");
         }
 
         public void run() {
-            for (int i = 0; i < this.eventsPerThread; i++) {
-                this.logger.info(String.format("Thread: %s, event: %d", this.threadName, i));
+            Date dCurrent = new Date();
+            Date dEnd = new Date();
+            dEnd.setTime(dCurrent.getTime() + testDurationInSecs * 1000);
+            int eventId = 0;
+            while(dCurrent.before(dEnd)) {
+                String message = String.format("Thread: %s, event: %d", this.threadName, eventId++);
+                this.logger.info(message);
+                dCurrent = new Date();
             }
         }
     }
@@ -52,7 +56,7 @@ public class HttpLoggerStressTest {
         serviceArgs.setPassword("changeme");
         serviceArgs.setHost("127.0.0.1");
         serviceArgs.setPort(8089);
-        serviceArgs.setScheme("http");
+        serviceArgs.setScheme("https");
         Service service = Service.connect(serviceArgs);
         service.login();
 
@@ -64,8 +68,10 @@ public class HttpLoggerStressTest {
             return -1;
         }
         Job job = service.getJobs().create(searchQuery, new Args());
-        while (!job.isDone())
+        while (!job.isDone()) {
             Thread.sleep(1000);
+            job.refresh();
+        }
         Args outputArgs = new Args();
         outputArgs.put("count", 100);
         outputArgs.put("offset", 0);
@@ -98,7 +104,7 @@ public class HttpLoggerStressTest {
         serviceArgs.setPassword("changeme");
         serviceArgs.setHost("127.0.0.1");
         serviceArgs.setPort(8089);
-        serviceArgs.setScheme("http");
+        serviceArgs.setScheme("https");
         Service service = Service.connect(serviceArgs);
         service.login();
 
@@ -147,9 +153,10 @@ public class HttpLoggerStressTest {
             fw.write("    <!--need the \"token=...\" line to be a single line for parsing purpose-->\r\n");
             fw.write("    <Appenders>\r\n");
             fw.write("        <Http name=\"Http\"\r\n");
-            fw.write("              url=\"127.0.0.1:8089/services/receivers/token\"\r\n");
-            fw.write("              protocol=\"http\"\r\n");
+            fw.write("              url=\"https://127.0.0.1:8089/services/receivers/token\"\r\n");
+            fw.write("              index=\"\"\r\n");
             fw.write(String.format("              token=\"%s\"\r\n", token));
+            fw.write("              disableCertificateValidation=\"true\"\r\n");
             fw.write("              source=\"splunktest\" sourcetype=\"battlecat\">\r\n");
             fw.write("            <PatternLayout pattern=\"%m\"/>\r\n");
             fw.write("        </Http>\r\n");
@@ -170,16 +177,29 @@ public class HttpLoggerStressTest {
 
     @Test
     public void canSendEventUsingJavaLogging() throws Exception {
-        int numberOfThreads = 100;
-        int eventsPerThread = 5000;
+        int numberOfThreads = 25;
+        int eventsPerThread = 1000;
+        int testDurationInSecs = 300;
 
+        System.out.printf("\tSetting up http inputs ... ");
         setupHttpInput();
-        generateData(numberOfThreads, eventsPerThread);
-        Thread.sleep(5000);
+        System.out.printf("Inserting data ... ");
+        generateData(numberOfThreads, testDurationInSecs);
+        System.out.printf("Done.\r\n");
+        // Wait for indexing to complete
+        int eventCount = getEventsCount("search *|stats count");
+        do {
+            System.out.printf("\tWaiting for indexing to complete, %d events so far\r\n", eventCount);
+            Thread.sleep(10000);
+            int updatedEventCount = getEventsCount("search *|stats count");
+            if(updatedEventCount == eventCount)
+                break;
+            eventCount = updatedEventCount;
+        }while(true);
         Boolean testPassed = true;
         for (int i = 0; i < numberOfThreads; i++) {
             String arguments = String.format("search Thread%d | stats count", i);
-            int eventCount = getEventsCount(arguments);
+            eventCount = getEventsCount(arguments);
             System.out.printf("Thread %d, expected %d events, actually %d\r\n", i, eventsPerThread, eventCount);
             if (eventCount != eventsPerThread)
                 testPassed = false;

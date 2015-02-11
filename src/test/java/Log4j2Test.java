@@ -38,7 +38,7 @@ public final class Log4j2Test {
         //use httplogger
         Date date = new Date();
         String jsonMsg = String.format("{EventDate:%s, EventMsg:'this is a test event for log4j2", date.toString());
-        Logger logger = LogManager.getLogger("splunkHttpLogger");
+        Logger logger = LogManager.getLogger("testSplunkLog4j");
         logger.info(jsonMsg);
 
         TestUtil.verifyOneAndOnlyOneEventSendToSplunk(serviceArgs, jsonMsg);

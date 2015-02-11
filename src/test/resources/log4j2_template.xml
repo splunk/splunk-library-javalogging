@@ -15,15 +15,16 @@ License for the specific language governing permissions and limitations
 under the License.
 -->
 
-<Configuration status="info" name="example" packages="com.splunk.logging">
+<Configuration status="info" name="example" packages="">
     <!--need the "token=..." line to be a single line for parsing purpose-->
     <Appenders>
         <Socket name="socket" host="127.0.0.1" port="15000">
             <PatternLayout pattern="%p: %m%n" charset="UTF-8"/>
         </Socket>
 
-        <Http name="httpappender"
+        <Http name="splunkhttpappender"
               url="%scheme%://%host%:%port%/services/data/inputs/token/http"
+              index=""
               token="%user_defined_httpinput_token%"
               disableCertificateValidation="true"
               source="splunktest_accept" sourcetype="battlecat_test">
@@ -40,8 +41,8 @@ under the License.
             <AppenderRef ref="socket"/>
         </Logger>
 
-        <Logger name ="splunkHttpLogger" level="INFO">
-            <appender-ref ref="httpappender" />
+        <Logger name="testSplunkLog4j" level="info">
+            <AppenderRef ref="splunkhttpappender"/>
         </Logger>
 
     </Loggers>

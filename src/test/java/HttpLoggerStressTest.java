@@ -15,9 +15,29 @@ import com.splunk.logging.*;
 import com.splunk.*;
 
 public class HttpLoggerStressTest {
+    private  static  class  GcCaller implements  Runnable
+    {
+        private int testDurationInSecs = 0;
+        public GcCaller(int testDurationInSecs) {
+            this.testDurationInSecs = testDurationInSecs;
+        }
+        public void run() {
+            Date dCurrent = new Date();
+            Date dEnd = new Date();
+            dEnd.setTime(dCurrent.getTime() + testDurationInSecs * 1000);
+            while(dCurrent.before(dEnd)) {
+                try {
+                    Thread.sleep(5000);
+                }
+                catch (Exception e){}
+                //System.gc();
+                dCurrent = new Date();
+            }
+        }
+    }
     private static class DataSender implements Runnable {
         private String threadName;
-        private int eventsGenerated = 0, testDurationInSecs = 300;
+        public int eventsGenerated = 0, testDurationInSecs = 300;
         Logger logger;
 
         public DataSender(String threadName, int testDurationInSecs) {
@@ -30,10 +50,8 @@ public class HttpLoggerStressTest {
             Date dCurrent = new Date();
             Date dEnd = new Date();
             dEnd.setTime(dCurrent.getTime() + testDurationInSecs * 1000);
-            int eventId = 0;
             while(dCurrent.before(dEnd)) {
-                String message = String.format("Thread: %s, event: %d", this.threadName, eventId++);
-                this.logger.info(message);
+                this.logger.info(String.format("Thread: %s, event: %d", this.threadName, eventsGenerated++));
                 dCurrent = new Date();
             }
         }
@@ -157,6 +175,9 @@ public class HttpLoggerStressTest {
             fw.write("              index=\"\"\r\n");
             fw.write(String.format("              token=\"%s\"\r\n", token));
             fw.write("              disableCertificateValidation=\"true\"\r\n");
+            //fw.write("              batch_interval=\"250\"\r\n");
+            //fw.write("              batch_size_count=\"500\"\r\n");
+            //fw.write("              batch_size_bytes=\"512\"\r\n");
             fw.write("              source=\"splunktest\" sourcetype=\"battlecat\">\r\n");
             fw.write("            <PatternLayout pattern=\"%m\"/>\r\n");
             fw.write("        </Http>\r\n");
@@ -177,46 +198,47 @@ public class HttpLoggerStressTest {
 
     @Test
     public void canSendEventUsingJavaLogging() throws Exception {
-        int numberOfThreads = 25;
-        int eventsPerThread = 1000;
-        int testDurationInSecs = 300;
+        int numberOfThreads = 50;
+        int testDurationInSecs = 600;
 
         System.out.printf("\tSetting up http inputs ... ");
         setupHttpInput();
         System.out.printf("Inserting data ... ");
-        generateData(numberOfThreads, testDurationInSecs);
-        System.out.printf("Done.\r\n");
-        // Wait for indexing to complete
-        int eventCount = getEventsCount("search *|stats count");
-        do {
-            System.out.printf("\tWaiting for indexing to complete, %d events so far\r\n", eventCount);
-            Thread.sleep(10000);
-            int updatedEventCount = getEventsCount("search *|stats count");
-            if(updatedEventCount == eventCount)
-                break;
-            eventCount = updatedEventCount;
-        }while(true);
-        Boolean testPassed = true;
-        for (int i = 0; i < numberOfThreads; i++) {
-            String arguments = String.format("search Thread%d | stats count", i);
-            eventCount = getEventsCount(arguments);
-            System.out.printf("Thread %d, expected %d events, actually %d\r\n", i, eventsPerThread, eventCount);
-            if (eventCount != eventsPerThread)
-                testPassed = false;
-        }
-        System.out.printf("Test %s.\r\n", testPassed ? "PASSED" : "FAILED");
-        Assert.assertTrue(testPassed);
-    }
-
-    private static void generateData(int numberOfThreads, int eventsPerThread) throws InterruptedException {
+        DataSender[] dsList = new DataSender[numberOfThreads];
         Thread[] tList = new Thread[numberOfThreads];
         for (int i = 0; i < numberOfThreads; i++) {
-            Thread t = new Thread(new DataSender(String.format("Thread%s", i), eventsPerThread));
-            tList[i] = t;
+            dsList[i] = new DataSender(String.format("Thread%s", i), testDurationInSecs);
+            tList[i] = new Thread(dsList[i]);;
         }
+        Thread tGc = new Thread(new GcCaller(testDurationInSecs));
+        tGc.start();
         for (Thread t : tList)
             t.start();
         for (Thread t : tList)
             t.join();
+        tGc.join();
+        System.out.printf("Done.\r\n");
+        // Wait for indexing to complete
+        int eventCount = getEventsCount("search *|stats count");
+        for(int i=0; i<3; i++) {
+            do {
+                System.out.printf("\tWaiting for indexing to complete, %d events so far\r\n", eventCount);
+                Thread.sleep(10000);
+                int updatedEventCount = getEventsCount("search *|stats count");
+                if (updatedEventCount == eventCount)
+                    break;
+                eventCount = updatedEventCount;
+            } while (true);
+            System.out.printf("\tCompleted wait for iteration %d\r\n", i);
+        }
+        Boolean testPassed = true;
+        for (int i = 0; i < numberOfThreads; i++) {
+            String arguments = String.format("search Thread%d | stats count", i);
+            eventCount = getEventsCount(arguments);
+            System.out.printf("Thread %d, expected %d events, actually %d, %s\r\n", i, dsList[i].eventsGenerated, eventCount, (eventCount == dsList[i].eventsGenerated)?"passed.":"failed.");
+            testPassed &= (eventCount == dsList[i].eventsGenerated);
+        }
+        System.out.printf("Test %s.\r\n", testPassed ? "PASSED" : "FAILED");
+        Assert.assertTrue(testPassed);
     }
 }

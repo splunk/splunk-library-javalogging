@@ -27,6 +27,7 @@ import org.apache.http.conn.ssl.TrustStrategy;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
 import org.apache.http.impl.nio.client.HttpAsyncClients;
+import org.apache.http.util.EntityUtils;
 import org.json.simple.JSONObject;
 import javax.net.ssl.SSLContext;
 import java.io.IOException;
@@ -47,11 +48,13 @@ public final class HttpInputEventSender extends TimerTask {
     public static final String MetadataSourceTypeTag = "sourcetype";
     private static final String AuthorizationHeaderTag = "Authorization";
     private static final String AuthorizationHeaderScheme = "Splunk %s";
+    private static final String ReplySuccess = "{\"text\":\"Success\",\"code\":0}";
 
     private String httpInputUrl;
     private final String token;
     private final long maxEventsBatchCount;
     private final long maxEventsBatchSize;
+    private final long retriesOnError;
     private Dictionary<String, String> metadata;
     private Timer timer;
     private StringBuilder eventsBatch = new StringBuilder();
@@ -71,11 +74,13 @@ public final class HttpInputEventSender extends TimerTask {
     public HttpInputEventSender(
         final String httpInputUrl, final String token,
         long delay, long maxEventsBatchCount, long maxEventsBatchSize,
+        long retriesOnError,
         Dictionary<String, String> metadata) {
         this.httpInputUrl = httpInputUrl;
         this.token = token;
         this.maxEventsBatchCount = maxEventsBatchCount;
         this.maxEventsBatchSize = maxEventsBatchSize;
+        this.retriesOnError = retriesOnError;
         this.metadata = metadata;
 
         if (delay > 0) {
@@ -200,18 +205,46 @@ public final class HttpInputEventSender extends TimerTask {
 
     private void postEventsAsync(final String eventsBatch) {
         startHttpClient();
-        HttpPost httpPost = new HttpPost(httpInputUrl);
+        final String encoding = "utf-8";
+        // create http request
+        final HttpPost httpPost = new HttpPost(httpInputUrl);
         httpPost.setHeader(
             AuthorizationHeaderTag,
             String.format(AuthorizationHeaderScheme, token));
-        StringEntity entity = new StringEntity(eventsBatch, "utf-8");
+        StringEntity entity = new StringEntity(eventsBatch, encoding);
         entity.setContentType("application/json; charset=utf-8");
         httpPost.setEntity(entity);
+        // post request
         httpClient.execute(httpPost, new FutureCallback<HttpResponse>() {
-            // @todo - handle reply
-            public void completed(final HttpResponse response) {}
-            public void failed(final Exception ex) {}
+            long retriesCount = 0;
+
+            public void completed(final HttpResponse response) {
+                String reply = "";
+                try {
+                    reply = EntityUtils.toString(response.getEntity(), encoding);
+                } catch (IOException e) {}
+                if (! isHttpInputReplySuccess(reply)) {
+                    // @todo - report error
+                }
+            }
+
+            public void failed(final Exception ex) {
+                if (retriesCount >= retriesOnError) {
+                    // @todo - report network failure
+                } else {
+                    // retry
+                    retriesCount ++;
+                    httpClient.execute(httpPost, this);
+                }
+            }
+
             public void cancelled() {}
         });
+    }
+
+    private boolean isHttpInputReplySuccess(final String reply) {
+        // currently, for simplicity we do text comparison with successful reply,
+        // in the future we may consider json parsing here
+        return reply.equalsIgnoreCase(ReplySuccess);
     }
 }

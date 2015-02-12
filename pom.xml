@@ -59,10 +59,11 @@
                         <artifactId>maven-surefire-plugin</artifactId>
                         <version>2.18.1</version>
                         <configuration>
-                            <excludes>
-                                <exclude>**/*StressTest.class</exclude>
-                                <exclude>**/*UnitTest.class</exclude>
-                            </excludes>
+                            <includes>
+                                <include>**/JavaLoggingTest.class</include>
+                                <include>**/Log4j2Test.class</include>
+                                <include>**/LogbackTest.class</include>
+                            </includes>
                         </configuration>
                     </plugin>
                 </plugins>

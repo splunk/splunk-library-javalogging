@@ -20,7 +20,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 
-import com.splunk.logging.HttpInputErrorHandler;
+import com.splunk.logging.HttpInputLoggingErrorHandler;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
@@ -124,7 +124,7 @@ public class HttpInputLoggerUnitTest {
     @Test
     public void simpleLogging() {
 
-        HttpInputErrorHandler.onError(new HttpInputErrorHandler.ErrorCallback() {
+        HttpInputLoggingErrorHandler.onError(new HttpInputLoggingErrorHandler.ErrorCallback() {
 
             public void exception(final String data, final Exception ex) {}
             public void error(final String data, final String reply) {

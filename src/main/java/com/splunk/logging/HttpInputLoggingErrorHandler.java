@@ -24,10 +24,16 @@ import java.util.concurrent.Future;
  * @brief Splunk http input error handler.
  *
  * @details
- * A user application can utilize HttpInputErrorHandler in order to detect errors
- * caused by network connection and/or Splunk server
+ * A user application can utilize HttpInputLoggingErrorHandler in order to detect errors
+ * caused by network connection and/or Splunk server.
+ *
+ * Usage example:
+ * HttpInputLoggingErrorHandler.onError(new HttpInputErrorHandler.ErrorCallback() {
+ *     public void exception(final String data, final Exception ex) {  handle exception  }
+ *     public void error(final String data, final String reply) { handle error }
+ * });
  */
-public class HttpInputErrorHandler {
+public class HttpInputLoggingErrorHandler {
     public interface ErrorCallback {
         void exception(final String data, final Exception ex);
         void error(final String data, final String reply);
@@ -35,16 +41,30 @@ public class HttpInputErrorHandler {
 
     private static ErrorCallback errorCallback;
 
+    /**
+     * Register error callbacks
+     * @param callback
+     */
     public static void onError(ErrorCallback callback) {
         errorCallback = callback;
     }
 
+    /**
+     * Report an exception
+     * @param data
+     * @param ex is an exception thrown bgy posting data
+     */
     public static void exception(final String data, final Exception ex) {
         if (errorCallback != null) {
             errorCallback.exception(data, ex);
         }
     }
 
+    /**
+     * Report an error
+     * @param data
+     * @param reply returned by Splunk server
+     */
     public static void error(final String data, final String reply) {
         if (errorCallback != null) {
             errorCallback.error(data, reply);

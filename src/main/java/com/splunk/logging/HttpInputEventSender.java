@@ -32,9 +32,7 @@ import org.json.simple.JSONObject;
 import javax.net.ssl.SSLContext;
 import java.io.IOException;
 import java.security.cert.X509Certificate;
-import java.util.Dictionary;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.*;
 
 
 /**
@@ -57,8 +55,8 @@ public final class HttpInputEventSender extends TimerTask {
     private final long retriesOnError;
     private Dictionary<String, String> metadata;
     private Timer timer;
-    private StringBuilder eventsBatch = new StringBuilder();
-    private long eventsCount = 0; // count of events in events batch
+    private List<HttpInputLoggingEventInfo> eventsBatch = new LinkedList<HttpInputLoggingEventInfo>();
+    private long eventsBatchSize = 0; // estimated total size of events batch
     private CloseableHttpAsyncClient httpClient;
     private boolean disableCertificateValidation = false;
 
@@ -97,9 +95,12 @@ public final class HttpInputEventSender extends TimerTask {
      * @param message event text
      */
     public synchronized void send(final String severity, final String message) {
-        eventsBatch.append(createEvent(severity, message));
-        eventsCount++;
-        if (eventsCount > maxEventsBatchCount || eventsBatch.length() > maxEventsBatchSize) {
+        // create event info container and add it to the batch
+        HttpInputLoggingEventInfo eventInfo =
+                new HttpInputLoggingEventInfo(severity, message);
+        eventsBatch.add(eventInfo);
+        eventsBatchSize += severity.length() + message.length();
+        if (eventsBatch.size() >= maxEventsBatchCount || eventsBatchSize > maxEventsBatchSize) {
             flush();
         }
     }
@@ -108,12 +109,14 @@ public final class HttpInputEventSender extends TimerTask {
      * Flush all pending events
      */
     public synchronized void flush() {
-        if (eventsBatch.length() > 0) {
-            postEventsAsync(eventsBatch.toString());
+        if (eventsBatch.size() > 0) {
+            postEventsAsync(eventsBatch);
         }
-        // clear the batch buffer
-        eventsBatch.setLength(0);
-        eventsCount = 0;
+        // Clear the batch. A new list should be created because events are
+        // sending asynchronously and "previous" instance of eventsBatch object
+        // is still in use.
+        eventsBatch = new LinkedList<HttpInputLoggingEventInfo>();
+        eventsBatchSize = 0;
     }
 
     /**
@@ -141,14 +144,14 @@ public final class HttpInputEventSender extends TimerTask {
         disableCertificateValidation = true;
     }
 
-    private String createEvent(final String severity, final String message) {
+    private String serializeEventInfo(HttpInputLoggingEventInfo eventInfo) {
         // create event json content
         JSONObject event = new JSONObject();
         // event timestamp and metadata
         String index = metadata.get(MetadataIndexTag);
         String source = metadata.get(MetadataSourceTag);
         String sourceType = metadata.get(MetadataSourceTypeTag);
-        event.put(MetadataTimeTag, String.format("%d", System.currentTimeMillis() / 1000));
+        event.put(MetadataTimeTag, String.format("%d", eventInfo.getTime()));
         if (index != null && index.length() > 0)
             event.put(MetadataIndexTag, index);
         if (source  != null && source.length() > 0)
@@ -157,8 +160,8 @@ public final class HttpInputEventSender extends TimerTask {
             event.put(MetadataSourceTypeTag, sourceType);
         // event body
         JSONObject body = new JSONObject();
-        body.put("severity", severity);
-        body.put("message", message);
+        body.put("severity", eventInfo.getSeverity());
+        body.put("message", eventInfo.getMessage());
         // join event and body
         event.put("event", body);
         return event.toString();
@@ -203,15 +206,19 @@ public final class HttpInputEventSender extends TimerTask {
         }
     }
 
-    private void postEventsAsync(final String eventsBatch) {
+    private void postEventsAsync(final List<HttpInputLoggingEventInfo> eventsBatch) {
         startHttpClient();
         final String encoding = "utf-8";
+        // convert events list into a string
+        StringBuilder eventsBatchString = new StringBuilder();
+        for (HttpInputLoggingEventInfo eventInfo : eventsBatch)
+            eventsBatchString.append(serializeEventInfo(eventInfo));
         // create http request
         final HttpPost httpPost = new HttpPost(httpInputUrl);
         httpPost.setHeader(
             AuthorizationHeaderTag,
             String.format(AuthorizationHeaderScheme, token));
-        StringEntity entity = new StringEntity(eventsBatch, encoding);
+        StringEntity entity = new StringEntity(eventsBatchString.toString(), encoding);
         entity.setContentType("application/json; charset=utf-8");
         httpPost.setEntity(entity);
         // post request

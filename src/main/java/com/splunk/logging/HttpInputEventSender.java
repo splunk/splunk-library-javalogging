@@ -231,13 +231,15 @@ public final class HttpInputEventSender extends TimerTask {
                     reply = EntityUtils.toString(response.getEntity(), encoding);
                 } catch (IOException e) {}
                 if (! isHttpInputReplySuccess(reply)) {
-                    HttpInputLoggingErrorHandler.error(eventsBatch, reply);
+                    HttpInputLoggingErrorHandler.error(
+                            eventsBatch,
+                            new HttpInputLoggingErrorHandler.ServerErrorException(reply));
                 }
             }
 
             public void failed(final Exception ex) {
                 if (retriesCount >= retriesOnError) {
-                    HttpInputLoggingErrorHandler.exception(eventsBatch, ex);
+                    HttpInputLoggingErrorHandler.error(eventsBatch, ex);
                 } else {
                     // retry
                     retriesCount ++;

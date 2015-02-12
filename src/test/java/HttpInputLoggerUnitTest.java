@@ -128,9 +128,10 @@ public class HttpInputLoggerUnitTest {
 
         HttpInputLoggingErrorHandler.onError(new HttpInputLoggingErrorHandler.ErrorCallback() {
 
-            public void exception(final List<HttpInputLoggingEventInfo> data, final Exception ex) {}
-            public void error(final List<HttpInputLoggingEventInfo> data, final String reply) {
-                lastReply = reply;
+            public void error(final List<HttpInputLoggingEventInfo> data, final Exception ex) {
+                HttpInputLoggingErrorHandler.ServerErrorException serverErrorException =
+                        (HttpInputLoggingErrorHandler.ServerErrorException)ex;
+                lastReply = serverErrorException.getReply();
                 lastEvent = data.get(0);
             }
         });

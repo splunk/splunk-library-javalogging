@@ -21,6 +21,7 @@ import java.io.OutputStream;
 import java.net.InetSocketAddress;
 
 import com.splunk.logging.HttpInputLoggingErrorHandler;
+import com.splunk.logging.HttpInputLoggingEventInfo;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
@@ -41,6 +42,7 @@ public class HttpInputLoggerUnitTest {
     private final static org.apache.logging.log4j.Logger LOG4J = org.apache.logging.log4j.LogManager.getLogger("splunk.log4j");
     private final static org.slf4j.Logger LOGBACK = org.slf4j.LoggerFactory.getLogger("splunk.logback");
     private String lastReply = "";
+    private HttpInputLoggingEventInfo lastEvent;
     private static final String SuccessReply = "{\"text\":\"Success\",\"code\":0}";
     private static final String ErrorReply = "{\"text\":\"Error\",\"code\":1}";
 
@@ -125,10 +127,11 @@ public class HttpInputLoggerUnitTest {
     public void simpleLogging() {
 
         HttpInputLoggingErrorHandler.onError(new HttpInputLoggingErrorHandler.ErrorCallback() {
-
-            public void exception(final String data, final Exception ex) {}
-            public void error(final String data, final String reply) {
-                lastReply = reply;
+            public void error(final List<HttpInputLoggingEventInfo> data, final Exception ex) {
+                HttpInputLoggingErrorHandler.ServerErrorException serverErrorException =
+                        (HttpInputLoggingErrorHandler.ServerErrorException)ex;
+                lastReply = serverErrorException.getReply();
+                lastEvent = data.get(0);
             }
         });
 
@@ -163,6 +166,8 @@ public class HttpInputLoggerUnitTest {
         LOGGER.info("fail");
         sleep();
         Assert.assertTrue(lastReply.equalsIgnoreCase(ErrorReply));
+        Assert.assertTrue(lastEvent.getSeverity().equalsIgnoreCase("INFO"));
+        Assert.assertTrue(lastEvent.getMessage().equalsIgnoreCase("fail"));
     }
 
     private void testEvent(JSONObject json, String severity, String message) {

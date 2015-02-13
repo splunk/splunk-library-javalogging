@@ -18,7 +18,11 @@ package com.splunk.logging;
  * under the License.
  */
 
-import java.util.concurrent.Future;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
+
+import java.util.List;
 
 /**
  * @brief Splunk http input error handler.
@@ -29,14 +33,62 @@ import java.util.concurrent.Future;
  *
  * Usage example:
  * HttpInputLoggingErrorHandler.onError(new HttpInputErrorHandler.ErrorCallback() {
- *     public void exception(final String data, final Exception ex) {  handle exception  }
- *     public void error(final String data, final String reply) { handle error }
+ *     public void error(final String data, final Exception ex) {  handle exception  }
  * });
  */
 public class HttpInputLoggingErrorHandler {
+
+    /**
+     * This exception is passed to error callback when Splunk server replies an error
+     */
+    public static class ServerErrorException extends Exception {
+        private String reply;
+        private long errorCode = -1;
+        private String errorText = "unknown error";
+
+        /**
+         * Create an exception with server error reply
+         * @param serverReply
+         */
+        public ServerErrorException(final String serverReply) {
+            reply = serverReply;
+            JSONParser jsonParser = new JSONParser();
+            try {
+                // read server reply
+                JSONObject json = (JSONObject)jsonParser.parse(serverReply);
+                errorCode = (Long)json.get("code");
+                errorText = (String)json.get("text");
+            } catch (ParseException e) {}
+        }
+
+        /**
+         * @return Splunk server reply in json format
+         */
+        public String getReply() {
+            return reply;
+        }
+
+        /**
+         * @return error code replied by Splunk server
+         */
+        public long getErrorCode() {
+            return errorCode;
+        }
+
+        /**
+         * * @return error text replied by Splunk server
+         */
+        public String getErrorText() {
+            return errorText;
+        }
+
+        @Override public String toString() {
+            return getReply();
+        }
+    }
+
     public interface ErrorCallback {
-        void exception(final String data, final Exception ex);
-        void error(final String data, final String reply);
+        void error(final List<HttpInputLoggingEventInfo> data, final Exception ex);
     }
 
     private static ErrorCallback errorCallback;
@@ -52,22 +104,11 @@ public class HttpInputLoggingErrorHandler {
     /**
      * Report an exception
      * @param data
-     * @param ex is an exception thrown bgy posting data
+     * @param ex is an exception thrown by posting or processing data
      */
-    public static void exception(final String data, final Exception ex) {
+    public static void error(final List<HttpInputLoggingEventInfo> data, final Exception ex) {
         if (errorCallback != null) {
-            errorCallback.exception(data, ex);
-        }
-    }
-
-    /**
-     * Report an error
-     * @param data
-     * @param reply returned by Splunk server
-     */
-    public static void error(final String data, final String reply) {
-        if (errorCallback != null) {
-            errorCallback.error(data, reply);
+            errorCallback.error(data, ex);
         }
     }
 }

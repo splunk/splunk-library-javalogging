@@ -97,7 +97,7 @@ public class HttpInputLoggerUnitTest {
         "handlers=com.splunk.logging.HttpInputHandler\n" +
         "com.splunk.logging.HttpInputHandler.url=http://localhost:5555/services/logging\n" +
         "com.splunk.logging.HttpInputHandler.token=22C712B0-E6EE-4355-98DD-2DDE23D968D7\n" +
-        "com.splunk.logging.HttpInputHandler.disableCertificateValidation=true";
+        "com.splunk.logging.HttpInputHandler.disableCertificateValidation=true\n";
 
     public HttpInputLoggerUnitTest() {
 

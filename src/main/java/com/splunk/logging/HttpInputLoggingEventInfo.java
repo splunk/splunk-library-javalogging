@@ -32,7 +32,7 @@ public class HttpInputLoggingEventInfo {
      * @param message is an event content
      */
     public HttpInputLoggingEventInfo(final String severity, final String message) {
-        time = System.currentTimeMillis() / 1000;
+        this.time = System.currentTimeMillis() / 1000;
         this.severity = severity;
         this.message = message;
     }

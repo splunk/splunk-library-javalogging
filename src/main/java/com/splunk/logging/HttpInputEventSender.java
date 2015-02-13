@@ -39,14 +39,13 @@ import java.util.*;
  * This is an internal helper class that sends logging events to Splunk http
  * input. This class is not supposed to be used by Splunk customers.
  */
-public final class HttpInputEventSender extends TimerTask {
+final class HttpInputEventSender extends TimerTask {
     public static final String MetadataTimeTag = "time";
     public static final String MetadataIndexTag = "index";
     public static final String MetadataSourceTag = "source";
     public static final String MetadataSourceTypeTag = "sourcetype";
     private static final String AuthorizationHeaderTag = "Authorization";
     private static final String AuthorizationHeaderScheme = "Splunk %s";
-    private static final String ReplySuccess = "{\"text\":\"Success\",\"code\":0}";
 
     private String httpInputUrl;
     private final String token;
@@ -226,11 +225,11 @@ public final class HttpInputEventSender extends TimerTask {
             long retriesCount = 0;
 
             public void completed(final HttpResponse response) {
-                String reply = "";
-                try {
-                    reply = EntityUtils.toString(response.getEntity(), encoding);
-                } catch (IOException e) {}
-                if (! isHttpInputReplySuccess(reply)) {
+                if (response.getStatusLine().getStatusCode() != 200) {
+                    String reply = "";
+                    try {
+                        reply = EntityUtils.toString(response.getEntity(), encoding);
+                    } catch (IOException e) {}
                     HttpInputLoggingErrorHandler.error(
                             eventsBatch,
                             new HttpInputLoggingErrorHandler.ServerErrorException(reply));
@@ -249,11 +248,5 @@ public final class HttpInputEventSender extends TimerTask {
 
             public void cancelled() {}
         });
-    }
-
-    private boolean isHttpInputReplySuccess(final String reply) {
-        // currently, for simplicity we do text comparison with successful reply,
-        // in the future we may consider json parsing here
-        return reply.equalsIgnoreCase(ReplySuccess);
     }
 }

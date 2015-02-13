@@ -127,7 +127,6 @@ public class HttpInputLoggerUnitTest {
     public void simpleLogging() {
 
         HttpInputLoggingErrorHandler.onError(new HttpInputLoggingErrorHandler.ErrorCallback() {
-
             public void error(final List<HttpInputLoggingEventInfo> data, final Exception ex) {
                 HttpInputLoggingErrorHandler.ServerErrorException serverErrorException =
                         (HttpInputLoggingErrorHandler.ServerErrorException)ex;

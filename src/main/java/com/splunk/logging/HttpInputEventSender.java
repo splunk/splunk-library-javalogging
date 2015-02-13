@@ -75,6 +75,13 @@ final class HttpInputEventSender extends TimerTask {
         Dictionary<String, String> metadata) {
         this.httpInputUrl = httpInputUrl;
         this.token = token;
+        // when size configuration setting is missing it's treated as "infinity",
+        // i.e., any value is accepted.
+        if (maxEventsBatchCount == 0 && maxEventsBatchSize > 0) {
+            maxEventsBatchCount = Long.MAX_VALUE;
+        } else if (maxEventsBatchSize == 0 && maxEventsBatchCount > 0) {
+            maxEventsBatchSize = Long.MAX_VALUE;
+        }
         this.maxEventsBatchCount = maxEventsBatchCount;
         this.maxEventsBatchSize = maxEventsBatchSize;
         this.retriesOnError = retriesOnError;

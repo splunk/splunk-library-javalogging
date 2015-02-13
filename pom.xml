@@ -79,7 +79,7 @@
                         <version>2.18.1</version>
                         <configuration>
                             <includes>
-                                <include>**/*UnitTest.class</include>
+                                <include>**/HttpInputLoggerUnitTest.class</include>
                             </includes>
                         </configuration>
                     </plugin>

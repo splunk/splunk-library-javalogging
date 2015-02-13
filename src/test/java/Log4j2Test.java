@@ -13,10 +13,9 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-
-import com.splunk.*;
 import java.io.*;
 import java.util.*;
+
 import org.junit.Assert;
 import org.junit.Test;
 import org.apache.logging.log4j.LogManager;
@@ -30,19 +29,25 @@ public final class Log4j2Test {
      */
     @Test
     public void canSendEventUsingLog4j2() throws Exception, IOException, InterruptedException {
-
-        ServiceArgs serviceArgs = TestUtil.getSplunkHostInfo();
-        String token = TestUtil.createHttpinput(serviceArgs, httpinputName);
-        TestUtil.updateConfigFile("log4j2_template.xml","log4j2.xml", serviceArgs, token);
+        String token = TestUtil.createHttpinput(httpinputName);
+        TestUtil.updateConfigFile("log4j2_template.xml", "log4j2.xml", token);
 
         //use httplogger
+        List<String> msgs = new ArrayList<String>();
+
         Date date = new Date();
-        String jsonMsg = String.format("{EventDate:%s, EventMsg:'this is a test event for log4j2", date.toString());
+        String jsonMsg = String.format("{EventDate:%s, EventMsg:'this is a test event for log4j2}", date.toString());
         Logger logger = LogManager.getLogger("testSplunkLog4j");
         logger.info(jsonMsg);
+        msgs.add(jsonMsg);
 
-        TestUtil.verifyOneAndOnlyOneEventSendToSplunk(serviceArgs, jsonMsg);
-        TestUtil.deleteHttpinput(serviceArgs, httpinputName);
+        jsonMsg = String.format("{EventDate:%s, EventMsg:'this is a test error for log4j2}", date.toString());
+        logger.error(jsonMsg);
+        msgs.add(jsonMsg);
+
+        TestUtil.verifyEventsSentToSplunk(msgs);
+
+        TestUtil.deleteHttpinput(httpinputName);
         System.out.println("====================== Test pass=========================");
     }
 }

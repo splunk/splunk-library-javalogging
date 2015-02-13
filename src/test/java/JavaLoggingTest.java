@@ -13,11 +13,13 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 import java.io.*;
 import java.util.*;
-import com.splunk.ServiceArgs;
+
 import org.junit.Assert;
 import org.junit.Test;
+
 import java.util.logging.Logger;
 import java.util.logging.LogManager;
 
@@ -30,19 +32,19 @@ public final class JavaLoggingTest {
      */
     @Test
     public void canSendEventUsingJavaLogging() throws Exception {
-        ServiceArgs serviceArgs = TestUtil.getSplunkHostInfo();
-        String token = TestUtil.createHttpinput(serviceArgs, httpinputName);
-        TestUtil.updateConfigFile("logging_template.properties","logging.properties", serviceArgs, token);
+        String token = TestUtil.createHttpinput(httpinputName);
+        TestUtil.updateConfigFile("logging_template.properties", "logging.properties", token);
 
         Date date = new Date();
-        String jsonMsg = String.format("{EventDate:%s, EventMsg:'this is a test event for java logging", date.toString());
-        FileInputStream configFile=new FileInputStream( TestUtil.class.getProtectionDomain().getCodeSource().getLocation().getPath()+"/logging.properties");
+        String jsonMsg = String.format("{EventDate:%s, EventMsg:'this is a test event for java logging}", date.toString());
+        FileInputStream configFile = new FileInputStream(TestUtil.class.getProtectionDomain().getCodeSource().getLocation().getPath() + "/logging.properties");
         LogManager.getLogManager().readConfiguration(configFile);
 
-        Logger logger =Logger.getLogger("splunkLogger");
+        Logger logger = Logger.getLogger("splunkLogger");
         logger.info(jsonMsg);
 
-        TestUtil.verifyOneAndOnlyOneEventSendToSplunk(serviceArgs,jsonMsg);
-        TestUtil.deleteHttpinput(serviceArgs,httpinputName);
+        TestUtil.verifyOneAndOnlyOneEventSentToSplunk(jsonMsg);
+
+        TestUtil.deleteHttpinput(httpinputName);
     }
 }

@@ -13,7 +13,7 @@
         </layout>
     </Appender>
 
-    <logger name ="splunkLogback" level="INFO">
+    <logger name ="splunkLogback" level="debug">
         <appender-ref ref="httpappender" />
     </logger>
 

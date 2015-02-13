@@ -13,8 +13,10 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 import com.splunk.*;
 import org.junit.Assert;
+
 import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
@@ -23,50 +25,63 @@ import java.util.List;
 import java.util.Map;
 
 public class TestUtil {
+
+    private static final ServiceArgs serviceArgs = new ServiceArgs();
+    private static Service service;
+
     /**
-     *   read splunk host info from .splunkrc file
+     * read splunk host info from .splunkrc file
      */
-    public static ServiceArgs getSplunkHostInfo()throws IOException {
-        String splunkhostfile = System.getProperty("user.home") + File.separator + ".splunkrc";
+    private static void getSplunkHostInfo() throws IOException {
 
-        ServiceArgs serviceArgs = new ServiceArgs();
+        if (serviceArgs.isEmpty()) {
+            //set default value
+            serviceArgs.setUsername("admin");
+            serviceArgs.setPassword("changeme");
+            serviceArgs.setHost("localhost");
+            serviceArgs.setPort(8089);
+            serviceArgs.setScheme("https");
 
-        serviceArgs.setUsername("admin");
-        serviceArgs.setPassword("changeme");
-        serviceArgs.setHost("localhost");
-        serviceArgs.setPort(8089);
-        serviceArgs.setScheme("https");
-
-        List<String> lines = Files.readAllLines(new File(splunkhostfile).toPath(), Charset.defaultCharset());
-
-        for (String line : lines) {
-            if (line.toLowerCase().contains("host=")) {
-                serviceArgs.setHost(line.split("=")[1]);
-            }
-            if (line.toLowerCase().contains("admin=")) {
-                serviceArgs.setUsername(line.split("=")[1]);
-            }
-            if (line.toLowerCase().contains("password=")) {
-                serviceArgs.setPassword(line.split("=")[1]);
-            }
-            if (line.toLowerCase().contains("scheme=")) {
-                serviceArgs.setScheme(line.split("=")[1]);
-            }
-            if (line.toLowerCase().contains("port=")) {
-                serviceArgs.setPort(Integer.parseInt(line.split("=")[1]));
+            //update serviceArgs with customer splunk host info
+            String splunkhostfile = System.getProperty("user.home") + File.separator + ".splunkrc";
+            List<String> lines = Files.readAllLines(new File(splunkhostfile).toPath(), Charset.defaultCharset());
+            for (String line : lines) {
+                if (line.toLowerCase().contains("host=")) {
+                    serviceArgs.setHost(line.split("=")[1]);
+                }
+                if (line.toLowerCase().contains("admin=")) {
+                    serviceArgs.setUsername(line.split("=")[1]);
+                }
+                if (line.toLowerCase().contains("password=")) {
+                    serviceArgs.setPassword(line.split("=")[1]);
+                }
+                if (line.toLowerCase().contains("scheme=")) {
+                    serviceArgs.setScheme(line.split("=")[1]);
+                }
+                if (line.toLowerCase().contains("port=")) {
+                    serviceArgs.setPort(Integer.parseInt(line.split("=")[1]));
+                }
             }
         }
-
-        return serviceArgs;
     }
 
+    private static void connectToSplunk() throws IOException {
+
+        if (service == null) {
+            getSplunkHostInfo();
+
+            //get splunk service and login
+            service = Service.connect(serviceArgs);
+            service.login();
+        }
+    }
+
+
     /**
-     *   create http input token
+     * create http input token
      */
-    public static String createHttpinput(ServiceArgs serviceArgs,String httpinputName) throws IOException{
-        //connect to splunk server
-        Service service = Service.connect(serviceArgs);
-        service.login();
+    public static String createHttpinput(String httpinputName) throws IOException {
+        connectToSplunk();
 
         //enable logging endpoint
         Map args = new HashMap();
@@ -80,7 +95,8 @@ public class TestUtil {
 
         try {
             service.delete("/services/data/inputs/token/http/" + httpinputName);
-        } catch (Exception e){}
+        } catch (Exception e) {
+        }
 
         service.post("/services/data/inputs/token/http", args);
 
@@ -109,23 +125,25 @@ public class TestUtil {
     }
 
     /**
-     *   delete http input token
+     * delete http input token
      */
-    public static void deleteHttpinput(ServiceArgs serviceArgs,String httpinputName) throws IOException {
-        Service service = Service.connect(serviceArgs);
-        service.login();
+    public static void deleteHttpinput(String httpinputName) throws IOException {
+        connectToSplunk();
 
         //remove a httpinput
         try {
             service.delete("/services/data/inputs/http/" + httpinputName);
-        } catch (Exception e){}
+        } catch (Exception e) {
+        }
     }
 
     /**
-     *   modify the config file with the generated token, and configured splunk host,
-     *   read the template from configFileTemplate, and create the updated configfile to configFile
+     * modify the config file with the generated token, and configured splunk host,
+     * read the template from configFileTemplate, and create the updated configfile to configFile
      */
-    public static void updateConfigFile(String configFileTemplate, String configFile, ServiceArgs serviceArgs, String token) throws  IOException{
+    public static void updateConfigFile(String configFileTemplate, String configFile, String token) throws IOException {
+        getSplunkHostInfo();
+
         String configFileDir = TestUtil.class.getProtectionDomain().getCodeSource().getLocation().getPath();
         List<String> lines = Files.readAllLines(new File(configFileDir, configFileTemplate).toPath(), Charset.defaultCharset());
         for (int i = 0; i < lines.size(); i++) {
@@ -138,7 +156,7 @@ public class TestUtil {
             }
 
             if (lines.get(i).contains("%port%")) {
-                lines.set(i, lines.get(i).replace("%port%",serviceArgs.port.toString()));
+                lines.set(i, lines.get(i).replace("%port%", serviceArgs.port.toString()));
             }
 
             if (lines.get(i).contains("%scheme%")) {
@@ -157,16 +175,14 @@ public class TestUtil {
         fw.close();
     }
 
-    public static void verifyOneAndOnlyOneEventSendToSplunk(ServiceArgs serviceArgs, String msg) throws IOException {
-        //verify the event is send to splunk and can be searched
-        Service service = Service.connect(serviceArgs);
-        service.login();
+    public static void verifyOneAndOnlyOneEventSentToSplunk(String msg) throws IOException {
+        connectToSplunk();
 
         long startTime = System.currentTimeMillis();
         int eventCount = 0;
-        InputStream resultsStream=null;
-        ResultsReaderXml resultsReader=null;
-        while (System.currentTimeMillis()-startTime < 30 * 1000)/*wait for up to 30s*/ {
+        InputStream resultsStream = null;
+        ResultsReaderXml resultsReader = null;
+        while (System.currentTimeMillis() - startTime < 30 * 1000)/*wait for up to 30s*/ {
             resultsStream = service.oneshotSearch("search " + msg);
             resultsReader = new ResultsReaderXml(resultsStream);
 
@@ -185,5 +201,38 @@ public class TestUtil {
         resultsStream.close();
 
         Assert.assertTrue(eventCount == 1);
+    }
+
+    /*
+    verify each of the message in msgs appeared and appeared only once in splunk
+     */
+    public static void verifyEventsSentToSplunk(List<String> msgs) throws IOException {
+        connectToSplunk();
+
+        for (String msg : msgs) {
+            long startTime = System.currentTimeMillis();
+            int eventCount = 0;
+            InputStream resultsStream = null;
+            ResultsReaderXml resultsReader = null;
+            while (System.currentTimeMillis() - startTime < 30 * 1000)/*wait for up to 30s*/ {
+                resultsStream = service.oneshotSearch("search " + msg);
+                resultsReader = new ResultsReaderXml(resultsStream);
+
+                //verify has one and only one record return
+                for (Event event : resultsReader) {
+                    eventCount++;
+                    System.out.println("---------------");
+                    System.out.println(event.getSegmentedRaw());
+                }
+
+                if (eventCount > 0)
+                    break;
+            }
+
+            resultsReader.close();
+            resultsStream.close();
+
+            Assert.assertTrue(eventCount == 1);
+        }
     }
 }

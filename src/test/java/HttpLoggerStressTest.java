@@ -27,19 +27,19 @@ public class HttpLoggerStressTest {
         }
 
         public void run() {
-            Random rand = new Random();
             Date dCurrent = new Date();
             Date dEnd = new Date();
             dEnd.setTime(dCurrent.getTime() + testDurationInSecs * 1000);
             while(dCurrent.before(dEnd)) {
                 this.logger.info(String.format("Thread: %s, event: %d", this.threadName, eventsGenerated++));
                 dCurrent = new Date();
-                int nextRandom =rand.nextInt(100);
-                if(nextRandom<5) // Wait 5 sec with 5% probability
-                try {
-                    Thread.sleep(500);
+                if(eventsGenerated % 1000 == 0) {
+                    try {
+                        Thread.sleep(1000);
+                    }
+                    catch (Exception e) {
+                    }
                 }
-                catch (Exception e){}
             }
         }
     }
@@ -146,47 +146,44 @@ public class HttpLoggerStressTest {
         }
         reader.close();
 
-        if (true) // Enable after debugging
-        {
-            //modify the config file with the generated token
-            String configFileDir = HttpLoggerStressTest.class.getProtectionDomain().getCodeSource().getLocation().getPath();
-            String configFilePath = new File(configFileDir, "log4j2.xml").getPath();
+        //modify the config file with the generated token
+        String configFileDir = HttpLoggerStressTest.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+        String configFilePath = new File(configFileDir, "log4j2.xml").getPath();
 
-            FileWriter fw = new FileWriter(configFilePath);
-            fw.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n");
-            fw.write("<Configuration status=\"info\" name=\"example\" packages=\"com.splunk.logging\">\r\n");
-            fw.write("    <!--need the \"token=...\" line to be a single line for parsing purpose-->\r\n");
-            fw.write("    <Appenders>\r\n");
-            fw.write("        <Http name=\"Http\"\r\n");
-            fw.write("              url=\"https://127.0.0.1:8089/services/receivers/token\"\r\n");
-            fw.write("              index=\"\"\r\n");
-            fw.write(String.format("              token=\"%s\"\r\n", token));
-            fw.write("              disableCertificateValidation=\"true\"\r\n");
-            //fw.write("              batch_interval=\"250\"\r\n");
-            //fw.write("              batch_size_count=\"500\"\r\n");
-            //fw.write("              batch_size_bytes=\"512\"\r\n");
-            fw.write("              source=\"splunktest\" sourcetype=\"battlecat\">\r\n");
-            fw.write("            <PatternLayout pattern=\"%m\"/>\r\n");
-            fw.write("        </Http>\r\n");
-            fw.write("    </Appenders>\r\n");
-            fw.write("    <loggers>\r\n");
-            fw.write("        <root level=\"debug\"/>\r\n");
-            fw.write("        <logger name =\"splunkHttpLogger\" level=\"INFO\">\r\n");
-            fw.write("            <appender-ref ref=\"Http\" />\r\n");
-            fw.write("        </logger>\r\n");
-            fw.write("    </loggers>\r\n");
-            fw.write("</Configuration>");
+        FileWriter fw = new FileWriter(configFilePath);
+        fw.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n");
+        fw.write("<Configuration status=\"info\" name=\"example\" packages=\"com.splunk.logging\">\r\n");
+        fw.write("    <!--need the \"token=...\" line to be a single line for parsing purpose-->\r\n");
+        fw.write("    <Appenders>\r\n");
+        fw.write("        <Http name=\"Http\"\r\n");
+        fw.write("              url=\"https://127.0.0.1:8089/services/receivers/token\"\r\n");
+        fw.write("              index=\"\"\r\n");
+        fw.write(String.format("              token=\"%s\"\r\n", token));
+        fw.write("              disableCertificateValidation=\"true\"\r\n");
+        //fw.write("              batch_interval=\"250\"\r\n");
+        //fw.write("              batch_size_count=\"500\"\r\n");
+        //fw.write("              batch_size_bytes=\"512\"\r\n");
+        fw.write("              source=\"splunktest\" sourcetype=\"battlecat\">\r\n");
+        fw.write("            <PatternLayout pattern=\"%m\"/>\r\n");
+        fw.write("        </Http>\r\n");
+        fw.write("    </Appenders>\r\n");
+        fw.write("    <loggers>\r\n");
+        fw.write("        <root level=\"debug\"/>\r\n");
+        fw.write("        <logger name =\"splunkHttpLogger\" level=\"INFO\">\r\n");
+        fw.write("            <appender-ref ref=\"Http\" />\r\n");
+        fw.write("        </logger>\r\n");
+        fw.write("    </loggers>\r\n");
+        fw.write("</Configuration>");
 
-            fw.flush();
-            fw.close();
-            addPath(configFilePath);
-        }
+        fw.flush();
+        fw.close();
+        addPath(configFilePath);
     }
 
     @Test
     public void canSendEventUsingJavaLogging() throws Exception {
-        int numberOfThreads = 300;
-        int testDurationInSecs = 900;
+        int numberOfThreads = 1;
+        int testDurationInSecs = 300;
 
         System.out.printf("\tSetting up http inputs ... ");
         setupHttpInput();

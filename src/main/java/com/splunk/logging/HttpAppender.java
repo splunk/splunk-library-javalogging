@@ -118,7 +118,7 @@ public final class HttpAppender extends AbstractAppender
                 name, url, token,
                 source, sourcetype, index,
                 filter, layout, ignoreExceptions,
-                parseInt(batchInterval, 0), parseInt(batchCount, 1), parseInt(batchSize, 0),
+                parseInt(batchInterval, 0), parseInt(batchCount, 0), parseInt(batchSize, 0),
                 parseInt(retriesOnError, 0),
                 disableCertificateValidation);
     }

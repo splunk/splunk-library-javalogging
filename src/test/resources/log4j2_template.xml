@@ -1,12 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration status="info" name="example" packages="">
     <Appenders>
-        <Http name="splunkhttpappender"
+        <Http
+              name="http"
               url="%scheme%://%host%:%port%/services/receivers/token"
               index=""
-              token="%user_defined_httpinput_token%"
+              token="%user_httpinput_token%"
+              source="%user_source%"
+              sourcetype="%user_sourcetype%"
+              batch_interval="%user_batch_interval%"
+              batch_size_bytes="%user_batch_size_bytes%"
+              batch_size_count="%user_batch_size_count%"
               disableCertificateValidation="true"
-              source="splunktest_accept" sourcetype="battlecat_test">
+              >
             <PatternLayout pattern="%m"/>
         </Http>
 
@@ -15,8 +21,8 @@
     <!-- Define a logger named 'testSplunkLog4j' which writes to the socket appender we defined above. -->
     <Loggers>
         <Root level="INFO"/>
-        <Logger name="testSplunkLog4j" level="info">
-            <AppenderRef ref="splunkhttpappender"/>
+        <Logger name="%user_logger_name%" level="info">
+            <AppenderRef ref="http"/>
         </Logger>
     </Loggers>
 </Configuration>

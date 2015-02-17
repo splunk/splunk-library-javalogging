@@ -16,10 +16,14 @@
 import java.io.*;
 import java.util.*;
 
+import org.apache.logging.log4j.spi.LoggerContext;
+import org.apache.logging.log4j.core.config.Configurator;
 import org.junit.Assert;
 import org.junit.Test;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import javax.naming.Context;
 
 public final class Log4j2Test {
     private String httpinputName = "Log4j2Test";
@@ -29,15 +33,22 @@ public final class Log4j2Test {
      */
     @Test
     public void canSendEventUsingLog4j2() throws Exception, IOException, InterruptedException {
-        String token = TestUtil.createHttpinput(httpinputName);
-        TestUtil.updateConfigFile("log4j2_template.xml", "log4j2.xml", token);
 
+        String token = TestUtil.createHttpinput(httpinputName);
+        String loggerName="splunkLogger4j2";
+        HashMap<String,String> userInputs=new HashMap<String,String>();
+        userInputs.put("user_logger_name",loggerName);
+        userInputs.put("user_httpinput_token",token);
+        TestUtil.updateConfigFile("log4j2_template.xml", "log4j2.xml", userInputs);
+
+        LoggerContext ctx=LogManager.getContext();
         //use httplogger
         List<String> msgs = new ArrayList<String>();
 
         Date date = new Date();
         String jsonMsg = String.format("{EventDate:%s, EventMsg:'this is a test event for log4j2}", date.toString());
-        Logger logger = LogManager.getLogger("testSplunkLog4j");
+
+        Logger logger = LogManager.getLogger(loggerName);
         logger.info(jsonMsg);
         msgs.add(jsonMsg);
 
@@ -50,4 +61,116 @@ public final class Log4j2Test {
         TestUtil.deleteHttpinput(httpinputName);
         System.out.println("====================== Test pass=========================");
     }
+
+
+    /**
+     * sending a message via httplogging using java.logging with batched_size_count
+     */
+    @Test
+    public void sendBatchedEventsByCount() throws Exception {
+        String token = TestUtil.createHttpinput(httpinputName);
+
+//        //clean out the events cache by setting send events immediately
+//        String loggerName="splunkLoggerCountCleanCache";
+//        HashMap<String,String> userInputs=new HashMap<String,String>();
+//        userInputs.put("user_logger_name",loggerName);
+//        userInputs.put("user_httpinput_token",token);
+//        TestUtil.updateConfigFile("log4j2_template.xml", "log4j2.xml", userInputs);
+//        String jsonMsg = String.format("{EventDate:%s, EventMsg:'this is a test event for java logging}", new Date().toString());
+//        Logger logger = LogManager.getContext().getLogger(loggerName);
+//        logger.info(jsonMsg);
+        String loggerName="splunkBatchLoggerCount";
+        HashMap<String,String> userInputs=new HashMap<String,String>();
+        userInputs.put("user_logger_name",loggerName);
+        userInputs.put("user_httpinput_token",token);
+        //userInputs.put("user_batch_interval","0");
+        userInputs.put("user_batch_size_count","5");
+        userInputs.put("user_logger_name",loggerName);
+        userInputs.put("user_source","splunktest_BatchCount");
+        userInputs.put("user_sourcetype","battlecat_BatchCount");
+
+        TestUtil.updateConfigFile("log4j2_template.xml", "log4j2.xml", userInputs);
+        LoggerContext context= LogManager.getContext(true);
+        boolean has=context.hasLogger(loggerName);
+        Logger logger = LogManager.getLogger(loggerName);
+
+        List<String> msgs = new ArrayList<String>();
+
+        String jsonMsg = String.format("{EventDate:%s, EventMsg:'this is a test event for java logging1}", new Date().toString());
+        logger.info(jsonMsg);
+        msgs.add(jsonMsg);
+        System.out.println("event 1");
+        TestUtil.verifyNoEventSentToSplunk(msgs);
+        jsonMsg = String.format("{EventDate:%s, EventMsg:'this is a test event for java logging2}", new Date().toString());
+        logger.info(jsonMsg);
+        msgs.add(jsonMsg);
+        System.out.println("event 2");
+        TestUtil.verifyNoEventSentToSplunk(msgs);
+        jsonMsg = String.format("{EventDate:%s, EventMsg:'this is a test event for java logging3}", new Date().toString());
+        logger.info(jsonMsg);
+        msgs.add(jsonMsg);
+        System.out.println("event 3");
+        TestUtil.verifyNoEventSentToSplunk(msgs);
+        jsonMsg = String.format("{EventDate:%s, EventMsg:'this is a test event for java logging4}", new Date().toString());
+        logger.info(jsonMsg);
+        msgs.add(jsonMsg);
+        System.out.println("event 4");
+        TestUtil.verifyNoEventSentToSplunk(msgs);
+
+        Thread.sleep(6000);
+        TestUtil.verifyNoEventSentToSplunk(msgs);
+
+        jsonMsg = String.format("{EventDate:%s, EventMsg:'this is a test event for java logging5}", new Date().toString());
+        logger.info(jsonMsg);
+        msgs.add(jsonMsg);
+
+        TestUtil.verifyEventsSentToSplunk(msgs);
+
+        TestUtil.deleteHttpinput(httpinputName);
+    }
+
+
+    /**
+     * sending a message via httplogging using java.logging with batched_size_bytes
+     */
+    @Test
+    public void sendBatchedEventsByBatchsize() throws Exception {
+        LogManager.getFactory().removeContext(LogManager.getContext());
+
+        String token = TestUtil.createHttpinput(httpinputName);
+        String loggerName="splunkLoggerBatchSize";
+        HashMap<String,String> userInputs=new HashMap<String,String>();
+        userInputs.put("user_logger_name",loggerName);
+        userInputs.put("user_httpinput_token",token);
+        userInputs.put("user_batch_interval","10000");
+        userInputs.put("user_batch_size_bytes","500");
+        //userInputs.put("user_batch_size_count","100");
+        userInputs.put("user_source","splunktest_BatchSize");
+        userInputs.put("user_sourcetype","battlecat_BatchSize");
+
+        TestUtil.updateConfigFile("log4j2_template.xml", "log4j2.xml", userInputs);
+        LoggerContext context= LogManager.getContext(true);
+        boolean has=context.hasLogger(loggerName);
+        Logger logger = LogManager.getLogger(loggerName);
+
+        List<String> msgs = new ArrayList<String>();
+
+        String jsonMsg = String.format("{EventDate:%s, EventMsg:'test event for log4j size 1}", new Date().toString());
+        logger.info(jsonMsg);
+        msgs.add(jsonMsg);
+        jsonMsg = String.format("{EventDate:%s, EventMsg:'test event for log4j size 2}", new Date().toString());
+        logger.info(jsonMsg);
+        msgs.add(jsonMsg);
+
+        Thread.sleep(6000);
+        TestUtil.verifyNoEventSentToSplunk(msgs);
+
+        jsonMsg = String.format("{EventDate:%s, EventMsg:'test event for log4j size 3, adding more msg to exceed the maxsize aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa}", new Date().toString());
+        logger.info(jsonMsg);
+        msgs.add(jsonMsg);
+
+        TestUtil.verifyEventsSentToSplunk(msgs);
+        TestUtil.deleteHttpinput(httpinputName);
+    }
+
 }

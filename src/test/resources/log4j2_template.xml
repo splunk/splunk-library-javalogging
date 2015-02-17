@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="info" name="example" packages="">
+    <Appenders>
+        <Http name="splunkhttpappender"
+              url="%scheme%://%host%:%port%/services/receivers/token"
+              index=""
+              token="%user_defined_httpinput_token%"
+              disableCertificateValidation="true"
+              source="splunktest_accept" sourcetype="battlecat_test">
+            <PatternLayout pattern="%m"/>
+        </Http>
+
+    </Appenders>
+
+    <!-- Define a logger named 'testSplunkLog4j' which writes to the socket appender we defined above. -->
+    <Loggers>
+        <Root level="INFO"/>
+        <Logger name="testSplunkLog4j" level="info">
+            <AppenderRef ref="splunkhttpappender"/>
+        </Logger>
+    </Loggers>
+</Configuration>

@@ -49,6 +49,7 @@ public final class HttpAppender extends AbstractAppender
                          long batchInterval,
                          long batchCount,
                          long batchSize,
+                         long retriesOnError,
                          final String disableCertificateValidation)
     {
         super(name, filter, layout, ignoreExceptions);
@@ -59,7 +60,7 @@ public final class HttpAppender extends AbstractAppender
         metadata.put(HttpInputEventSender.MetadataSourceTypeTag, sourcetype);
         // @todo - batching SPL-96375
         _eventSender = new HttpInputEventSender(
-            url, token, batchInterval, batchCount, batchSize, metadata);
+            url, token, batchInterval, batchCount, batchSize, retriesOnError, metadata);
         if (disableCertificateValidation.equalsIgnoreCase("true")) {
             _eventSender.disableCertificateValidation();
         }
@@ -82,6 +83,7 @@ public final class HttpAppender extends AbstractAppender
             @PluginAttribute("batch_size_bytes") final String batchSize,
             @PluginAttribute("batch_size_count") final String batchCount,
             @PluginAttribute("batch_interval") final String batchInterval,
+            @PluginAttribute("retries_on_error") final String retriesOnError,
             @PluginAttribute("disableCertificateValidation") final String disableCertificateValidation,
             @PluginElement("Layout") Layout<? extends Serializable> layout,
             @PluginElement("Filter") final Filter filter
@@ -117,6 +119,7 @@ public final class HttpAppender extends AbstractAppender
                 source, sourcetype, index,
                 filter, layout, ignoreExceptions,
                 parseInt(batchInterval, 0), parseInt(batchCount, 1), parseInt(batchSize, 0),
+                parseInt(retriesOnError, 0),
                 disableCertificateValidation);
     }
     

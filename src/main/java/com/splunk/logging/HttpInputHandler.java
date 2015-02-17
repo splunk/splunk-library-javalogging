@@ -68,9 +68,9 @@ package com.splunk.logging;
  * com.splunk.logging.HttpInputHandler.sourcetype=syslog
  *
  * # Batching
- * com.splunk.logging.HttpInputHandler.delay = 500
- * com.splunk.logging.HttpInputHandler.batchCount = 1000
- * com.splunk.logging.HttpInputHandler.batchSize = 65536
+ * com.splunk.logging.HttpInputHandler.batch_interval = 500
+ * com.splunk.logging.HttpInputHandler.batch_size_count = 1000
+ * com.splunk.logging.HttpInputHandler.batch_size_count = 65536
  */
 
 import java.io.IOException;
@@ -92,6 +92,7 @@ public final class HttpInputHandler extends Handler {
     private final String BatchDelayConfTag = "batch_interval";
     private final String BatchCountConfTag = "batch_size_count";
     private final String BatchSizeConfTag = "batch_size_bytes";
+    private final String RetriesOnErrorTag = "retries_on_error";
     private final String UrlConfTag = "url";
 
     /** HttpInputHandler c-or */
@@ -117,10 +118,11 @@ public final class HttpInputHandler extends Handler {
         long delay = getConfigurationNumericProperty(BatchDelayConfTag, 0);
         long batchCount = getConfigurationNumericProperty(BatchCountConfTag, 0);
         long batchSize = getConfigurationNumericProperty(BatchSizeConfTag, 0);
+        long retriesOnError = getConfigurationNumericProperty(RetriesOnErrorTag, 0);
 
         // delegate all configuration params to event sender
         eventSender = new HttpInputEventSender(
-            httpInputUrl, token, delay, batchCount, batchSize, metadata);
+            httpInputUrl, token, delay, batchCount, batchSize, retriesOnError, metadata);
 
         if (getConfigurationProperty("disableCertificateValidation", "false").equalsIgnoreCase("true")) {
             eventSender.disableCertificateValidation();

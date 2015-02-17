@@ -14,15 +14,18 @@
  * under the License.
  */
 
+import ch.qos.logback.classic.LoggerContext;
+import ch.qos.logback.classic.joran.JoranConfigurator;
+import ch.qos.logback.core.joran.spi.JoranException;
 import com.splunk.*;
 import org.junit.Assert;
+import org.slf4j.*;
 
 import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.logging.LogManager;
 
 public class TestUtil {
 
@@ -141,16 +144,12 @@ public class TestUtil {
      * modify the config file with the generated token, and configured splunk host,
      * read the template from configFileTemplate, and create the updated configfile to configFile
      */
-    public static void updateConfigFile(String configFileTemplate, String configFile, String token) throws IOException {
+    public static String updateConfigFile(String configFileTemplate, String configFile, HashMap<String,String>userInputs) throws IOException {
         getSplunkHostInfo();
 
         String configFileDir = TestUtil.class.getProtectionDomain().getCodeSource().getLocation().getPath();
         List<String> lines = Files.readAllLines(new File(configFileDir, configFileTemplate).toPath(), Charset.defaultCharset());
         for (int i = 0; i < lines.size(); i++) {
-            if (lines.get(i).contains("%user_defined_httpinput_token%")) {
-                lines.set(i, lines.get(i).replace("%user_defined_httpinput_token%", token));
-            }
-
             if (lines.get(i).contains("%host%")) {
                 lines.set(i, lines.get(i).replace("%host%", serviceArgs.host));
             }
@@ -162,17 +161,68 @@ public class TestUtil {
             if (lines.get(i).contains("%scheme%")) {
                 lines.set(i, lines.get(i).replace("%scheme%", serviceArgs.scheme));
             }
+
+            List<String> configureProperties= Arrays.asList(
+                    "user_httpinput_token",
+                    "user_batch_interval",
+                    "user_batch_size_bytes",
+                    "user_batch_size_count",
+                    "user_logger_name",
+                    "user_source",
+                    "user_sourcetype"
+            );
+
+            if(!userInputs.containsKey("user_source")) userInputs.put("user_source","acceptancetest");
+            if(!userInputs.containsKey("user_sourcetype")) userInputs.put("user_sourcetype","acceptancetestsourcetype");
+
+            for(String property:configureProperties) {
+                if (lines.get(i).contains(property)) {
+                    if (userInputs.keySet().contains(property) &&
+                            !userInputs.get(property).isEmpty())
+                        lines.set(i, lines.get(i).replace("%"+property+"%", userInputs.get(property)));
+                    else
+                        lines.set(i, "");
+                }
+            }
         }
 
         String configFilePath = new File(configFileDir, configFile).getPath();
         FileWriter fw = new FileWriter(configFilePath);
         for (String line : lines) {
-            fw.write(line);
-            fw.write(System.getProperty("line.separator"));
+            if(!line.isEmpty()) {
+                fw.write(line);
+                fw.write(System.getProperty("line.separator"));
+            }
         }
 
         fw.flush();
         fw.close();
+
+        return configFilePath;
+    }
+
+    /*
+    create logback.xml and force logback manager to reload the configurations
+     */
+    public static void resetLogbackConfiguration(String configFileTemplate, String configFile, HashMap<String,String> userInputs) throws IOException, JoranException {
+        String configFilePath=updateConfigFile(configFileTemplate,configFile,userInputs);
+
+        //force the Logback factory to reload the configuration file
+        JoranConfigurator jc=new JoranConfigurator();
+        LoggerContext context=(LoggerContext)LoggerFactory.getILoggerFactory();
+        jc.setContext(context);
+        context.reset();
+        jc.doConfigure(configFilePath);
+    }
+
+    /*
+    create logging.property and force java logging  manager to reload the configurations
+    */
+    public static void resetJavaLoggingConfiguration(String configFileTemplate, String configFile, HashMap<String,String> userInputs) throws IOException, JoranException {
+        String configFilePath=updateConfigFile(configFileTemplate,configFile,userInputs);
+        FileInputStream configFileStream = new FileInputStream(configFilePath);
+        LogManager.getLogManager().readConfiguration(configFileStream);
+        configFileStream.close();
     }
 
     public static void verifyOneAndOnlyOneEventSentToSplunk(String msg) throws IOException {
@@ -203,6 +253,36 @@ public class TestUtil {
         Assert.assertTrue(eventCount == 1);
     }
 
+    public static void verifyNoEventSentToSplunk(List<String> msgs) throws IOException {
+        connectToSplunk();
+        String searchstr=org.apache.commons.lang3.StringUtils.join(msgs,"\" OR \"");
+        searchstr="\""+searchstr+"\"";
+
+        long startTime = System.currentTimeMillis();
+        int eventCount = 0;
+        InputStream resultsStream = null;
+        ResultsReaderXml resultsReader = null;
+        while (System.currentTimeMillis() - startTime < 10 * 1000)/*wait for up to 30s*/ {
+            resultsStream = service.oneshotSearch("search " + searchstr);
+            resultsReader = new ResultsReaderXml(resultsStream);
+
+            //verify has one and only one record return
+            for (Event event : resultsReader) {
+                eventCount++;
+                System.out.println("------verify no events---------");
+                System.out.println(event.getSegmentedRaw());
+            }
+
+            if (eventCount > 0)
+                break;
+        }
+
+        resultsReader.close();
+        resultsStream.close();
+
+        Assert.assertTrue(eventCount == 0);
+    }
+
     /*
     verify each of the message in msgs appeared and appeared only once in splunk
      */
@@ -221,7 +301,7 @@ public class TestUtil {
                 //verify has one and only one record return
                 for (Event event : resultsReader) {
                     eventCount++;
-                    System.out.println("---------------");
+                    System.out.println("------verify has events---------");
                     System.out.println(event.getSegmentedRaw());
                 }
 

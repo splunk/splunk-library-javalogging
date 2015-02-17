@@ -2,19 +2,23 @@
 
 <configuration>
 
-    <Appender name="httpappender" class="com.splunk.logging.HttpLogbackAppender">
+    <Appender name="%user_logger_name%" class="com.splunk.logging.HttpLogbackAppender">
         <url>%scheme%://%host%:%port%/services/receivers/token</url>
-        <token>%user_defined_httpinput_token%</token>
+        <token>%user_httpinput_token%</token>
         <source>splunktest_accept</source>
         <sourcetype>battlecat_test</sourcetype>
         <disableCertificateValidation>true</disableCertificateValidation>
+        <batch_interval>%user_batch_interval%</batch_interval>
+        <batch_size_bytes>%user_batch_size_bytes%</batch_size_bytes>
+        <batch_size_count>%user_batch_size_count%</batch_size_count>
+
         <layout class="ch.qos.logback.classic.PatternLayout">
             <pattern>%msg</pattern>
         </layout>
     </Appender>
 
-    <logger name ="splunkLogback" level="debug">
-        <appender-ref ref="httpappender" />
+    <logger name ="%user_logger_name%" level="debug">
+        <appender-ref ref="%user_logger_name%" />
     </logger>
 
 </configuration>

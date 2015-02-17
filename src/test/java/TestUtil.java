@@ -144,7 +144,7 @@ public class TestUtil {
      * modify the config file with the generated token, and configured splunk host,
      * read the template from configFileTemplate, and create the updated configfile to configFile
      */
-    public static String updateConfigFile(String configFileTemplate, String configFile, HashMap<String,String>userInputs) throws IOException {
+    public static String updateConfigFile(String configFileTemplate, String configFile, HashMap<String, String> userInputs) throws IOException {
         getSplunkHostInfo();
 
         String configFileDir = TestUtil.class.getProtectionDomain().getCodeSource().getLocation().getPath();
@@ -162,7 +162,7 @@ public class TestUtil {
                 lines.set(i, lines.get(i).replace("%scheme%", serviceArgs.scheme));
             }
 
-            List<String> configureProperties= Arrays.asList(
+            List<String> configureProperties = Arrays.asList(
                     "user_httpinput_token",
                     "user_batch_interval",
                     "user_batch_size_bytes",
@@ -172,14 +172,15 @@ public class TestUtil {
                     "user_sourcetype"
             );
 
-            if(!userInputs.containsKey("user_source")) userInputs.put("user_source","acceptancetest");
-            if(!userInputs.containsKey("user_sourcetype")) userInputs.put("user_sourcetype","acceptancetestsourcetype");
+            if (!userInputs.containsKey("user_source")) userInputs.put("user_source", "acceptancetest");
+            if (!userInputs.containsKey("user_sourcetype"))
+                userInputs.put("user_sourcetype", "acceptancetestsourcetype");
 
-            for(String property:configureProperties) {
+            for (String property : configureProperties) {
                 if (lines.get(i).contains(property)) {
                     if (userInputs.keySet().contains(property) &&
                             !userInputs.get(property).isEmpty())
-                        lines.set(i, lines.get(i).replace("%"+property+"%", userInputs.get(property)));
+                        lines.set(i, lines.get(i).replace("%" + property + "%", userInputs.get(property)));
                     else
                         lines.set(i, "");
                 }
@@ -189,7 +190,7 @@ public class TestUtil {
         String configFilePath = new File(configFileDir, configFile).getPath();
         FileWriter fw = new FileWriter(configFilePath);
         for (String line : lines) {
-            if(!line.isEmpty()) {
+            if (!line.isEmpty()) {
                 fw.write(line);
                 fw.write(System.getProperty("line.separator"));
             }
@@ -202,14 +203,25 @@ public class TestUtil {
     }
 
     /*
+        create log4j2.xml and force log4j2 context manager to reload the configurations, return context and using this context to retrieve logger instead of using LogManager
+    */
+    public static org.apache.logging.log4j.core.LoggerContext resetLog4j2Configuration(String configFileTemplate, String configFile, HashMap<String, String> userInputs) throws IOException, JoranException {
+        String configFilePath = updateConfigFile(configFileTemplate, configFile, userInputs);
+        org.apache.logging.log4j.core.LoggerContext context = new org.apache.logging.log4j.core.LoggerContext("new");
+        context.reconfigure();
+        context.updateLoggers();
+        return context;
+    }
+
+    /*
     create logback.xml and force logback manager to reload the configurations
      */
-    public static void resetLogbackConfiguration(String configFileTemplate, String configFile, HashMap<String,String> userInputs) throws IOException, JoranException {
-        String configFilePath=updateConfigFile(configFileTemplate,configFile,userInputs);
+    public static void resetLogbackConfiguration(String configFileTemplate, String configFile, HashMap<String, String> userInputs) throws IOException, JoranException {
+        String configFilePath = updateConfigFile(configFileTemplate, configFile, userInputs);
 
         //force the Logback factory to reload the configuration file
-        JoranConfigurator jc=new JoranConfigurator();
-        LoggerContext context=(LoggerContext)LoggerFactory.getILoggerFactory();
+        JoranConfigurator jc = new JoranConfigurator();
+        LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
         jc.setContext(context);
         context.reset();
         jc.doConfigure(configFilePath);
@@ -218,8 +230,8 @@ public class TestUtil {
     /*
     create logging.property and force java logging  manager to reload the configurations
     */
-    public static void resetJavaLoggingConfiguration(String configFileTemplate, String configFile, HashMap<String,String> userInputs) throws IOException, JoranException {
-        String configFilePath=updateConfigFile(configFileTemplate,configFile,userInputs);
+    public static void resetJavaLoggingConfiguration(String configFileTemplate, String configFile, HashMap<String, String> userInputs) throws IOException, JoranException {
+        String configFilePath = updateConfigFile(configFileTemplate, configFile, userInputs);
         FileInputStream configFileStream = new FileInputStream(configFilePath);
         LogManager.getLogManager().readConfiguration(configFileStream);
         configFileStream.close();
@@ -255,8 +267,8 @@ public class TestUtil {
 
     public static void verifyNoEventSentToSplunk(List<String> msgs) throws IOException {
         connectToSplunk();
-        String searchstr=org.apache.commons.lang3.StringUtils.join(msgs,"\" OR \"");
-        searchstr="\""+searchstr+"\"";
+        String searchstr = org.apache.commons.lang3.StringUtils.join(msgs, "\" OR \"");
+        searchstr = "\"" + searchstr + "\"";
 
         long startTime = System.currentTimeMillis();
         int eventCount = 0;

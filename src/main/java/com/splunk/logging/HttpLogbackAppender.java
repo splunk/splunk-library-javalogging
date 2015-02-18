@@ -35,7 +35,7 @@ public class HttpLogbackAppender extends AppenderBase<ILoggingEvent> {
     private String _token;
     private String _disableCertificateValidation;
     private long _batchInterval = 0;
-    private long _batchCount = 1;
+    private long _batchCount = 0;
     private long _batchSize = 0;
     private long _retriesOnError = 0;
 

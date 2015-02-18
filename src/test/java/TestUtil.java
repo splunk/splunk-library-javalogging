@@ -31,6 +31,7 @@ public class TestUtil {
 
     private static final ServiceArgs serviceArgs = new ServiceArgs();
     private static Service service;
+    private static final String httpInputTokenEndpointPath = "/services/data/inputs/token/http";
 
     /**
      * read splunk host info from .splunkrc file
@@ -87,25 +88,23 @@ public class TestUtil {
         connectToSplunk();
 
         //enable logging endpoint
-        Map args = new HashMap();
-        args.put("disabled", 0);
-        service.post("/servicesNS/admin/search/data/inputs/token/http/http", args);
+        TestUtil.enableHttpinput();
 
         //create a httpinput
-        args = new HashMap();
+        Map args = new HashMap();
         args.put("name", httpinputName);
         args.put("description", "test http input");
 
         try {
-            service.delete("/services/data/inputs/token/http/" + httpinputName);
+            service.delete(httpInputTokenEndpointPath + "/" + httpinputName);
         } catch (Exception e) {
         }
 
-        service.post("/services/data/inputs/token/http", args);
+        service.post(httpInputTokenEndpointPath, args);
 
         //get httpinput token
         args = new HashMap();
-        ResponseMessage response = service.get("/services/data/inputs/token/http/" + httpinputName, args);
+        ResponseMessage response = service.get(httpInputTokenEndpointPath + "/" + httpinputName, args);
         BufferedReader reader = new BufferedReader(new InputStreamReader(response.getContent(), "UTF-8"));
         String token = "";
         while (true) {
@@ -135,10 +134,50 @@ public class TestUtil {
 
         //remove a httpinput
         try {
-            service.delete("/services/data/inputs/http/" + httpinputName);
+            service.delete(httpInputTokenEndpointPath + "/" + httpinputName);
         } catch (Exception e) {
         }
     }
+
+    /**
+     * disable http input featuren
+     */
+    public static void disableHttpinput() throws IOException {
+        connectToSplunk();
+
+        //disable logging endpoint
+        Map args = new HashMap();
+        args.put("disabled", 1);
+        service.post("/servicesNS/admin/search/data/inputs/token/http/http", args);
+    }
+
+    /**
+     * enable http input featuren
+     */
+    public static void enableHttpinput() throws IOException {
+        connectToSplunk();
+
+        //enable logging endpoint
+        Map args = new HashMap();
+        args.put("disabled", 0);
+        service.post("/servicesNS/admin/search/data/inputs/token/http/http", args);
+    }
+
+    /**
+     * disable http input token
+     */
+    public static void disableHttpinput(String httpinputName) throws IOException {
+        connectToSplunk();
+
+        Map args = new HashMap();
+        args.put("disabled", 1);
+
+        try {
+            service.post(httpInputTokenEndpointPath + "/" + httpinputName, args);
+        } catch (Exception e) {
+        }
+    }
+
 
     /**
      * modify the config file with the generated token, and configured splunk host,

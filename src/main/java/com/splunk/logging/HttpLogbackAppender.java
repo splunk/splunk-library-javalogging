@@ -137,7 +137,7 @@ public class HttpLogbackAppender extends AppenderBase<ILoggingEvent> {
     }
 
     public void setbatch_size_count(String value) {
-        _batchCount = parseLong(value, 1);
+        _batchCount = parseLong(value, 0);
     }
 
     public void setbatch_size_bytes(String value) {

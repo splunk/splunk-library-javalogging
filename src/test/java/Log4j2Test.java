@@ -137,9 +137,7 @@ public final class Log4j2Test {
         HashMap<String, String> userInputs = new HashMap<String, String>();
         userInputs.put("user_logger_name", loggerName);
         userInputs.put("user_httpinput_token", token);
-        //userInputs.put("user_batch_interval", "10000");
         userInputs.put("user_batch_size_bytes", "500");
-        //userInputs.put("user_batch_size_count","100");
         userInputs.put("user_source", "splunktest_BatchSize");
         userInputs.put("user_sourcetype", "battlecat_BatchSize");
 
@@ -148,17 +146,24 @@ public final class Log4j2Test {
 
         List<String> msgs = new ArrayList<String>();
 
+        int size=0;
         String jsonMsg = String.format("{EventDate:%s, EventMsg:'test event for log4j size 1}", new Date().toString());
         logger.info(jsonMsg);
+        size +=jsonMsg.length();
         msgs.add(jsonMsg);
         jsonMsg = String.format("{EventDate:%s, EventMsg:'test event for log4j size 2}", new Date().toString());
+        size +=jsonMsg.length();
         logger.info(jsonMsg);
         msgs.add(jsonMsg);
 
         Thread.sleep(6000);
         TestUtil.verifyNoEventSentToSplunk(msgs);
 
-        jsonMsg = String.format("{EventDate:%s, EventMsg:'test event for log4j size 3, adding more msg to exceed the maxsize aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa}", new Date().toString());
+        jsonMsg = String.format("{EventDate:%s, EventMsg:'test event for log4j size 3, adding more msg to exceed the maxsize}", new Date().toString());
+        while(size+jsonMsg.length()<550){
+            jsonMsg=String.format("%saaaaa",jsonMsg);
+        }
+
         logger.info(jsonMsg);
         msgs.add(jsonMsg);
 

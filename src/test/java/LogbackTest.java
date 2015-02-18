@@ -123,9 +123,7 @@ public final class LogbackTest {
         String loggerName="logBackBatchLoggerSize";
         HashMap<String,String> userInputs=new HashMap<String,String>();
         userInputs.put("user_httpinput_token",token);
-        userInputs.put("user_batch_interval","0");
-        userInputs.put("user_batch_size_count","10000");
-        userInputs.put("user_batch_size_bytes","500");
+        userInputs.put("user_batch_size_bytes", "500");
         userInputs.put("user_logger_name",loggerName);
         userInputs.put("user_source","splunktest_BatchSize");
         userInputs.put("user_sourcetype","battlecat_BatchSize");
@@ -135,17 +133,24 @@ public final class LogbackTest {
 
         List<String> msgs = new ArrayList<String>();
 
+        int size=0;
         String jsonMsg = String.format("{EventDate:%s, EventMsg:'test event for java logging size 1}", new Date().toString());
+        size +=jsonMsg.length();
         logger.info(jsonMsg);
         msgs.add(jsonMsg);
         jsonMsg = String.format("{EventDate:%s, EventMsg:'test event for java logging size 2}", new Date().toString());
+        size +=jsonMsg.length();
         logger.info(jsonMsg);
         msgs.add(jsonMsg);
 
         Thread.sleep(6000);
         TestUtil.verifyNoEventSentToSplunk(msgs);
 
-        jsonMsg = String.format("{EventDate:%s, EventMsg:'test event for java logging size 3, adding more msg to exceed the maxsize aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa}", new Date().toString());
+        jsonMsg = String.format("{EventDate:%s, EventMsg:'test event for java logging size 3, adding more msg to exceed the maxsize}", new Date().toString());
+        while(size+jsonMsg.length()<550){
+            jsonMsg=String.format("%saaaaa",jsonMsg);
+        }
+
         logger.info(jsonMsg);
         msgs.add(jsonMsg);
 

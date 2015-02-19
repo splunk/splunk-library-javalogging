@@ -60,9 +60,7 @@
                         <version>2.18.1</version>
                         <configuration>
                             <includes>
-                                <include>**/JavaLoggingTest.class</include>
-                                <include>**/Log4j2Test.class</include>
-                                <include>**/LogbackTest.class</include>
+                                <include>**/HttpInput_*.class</include>
                             </includes>
                         </configuration>
                     </plugin>

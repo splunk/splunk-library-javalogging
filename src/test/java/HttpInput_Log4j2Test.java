@@ -24,7 +24,7 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.apache.logging.log4j.Logger;
 
-public final class Log4j2Test {
+public final class HttpInput_Log4j2Test {
     private String httpinputName = "Log4j2Test";
     List<List<HttpInputLoggingEventInfo>> errors = new ArrayList<List<HttpInputLoggingEventInfo>>();
     List<HttpInputLoggingErrorHandler.ServerErrorException> logEx = new ArrayList<HttpInputLoggingErrorHandler.ServerErrorException>();

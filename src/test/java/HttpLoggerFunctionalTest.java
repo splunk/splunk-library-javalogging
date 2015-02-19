@@ -91,7 +91,7 @@ public class HttpLoggerFunctionalTest {
     private static ServiceArgs serviceArgs;
     private static String httpinputName = "functionalhttp";
 
-    private static void setupHttpInput() throws Exception {
+    private static void setupHttpInput(boolean batching) throws Exception {
         //connect to localhost
         serviceArgs = new ServiceArgs();
         serviceArgs.setUsername("admin");
@@ -137,16 +137,22 @@ public class HttpLoggerFunctionalTest {
 
         //modify the config file with the generated token
         String configFileDir = HttpLoggerStressTest.class.getProtectionDomain().getCodeSource().getLocation().getPath();
-        CreateLog4j2ConfigFile(token, new File(configFileDir, "log4j2.xml").getPath());
-        CreateLogBackConfigFile(token, new File(configFileDir, "logback.xml").getPath());
-        CreateJavaUtilLog(token);
+        CreateLog4j2ConfigFile(token, new File(configFileDir, "log4j2.xml").getPath(), batching);
+        CreateLogBackConfigFile(token, new File(configFileDir, "logback.xml").getPath(), batching);
+        CreateJavaUtilLog(token, batching);
     }
-    private static void CreateJavaUtilLog(String token) throws Exception {
+    private static void CreateJavaUtilLog(String token, boolean batching) throws Exception {
         String LoggerConf =
                 "handlers=com.splunk.logging.HttpInputHandler\n" +
                 "com.splunk.logging.HttpInputHandler.url=https://127.0.0.1:8089/services/receivers/token\n" +
                 String.format("com.splunk.logging.HttpInputHandler.token=%s\n", token) +
                 "com.splunk.logging.HttpInputHandler.disableCertificateValidation=true\n";
+        if(batching) {
+            LoggerConf +=
+                    "batch_interval=\"1000\"\n" +
+                    "batch_size_count=\"500\"\n" +
+                    "batch_size_bytes=\"512\"\n";
+        }
         try {
             java.util.logging.LogManager.getLogManager().readConfiguration(
                     new ByteArrayInputStream(LoggerConf.getBytes())
@@ -158,7 +164,7 @@ public class HttpLoggerFunctionalTest {
         }
 
     }
-    private static void CreateLogBackConfigFile(String token, String configFilePath) throws Exception {
+    private static void CreateLogBackConfigFile(String token, String configFilePath, boolean batching) throws Exception {
         FileWriter fw = new FileWriter(configFilePath);
         fw.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n");
         fw.write("<configuration>\r\n");
@@ -166,6 +172,11 @@ public class HttpLoggerFunctionalTest {
         fw.write("        <url>https://127.0.0.1:8089/services/receivers/token</url>\r\n");
         fw.write(String.format("        <token>%s</token>\r\n", token));
         fw.write("        <disableCertificateValidation>true</disableCertificateValidation>\r\n");
+        if(batching){
+            fw.write("        <batch_interval>1000</batch_interval>\r\n");
+            fw.write("        <batch_size_count>500</batch_size_count>\r\n");
+            fw.write("        <batch_size_bytes>512</batch_size_bytes>\r\n");
+        }
         fw.write("        <source>splunktest</source>\r\n");
         fw.write("        <sourcetype>battlecat</sourcetype>\r\n");
         fw.write("        <layout class=\"ch.qos.logback.classic.PatternLayout\">\r\n");
@@ -187,7 +198,7 @@ public class HttpLoggerFunctionalTest {
         addPath(configFilePath);
 
     }
-    private static void CreateLog4j2ConfigFile(String token, String configFilePath) throws Exception {
+    private static void CreateLog4j2ConfigFile(String token, String configFilePath, boolean batching) throws Exception {
         FileWriter fw = new FileWriter(configFilePath);
         fw.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n");
         fw.write("<Configuration status=\"info\" name=\"example\" packages=\"com.splunk.logging\">\r\n");
@@ -198,9 +209,11 @@ public class HttpLoggerFunctionalTest {
         fw.write("              index=\"\"\r\n");
         fw.write(String.format("              token=\"%s\"\r\n", token));
         fw.write("              disableCertificateValidation=\"true\"\r\n");
-        //fw.write("              batch_interval=\"250\"\r\n");
-        //fw.write("              batch_size_count=\"500\"\r\n");
-        //fw.write("              batch_size_bytes=\"512\"\r\n");
+        if(batching) {
+            fw.write("              batch_interval=\"1000\"\r\n");
+            fw.write("              batch_size_count=\"500\"\r\n");
+            fw.write("              batch_size_bytes=\"512\"\r\n");
+        }
         fw.write("              source=\"splunktest\" sourcetype=\"battlecat\">\r\n");
         fw.write("            <PatternLayout pattern=\"%m\"/>\r\n");
         fw.write("        </Http>\r\n");
@@ -219,30 +232,42 @@ public class HttpLoggerFunctionalTest {
     }
 
     @Test
-    public void canSendEventUsingJavaLogging() throws Exception {
+    public void LogToSplunkViaDifferentLoggers() throws Exception {
+        LogToSplunk(false);
+    }
+
+    @Test
+    public void BatchLogToSplunkViaDifferentLoggers() throws Exception {
+        LogToSplunk(true);
+    }
+
+    private void LogToSplunk(boolean batching) throws  Exception {
         long startTime = System.currentTimeMillis()/1000;
+        int expectedCounter = 10;
         Thread.sleep(2000);
         System.out.printf("\tSetting up http inputs ... ");
-        setupHttpInput();
+        setupHttpInput(batching);
         System.out.printf("Inserting data ... ");
-        int eventCounter=0;
+
         org.apache.logging.log4j.Logger LOG4J = org.apache.logging.log4j.LogManager.getLogger("splunk.log4j");
-        LOG4J.info("log4j message1");
-        LOG4J.info("log4j message2");
-        eventCounter += 2;
+        for(int i=0; i <expectedCounter; i++) {
+            LOG4J.info(String.format("log4j message%d", i));
+        }
 
         org.slf4j.Logger LOGBACK = org.slf4j.LoggerFactory.getLogger("splunk.logback");
-        LOGBACK.info("logback message1");
-        LOGBACK.info("logback message2");
-        eventCounter += 2;
+        for(int i=0; i <expectedCounter; i++) {
+            LOGBACK.info(String.format("logback message%d", i));
+        }
 
         java.util.logging.Logger LOGGER = java.util.logging.Logger.getLogger("splunk.java.util");
-        LOGGER.info("javautil message1");
-        LOGGER.info("javautil message2");
-        eventCounter += 2;
+        for(int i=0; i <expectedCounter; i++) {
+            LOGGER.info(String.format("javautil message%d", i));
+        }
         System.out.printf("Done.\r\n");
 
         // Wait for indexing to complete
+        if(batching)
+            Thread.sleep(5000);
         int eventCount = getEventsCount(String.format("search earliest=%d| stats count", startTime));
         for(int i=0; i<4; i++) {
             do {
@@ -259,10 +284,11 @@ public class HttpLoggerFunctionalTest {
         for (String type : new String [] {"log4j", "logback", "javautil"}) {
             String arguments = String.format("search %s earliest=%d| stats count", type, startTime);
             eventCount = getEventsCount(arguments);
-            System.out.printf("Logger: '%s', expected 2 events, actually %d, %s\r\n", type, eventCount, (eventCount == 2)?"passed.":"failed.");
-            testPassed &= (eventCount == 2);
+            System.out.printf("Logger: '%s', expected %d events, actually %d, %s\r\n", type, expectedCounter, eventCount, (eventCount == expectedCounter)?"passed.":"failed.");
+            testPassed &= (eventCount == expectedCounter);
         }
         System.out.printf("Test %s.\r\n", testPassed ? "PASSED" : "FAILED");
         Assert.assertTrue(testPassed);
+
     }
 }

@@ -182,6 +182,8 @@ public class HttpLoggerStressTest {
 
     @Test
     public void canSendEventUsingJavaLogging() throws Exception {
+        long startTime = System.currentTimeMillis()/1000;
+        Thread.sleep(2000);
         int numberOfThreads = 1;
         int testDurationInSecs = 300;
 
@@ -200,12 +202,12 @@ public class HttpLoggerStressTest {
             t.join();
         System.out.printf("Done.\r\n");
         // Wait for indexing to complete
-        int eventCount = getEventsCount("search *|stats count");
+        int eventCount = getEventsCount(String.format("search earliest=%d| stats count", startTime));
         for(int i=0; i<4; i++) {
             do {
                 System.out.printf("\tWaiting for indexing to complete, %d events so far\r\n", eventCount);
                 Thread.sleep(10000);
-                int updatedEventCount = getEventsCount("search *|stats count");
+                int updatedEventCount = getEventsCount(String.format("search earliest=%d| stats count", startTime));
                 if (updatedEventCount == eventCount)
                     break;
                 eventCount = updatedEventCount;
@@ -214,7 +216,7 @@ public class HttpLoggerStressTest {
         }
         Boolean testPassed = true;
         for (int i = 0; i < numberOfThreads; i++) {
-            String arguments = String.format("search Thread%d | stats count", i);
+            String arguments = String.format("search Thread%d earliest=%d| stats count", i, startTime);
             eventCount = getEventsCount(arguments);
             System.out.printf("Thread %d, expected %d events, actually %d, %s\r\n", i, dsList[i].eventsGenerated, eventCount, (eventCount == dsList[i].eventsGenerated)?"passed.":"failed.");
             testPassed &= (eventCount == dsList[i].eventsGenerated);

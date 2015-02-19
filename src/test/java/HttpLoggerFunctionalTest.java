@@ -33,36 +33,6 @@ import com.splunk.logging.*;
 import com.splunk.*;
 
 public class HttpLoggerFunctionalTest {
-
-    private static class DataSender implements Runnable {
-        private String threadName;
-        public int eventsGenerated = 0, testDurationInSecs = 300;
-        Logger logger;
-
-        public DataSender(String threadName, int testDurationInSecs) {
-            this.threadName = threadName;
-            this.testDurationInSecs = testDurationInSecs;
-            this.logger = LogManager.getLogger("splunk.log4j");
-        }
-
-        public void run() {
-            Date dCurrent = new Date();
-            Date dEnd = new Date();
-            dEnd.setTime(dCurrent.getTime() + testDurationInSecs * 1000);
-            while(dCurrent.before(dEnd)) {
-                this.logger.info(String.format("Thread: %s, event: %d", this.threadName, eventsGenerated++));
-                dCurrent = new Date();
-                if(eventsGenerated % 1000 == 0) {
-                    try {
-                        Thread.sleep(1000);
-                    }
-                    catch (Exception e) {
-                    }
-                }
-            }
-        }
-    }
-
     public static void addPath(String s) throws Exception {
         File f = new File(s);
         URI u = f.toURI();

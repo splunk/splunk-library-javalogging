@@ -16,9 +16,13 @@
  * under the License.
  */
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import ch.qos.logback.classic.LoggerContext;
+import ch.qos.logback.classic.joran.JoranConfigurator;
+import ch.qos.logback.core.joran.spi.JoranException;
+import org.slf4j.*;
 
+import com.splunk.logging.HttpInputLoggingErrorHandler;
+import com.splunk.logging.HttpInputLoggingEventInfo;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -29,7 +33,6 @@ import java.net.URLClassLoader;
 import java.util.*;
 import java.lang.reflect.*;
 
-import com.splunk.logging.*;
 import com.splunk.*;
 
 public class HttpLoggerFunctionalTest {
@@ -141,17 +144,18 @@ public class HttpLoggerFunctionalTest {
         CreateLogBackConfigFile(token, new File(configFileDir, "logback.xml").getPath(), batching);
         CreateJavaUtilLog(token, batching);
     }
+
     private static void CreateJavaUtilLog(String token, boolean batching) throws Exception {
         String LoggerConf =
                 "handlers=com.splunk.logging.HttpInputHandler\n" +
-                "com.splunk.logging.HttpInputHandler.url=https://127.0.0.1:8089/services/receivers/token\n" +
-                String.format("com.splunk.logging.HttpInputHandler.token=%s\n", token) +
-                "com.splunk.logging.HttpInputHandler.disableCertificateValidation=true\n";
-        if(batching) {
+                        "com.splunk.logging.HttpInputHandler.url=https://127.0.0.1:8089/services/receivers/token\n" +
+                        String.format("com.splunk.logging.HttpInputHandler.token=%s\n", token) +
+                        "com.splunk.logging.HttpInputHandler.disableCertificateValidation=true\n";
+        if (batching) {
             LoggerConf +=
-                    "batch_interval=\"1000\"\n" +
-                    "batch_size_count=\"500\"\n" +
-                    "batch_size_bytes=\"512\"\n";
+                    "com.splunk.logging.HttpInputHandler.batch_interval=200\n" +
+                            "com.splunk.logging.HttpInputHandler.batch_size_count=500\n" +
+                            "com.splunk.logging.HttpInputHandler.batch_size_bytes=512\n";
         }
         try {
             java.util.logging.LogManager.getLogManager().readConfiguration(
@@ -164,6 +168,7 @@ public class HttpLoggerFunctionalTest {
         }
 
     }
+
     private static void CreateLogBackConfigFile(String token, String configFilePath, boolean batching) throws Exception {
         FileWriter fw = new FileWriter(configFilePath);
         fw.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n");
@@ -172,8 +177,8 @@ public class HttpLoggerFunctionalTest {
         fw.write("        <url>https://127.0.0.1:8089/services/receivers/token</url>\r\n");
         fw.write(String.format("        <token>%s</token>\r\n", token));
         fw.write("        <disableCertificateValidation>true</disableCertificateValidation>\r\n");
-        if(batching){
-            fw.write("        <batch_interval>1000</batch_interval>\r\n");
+        if (batching) {
+            fw.write("        <batch_interval>200</batch_interval>\r\n");
             fw.write("        <batch_size_count>500</batch_size_count>\r\n");
             fw.write("        <batch_size_bytes>512</batch_size_bytes>\r\n");
         }
@@ -196,21 +201,22 @@ public class HttpLoggerFunctionalTest {
         fw.flush();
         fw.close();
         addPath(configFilePath);
+        resetLogbackConfiguration(configFilePath);
 
     }
+
     private static void CreateLog4j2ConfigFile(String token, String configFilePath, boolean batching) throws Exception {
         FileWriter fw = new FileWriter(configFilePath);
         fw.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n");
         fw.write("<Configuration status=\"info\" name=\"example\" packages=\"com.splunk.logging\">\r\n");
-        fw.write("    <!--need the \"token=...\" line to be a single line for parsing purpose-->\r\n");
         fw.write("    <Appenders>\r\n");
         fw.write("        <Http name=\"Http\"\r\n");
         fw.write("              url=\"https://127.0.0.1:8089/services/receivers/token\"\r\n");
         fw.write("              index=\"\"\r\n");
         fw.write(String.format("              token=\"%s\"\r\n", token));
         fw.write("              disableCertificateValidation=\"true\"\r\n");
-        if(batching) {
-            fw.write("              batch_interval=\"1000\"\r\n");
+        if (batching) {
+            fw.write("              batch_interval=\"200\"\r\n");
             fw.write("              batch_size_count=\"500\"\r\n");
             fw.write("              batch_size_bytes=\"512\"\r\n");
         }
@@ -241,35 +247,65 @@ public class HttpLoggerFunctionalTest {
         LogToSplunk(true);
     }
 
-    private void LogToSplunk(boolean batching) throws  Exception {
-        long startTime = System.currentTimeMillis()/1000;
-        int expectedCounter = 10;
+    private boolean insertDataWithLoggerAndVerify(String loggerType, int expectedCounter, boolean batching) throws IOException, InterruptedException, JoranException {
+        System.out.printf("\tInserting data with logger '%s'... ", loggerType);
+        long startTime = System.currentTimeMillis() / 1000;
         Thread.sleep(2000);
-        System.out.printf("\tSetting up http inputs ... ");
-        setupHttpInput(batching);
-        System.out.printf("Inserting data ... ");
-
-        org.apache.logging.log4j.Logger LOG4J = org.apache.logging.log4j.LogManager.getLogger("splunk.log4j");
-        for(int i=0; i <expectedCounter; i++) {
-            LOG4J.info(String.format("log4j message%d", i));
+        if (loggerType == "log4j") {
+            org.apache.logging.log4j.core.LoggerContext context = resetLog4j2Configuration();
+            org.apache.logging.log4j.Logger LOG4J = context.getLogger("splunk.log4j");
+            for (int i = 0; i < expectedCounter; i++) {
+                LOG4J.info(String.format("log4j message%d", i));
+            }
         }
-
-        org.slf4j.Logger LOGBACK = org.slf4j.LoggerFactory.getLogger("splunk.logback");
-        for(int i=0; i <expectedCounter; i++) {
-            LOGBACK.info(String.format("logback message%d", i));
+        if (loggerType == "logback") {
+            org.slf4j.Logger LOGBACK = org.slf4j.LoggerFactory.getLogger("splunk.logback");
+            for (int i = 0; i < expectedCounter; i++) {
+                LOGBACK.info(String.format("logback message%d", i));
+            }
         }
-
-        java.util.logging.Logger LOGGER = java.util.logging.Logger.getLogger("splunk.java.util");
-        for(int i=0; i <expectedCounter; i++) {
-            LOGGER.info(String.format("javautil message%d", i));
+        if (loggerType == "javautil") {
+            java.util.logging.Logger LOGGER = java.util.logging.Logger.getLogger("splunk.java.util");
+            for (int i = 0; i < expectedCounter; i++) {
+                LOGGER.info(String.format("javautil message%d", i));
+            }
         }
-        System.out.printf("Done.\r\n");
-
+        System.out.printf("Done\n");
         // Wait for indexing to complete
-        if(batching)
-            Thread.sleep(5000);
+        if (batching)
+            Thread.sleep(10000);
+        waitForIndexingToComplete(startTime);
+        Boolean testPassed = true;
+        String arguments = String.format("search %s earliest=%d| stats count", loggerType, startTime);
+        int eventCount = getEventsCount(arguments);
+        System.out.printf("\tLogger: '%s', expected %d events, actually %d, %s\r\n", loggerType, expectedCounter, eventCount, (eventCount == expectedCounter) ? "Passed." : "Failed.");
+        return (eventCount == expectedCounter);
+    }
+
+    private void LogToSplunk(boolean batching) throws Exception {
+        HttpInputLoggingErrorHandler.onError(new HttpInputLoggingErrorHandler.ErrorCallback() {
+            public void error(final List<HttpInputLoggingEventInfo> data, final Exception ex) {
+                HttpInputLoggingErrorHandler.ServerErrorException serverErrorException =
+                        (HttpInputLoggingErrorHandler.ServerErrorException) ex;
+                System.out.printf("ERROR: %s", ex.toString());
+                Assert.assertTrue(false);
+            }
+        });
+        int expectedCounter = 2;
+        System.out.printf("\tSetting up http inputs with %s ... ", batching ? "batching" : "no batching");
+        setupHttpInput(batching);
+        System.out.printf("Set\n");
+        Boolean testPassed = true;
+        testPassed &= insertDataWithLoggerAndVerify("log4j", expectedCounter, batching);
+        testPassed &= insertDataWithLoggerAndVerify("logback", expectedCounter, batching);
+        testPassed &= insertDataWithLoggerAndVerify("javautil", expectedCounter, batching);
+        Assert.assertTrue(testPassed);
+        System.out.printf("PASSED.\n\n");
+    }
+
+    private void waitForIndexingToComplete(long startTime) throws IOException, InterruptedException {
         int eventCount = getEventsCount(String.format("search earliest=%d| stats count", startTime));
-        for(int i=0; i<4; i++) {
+        for (int i = 0; i < 4; i++) {
             do {
                 System.out.printf("\tWaiting for indexing to complete, %d events so far\r\n", eventCount);
                 Thread.sleep(5000);
@@ -280,15 +316,28 @@ public class HttpLoggerFunctionalTest {
             } while (true);
             System.out.printf("\tCompleted wait for iteration %d\r\n", i);
         }
-        Boolean testPassed = true;
-        for (String type : new String [] {"log4j", "logback", "javautil"}) {
-            String arguments = String.format("search %s earliest=%d| stats count", type, startTime);
-            eventCount = getEventsCount(arguments);
-            System.out.printf("Logger: '%s', expected %d events, actually %d, %s\r\n", type, expectedCounter, eventCount, (eventCount == expectedCounter)?"passed.":"failed.");
-            testPassed &= (eventCount == expectedCounter);
-        }
-        System.out.printf("Test %s.\r\n", testPassed ? "PASSED" : "FAILED");
-        Assert.assertTrue(testPassed);
-
     }
+
+    /*
+        create log4j2.xml and force log4j2 context manager to reload the configurations, return context and using this context to retrieve logger instead of using LogManager
+    */
+    private static org.apache.logging.log4j.core.LoggerContext resetLog4j2Configuration() throws IOException {
+        org.apache.logging.log4j.core.LoggerContext context = new org.apache.logging.log4j.core.LoggerContext("new");
+        context.reconfigure();
+        context.updateLoggers();
+        return context;
+    }
+
+    /*
+    create logback.xml and force logback manager to reload the configurations
+     */
+    private static void resetLogbackConfiguration(String configFilePath) throws IOException, JoranException {
+        //force the Logback factory to reload the configuration file
+        JoranConfigurator jc = new JoranConfigurator();
+        LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
+        jc.setContext(context);
+        context.reset();
+        jc.doConfigure(configFilePath);
+    }
+
 }

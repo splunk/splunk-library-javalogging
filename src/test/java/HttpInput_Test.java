@@ -35,7 +35,7 @@ import java.lang.reflect.*;
 
 import com.splunk.*;
 
-public class HttpLoggerFunctionalTest {
+public class HttpInput_Test {
     public static void addPath(String s) throws Exception {
         File f = new File(s);
         URI u = f.toURI();

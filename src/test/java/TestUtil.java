@@ -69,7 +69,7 @@ public class TestUtil {
         }
     }
 
-    private static void connectToSplunk() throws IOException {
+    public static Service connectToSplunk() throws IOException {
 
         if (service == null) {
             getSplunkHostInfo();
@@ -78,6 +78,8 @@ public class TestUtil {
             service = Service.connect(serviceArgs);
             service.login();
         }
+
+        return service;
     }
 
 

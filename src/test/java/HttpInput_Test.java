@@ -16,11 +16,7 @@
  * under the License.
  */
 
-import ch.qos.logback.classic.LoggerContext;
-import ch.qos.logback.classic.joran.JoranConfigurator;
 import ch.qos.logback.core.joran.spi.JoranException;
-import org.slf4j.*;
-
 import com.splunk.logging.HttpInputLoggingErrorHandler;
 import com.splunk.logging.HttpInputLoggingEventInfo;
 import org.junit.Assert;
@@ -48,14 +44,7 @@ public class HttpInput_Test {
 
     private static int getEventsCount(String searchQuery) throws IOException, InterruptedException {
         //connect to localhost
-        serviceArgs = new ServiceArgs();
-        serviceArgs.setUsername("admin");
-        serviceArgs.setPassword("changeme");
-        serviceArgs.setHost("127.0.0.1");
-        serviceArgs.setPort(8089);
-        serviceArgs.setScheme("https");
-        Service service = Service.connect(serviceArgs);
-        service.login();
+        Service service = TestUtil.connectToSplunk();
 
         // Check the syntax of the query.
         try {
@@ -95,48 +84,8 @@ public class HttpInput_Test {
     private static String httpinputName = "functionalhttp";
 
     private static void setupHttpInput(boolean batching) throws Exception {
-        //connect to localhost
-        serviceArgs = new ServiceArgs();
-        serviceArgs.setUsername("admin");
-        serviceArgs.setPassword("changeme");
-        serviceArgs.setHost("127.0.0.1");
-        serviceArgs.setPort(8089);
-        serviceArgs.setScheme("https");
-        Service service = Service.connect(serviceArgs);
-        service.login();
-
-        //enable logging endpoint
-        Map args = new HashMap();
-        args.put("disabled", 0);
-        service.post("/servicesNS/admin/search/data/inputs/token/http/http", args);
-
-        //create a httpinput
-        args = new HashMap();
-        args.put("name", httpinputName);
-        args.put("description", "test http input");
-
-        try {
-            service.delete("/services/data/inputs/token/http/" + httpinputName);
-        } catch (Exception e) {
-        }
-
-        service.post("/services/data/inputs/token/http", args);
-
-        args = new HashMap();
-        ResponseMessage response = service.get("/services/data/inputs/token/http/" + httpinputName, args);
-        BufferedReader reader = new BufferedReader(new InputStreamReader(response.getContent(), "UTF-8"));
-        String token = "";
-        while (true) {
-            String line = reader.readLine();
-            if (line == null) break;
-
-            if (line.contains("name=\"token\"")) {
-                token = line.split(">")[1];
-                token = token.split("<")[0];
-                break;
-            }
-        }
-        reader.close();
+        TestUtil.enableHttpinput();
+        String token=TestUtil.createHttpinput(httpinputName);
 
         //modify the config file with the generated token
         String configFileDir = HttpLoggerStressTest.class.getProtectionDomain().getCodeSource().getLocation().getPath();
@@ -201,8 +150,7 @@ public class HttpInput_Test {
         fw.flush();
         fw.close();
         addPath(configFilePath);
-        resetLogbackConfiguration(configFilePath);
-
+        TestUtil.resetLogbackConfiguration("logback.xml", "logback.xml", new HashMap<String, String>());
     }
 
     private static void CreateLog4j2ConfigFile(String token, String configFilePath, boolean batching) throws Exception {
@@ -252,7 +200,7 @@ public class HttpInput_Test {
         long startTime = System.currentTimeMillis() / 1000;
         Thread.sleep(2000);
         if (loggerType == "log4j") {
-            org.apache.logging.log4j.core.LoggerContext context = resetLog4j2Configuration();
+            org.apache.logging.log4j.core.LoggerContext context = TestUtil.resetLog4j2Configuration("log4j2.xml","log4j2.xml",new HashMap<String, String>());
             org.apache.logging.log4j.Logger LOG4J = context.getLogger("splunk.log4j");
             for (int i = 0; i < expectedCounter; i++) {
                 LOG4J.info(String.format("log4j message%d", i));
@@ -317,27 +265,4 @@ public class HttpInput_Test {
             System.out.printf("\tCompleted wait for iteration %d\r\n", i);
         }
     }
-
-    /*
-        create log4j2.xml and force log4j2 context manager to reload the configurations, return context and using this context to retrieve logger instead of using LogManager
-    */
-    private static org.apache.logging.log4j.core.LoggerContext resetLog4j2Configuration() throws IOException {
-        org.apache.logging.log4j.core.LoggerContext context = new org.apache.logging.log4j.core.LoggerContext("new");
-        context.reconfigure();
-        context.updateLoggers();
-        return context;
-    }
-
-    /*
-    create logback.xml and force logback manager to reload the configurations
-     */
-    private static void resetLogbackConfiguration(String configFilePath) throws IOException, JoranException {
-        //force the Logback factory to reload the configuration file
-        JoranConfigurator jc = new JoranConfigurator();
-        LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
-        jc.setContext(context);
-        context.reset();
-        jc.doConfigure(configFilePath);
-    }
-
 }

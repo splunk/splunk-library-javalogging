@@ -55,9 +55,9 @@ public final class HttpAppender extends AbstractAppender
         super(name, filter, layout, ignoreExceptions);
         // init events sender
         Dictionary<String, String> metadata = new Hashtable<String, String>();
-        metadata.put(HttpInputEventSender.MetadataIndexTag, index);
-        metadata.put(HttpInputEventSender.MetadataSourceTag, source);
-        metadata.put(HttpInputEventSender.MetadataSourceTypeTag, sourcetype);
+        metadata.put(HttpInputEventSender.MetadataIndexTag, index != null ? index : "");
+        metadata.put(HttpInputEventSender.MetadataSourceTag, source != null ? source : "");
+        metadata.put(HttpInputEventSender.MetadataSourceTypeTag, sourcetype != null ? sourcetype : "");
         // @todo - batching SPL-96375
         _eventSender = new HttpInputEventSender(
             url, token, batchInterval, batchCount, batchSize, retriesOnError, metadata);

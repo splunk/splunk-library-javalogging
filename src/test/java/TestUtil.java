@@ -26,6 +26,8 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.util.*;
 import java.util.logging.LogManager;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class TestUtil {
 
@@ -180,7 +182,6 @@ public class TestUtil {
         }
     }
 
-
     /**
      * modify the config file with the generated token, and configured splunk host,
      * read the template from configFileTemplate, and create the updated configfile to configFile
@@ -194,7 +195,6 @@ public class TestUtil {
             if (lines.get(i).contains("%host%")) {
                 lines.set(i, lines.get(i).replace("%host%", serviceArgs.host));
             }
-
             if (lines.get(i).contains("%port%")) {
                 lines.set(i, lines.get(i).replace("%port%", serviceArgs.port.toString()));
             }
@@ -203,28 +203,12 @@ public class TestUtil {
                 lines.set(i, lines.get(i).replace("%scheme%", serviceArgs.scheme));
             }
 
-            List<String> configureProperties = Arrays.asList(
-                    "user_httpinput_token",
-                    "user_batch_interval",
-                    "user_batch_size_bytes",
-                    "user_batch_size_count",
-                    "user_logger_name",
-                    "user_source",
-                    "user_sourcetype"
-            );
-
-            if (!userInputs.containsKey("user_source")) userInputs.put("user_source", "acceptancetest");
-            if (!userInputs.containsKey("user_sourcetype"))
-                userInputs.put("user_sourcetype", "acceptancetestsourcetype");
-
-            for (String property : configureProperties) {
-                if (lines.get(i).contains(property)) {
-                    if (userInputs.keySet().contains(property) &&
-                            !userInputs.get(property).isEmpty())
-                        lines.set(i, lines.get(i).replace("%" + property + "%", userInputs.get(property)));
-                    else
-                        lines.set(i, "");
-                }
+            String match = FindUserInputConfiguration(lines.get(i));
+            if (!match.isEmpty()) {
+                if (userInputs.keySet().contains(match))
+                    lines.set(i, lines.get(i).replace("%" + match + "%", userInputs.get(match)));
+                else
+                    lines.set(i, "");
             }
         }
 
@@ -241,6 +225,16 @@ public class TestUtil {
         fw.close();
 
         return configFilePath;
+    }
+
+    private static String FindUserInputConfiguration(String line) {
+        String pattern = "%.*%";
+        Pattern r = Pattern.compile(pattern);
+        Matcher m = r.matcher(line);
+        if (m.find()) {
+            return m.group(0).substring(1, m.group(0).length() - 1);
+        } else
+            return "";
     }
 
     /*

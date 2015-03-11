@@ -64,6 +64,41 @@ public final class HttpInput_LogbackTest {
     }
 
     /**
+     * sending a message via httplogging using logback to splunk
+     */
+    @Test
+    public void canSendEventUsingLogbackWithOptions() throws Exception {
+        String token = TestUtil.createHttpinput(httpinputName);
+
+        String loggerName = "logBackLogger";
+        HashMap<String, String> userInputs = new HashMap<String, String>();
+        userInputs.put("user_logger_name", loggerName);
+        userInputs.put("user_httpinput_token", token);
+        userInputs.put("user_source", "splunktest");
+        userInputs.put("user_sourcetype", "battlecat");
+        TestUtil.resetLogbackConfiguration("logback_template.xml", "logback.xml", userInputs);
+
+        List<String> msgs = new ArrayList<String>();
+
+        Date date = new Date();
+        String jsonMsg = String.format("{EventDate:%s, EventMsg:'this is a test event for Logback Test}", date.toString());
+        Logger logger = LoggerFactory.getLogger(loggerName);
+        logger.info(jsonMsg);
+        msgs.add(jsonMsg);
+
+        jsonMsg = String.format("{EventDate:%s, EventMsg:'this is a test error for Logback Test}", date.toString());
+        logger.error(jsonMsg);
+        msgs.add(jsonMsg);
+
+        jsonMsg = String.format("{EventDate:%s, EventMsg:'this is a test debug for Logback Test}", date.toString());
+        logger.debug(jsonMsg);
+        msgs.add(jsonMsg);
+
+        TestUtil.verifyEventsSentToSplunk(msgs);
+        TestUtil.deleteHttpinput(httpinputName);
+    }
+
+    /**
      * sending batched message using logback to splunk
      */
     @Test

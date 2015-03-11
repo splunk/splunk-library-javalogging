@@ -4,8 +4,8 @@
         <Http
               name="http"
               url="%scheme%://%host%:%port%/services/receivers/token"
-              index=""
               token="%user_httpinput_token%"
+              index="%user_index%"
               source="%user_source%"
               sourcetype="%user_sourcetype%"
               batch_interval="%user_batch_interval%"

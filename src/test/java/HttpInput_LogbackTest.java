@@ -310,8 +310,8 @@ public final class HttpInput_LogbackTest {
             Assert.fail("didn't catch errors");
 
         System.out.println(logEx.toString());
-        Assert.assertEquals(-1, logEx.get(0).getErrorCode());
-        Assert.assertEquals("unknown error", logEx.get(0).getErrorText());
+        Assert.assertEquals(1, logEx.get(0).getErrorCode());
+        Assert.assertTrue(logEx.get(0).getErrorText().contains("Token disabled"));
 
         for (List<HttpInputLoggingEventInfo> infos : errors) {
             for (HttpInputLoggingEventInfo info : infos) {

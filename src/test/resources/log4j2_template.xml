@@ -3,7 +3,7 @@
     <Appenders>
         <Http
               name="http"
-              url="%scheme%://%host%:%port%/services/receivers/token"
+              url="%scheme%://%host%:8088/services/receivers/token"
               token="%user_httpinput_token%"
               index="%user_index%"
               source="%user_source%"

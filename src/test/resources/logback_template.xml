@@ -3,7 +3,7 @@
 <configuration>
 
     <Appender name="%user_logger_name%" class="com.splunk.logging.HttpLogbackAppender">
-        <url>%scheme%://%host%:%port%/services/receivers/token</url>
+        <url>%scheme%://%host%:8088/services/receivers/token</url>
         <token>%user_httpinput_token%</token>
         <index>%user_index%</index>
         <source>splunktest_accept</source>

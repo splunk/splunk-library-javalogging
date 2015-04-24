@@ -60,7 +60,7 @@ public class HttpLoggerStressTest {
         serviceArgs.setUsername("admin");
         serviceArgs.setPassword("changeme");
         serviceArgs.setHost("127.0.0.1");
-        serviceArgs.setPort(8089);
+        serviceArgs.setPort(8088);
         serviceArgs.setScheme("https");
         Service service = Service.connect(serviceArgs);
         service.login();

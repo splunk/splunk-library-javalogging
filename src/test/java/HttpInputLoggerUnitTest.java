@@ -53,6 +53,9 @@ public class HttpInputLoggerUnitTest {
             byte[] bodyBytes = new byte[httpExchange.getRequestBody().available()];
             httpExchange.getRequestBody().read(
                     bodyBytes, 0, httpExchange.getRequestBody().available());
+            List<String> contentTypeList =  httpExchange.getRequestHeaders().get("content-type");
+            Assert.assertTrue(contentTypeList.size() == 1);
+            Assert.assertTrue(contentTypeList.get(0).contains("profile=urn:splunk:event:1.0"));
             String body = new String(bodyBytes);
             System.out.println(body);
             // extract individual json documents and parse

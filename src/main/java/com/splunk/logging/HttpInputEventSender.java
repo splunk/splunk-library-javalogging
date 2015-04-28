@@ -46,6 +46,7 @@ final class HttpInputEventSender extends TimerTask {
     public static final String MetadataSourceTypeTag = "sourcetype";
     private static final String AuthorizationHeaderTag = "Authorization";
     private static final String AuthorizationHeaderScheme = "Splunk %s";
+    private static final String HttpContentType = "application/json; profile=urn:splunk:event:1.0; charset=utf-8";
 
     private String httpInputUrl;
     private final String token;
@@ -225,7 +226,7 @@ final class HttpInputEventSender extends TimerTask {
             AuthorizationHeaderTag,
             String.format(AuthorizationHeaderScheme, token));
         StringEntity entity = new StringEntity(eventsBatchString.toString(), encoding);
-        entity.setContentType("application/json; charset=utf-8");
+        entity.setContentType(HttpContentType);
         httpPost.setEntity(entity);
         // post request
         httpClient.execute(httpPost, new FutureCallback<HttpResponse>() {

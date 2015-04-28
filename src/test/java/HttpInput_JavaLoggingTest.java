@@ -270,8 +270,8 @@ public final class HttpInput_JavaLoggingTest {
         System.out.println("======print logEx");
         System.out.println(logEx.toString());
         System.out.println("======finsih print logEx");
-        Assert.assertEquals(3, logEx.get(1).getErrorCode());
         Assert.assertEquals("Invalid token", logEx.get(1).getErrorText());
+        Assert.assertEquals(4, logEx.get(1).getErrorCode());
 
 
         for (List<HttpInputLoggingEventInfo> infos : errors) {

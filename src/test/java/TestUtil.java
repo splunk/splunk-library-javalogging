@@ -88,7 +88,7 @@ public class TestUtil {
     /**
      * create http input token
      */
-    public static String createHttpinput(String httpinputName) throws IOException {
+    public static String createHttpinput(String httpinputName) throws Exception {
         connectToSplunk();
 
         //enable logging endpoint
@@ -99,12 +99,10 @@ public class TestUtil {
         args.put("name", httpinputName);
         args.put("description", "test http input");
 
-        try {
-            service.delete(httpInputTokenEndpointPath + "/" + httpinputName);
-        } catch (Exception e) {
-        }
+        deleteHttpinput(httpinputName);
 
-        service.post(httpInputTokenEndpointPath, args);
+        ResponseMessage msg = service.post(httpInputTokenEndpointPath, args);
+        assert msg.getStatus() == 201;
 
         //get httpinput token
         args = new HashMap();
@@ -133,13 +131,17 @@ public class TestUtil {
     /**
      * delete http input token
      */
-    public static void deleteHttpinput(String httpinputName) throws IOException {
+    public static void deleteHttpinput(String httpinputName) throws Exception {
         connectToSplunk();
-
-        //remove a httpinput
         try {
-            service.delete(httpInputTokenEndpointPath + "/" + httpinputName);
-        } catch (Exception e) {
+            ResponseMessage response = service.get(httpInputTokenEndpointPath + "/" + httpinputName);
+            if (response.getStatus() == 200) {
+                response = service.delete(httpInputTokenEndpointPath + "/" + httpinputName);
+                assert response.getStatus() == 200;
+            }
+        } catch (com.splunk.HttpException e) {
+            if (e.getStatus()!=404)
+                throw e;
         }
     }
 
@@ -152,7 +154,8 @@ public class TestUtil {
         //disable logging endpoint
         Map args = new HashMap();
         args.put("disabled", 1);
-        service.post("/servicesNS/admin/search/data/inputs/token/http/http", args);
+        ResponseMessage response = service.post("/servicesNS/admin/search/data/inputs/token/http/http", args);
+        assert response.getStatus() == 200;
     }
 
     /**
@@ -164,7 +167,9 @@ public class TestUtil {
         //enable logging endpoint
         Map args = new HashMap();
         args.put("disabled", 0);
-        service.post("/servicesNS/admin/search/data/inputs/token/http/http", args);
+        ResponseMessage response = service.post("/servicesNS/admin/search/data/inputs/token/http/http", args);
+        assert response.getStatus() == 200;
+
     }
 
     /**
@@ -176,10 +181,8 @@ public class TestUtil {
         Map args = new HashMap();
         args.put("disabled", 1);
 
-        try {
-            service.post(httpInputTokenEndpointPath + "/" + httpinputName, args);
-        } catch (Exception e) {
-        }
+        ResponseMessage response = service.post(httpInputTokenEndpointPath + "/" + httpinputName, args);
+        assert response.getStatus() == 200;
     }
 
     /**

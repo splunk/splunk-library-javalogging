@@ -252,8 +252,8 @@ public final class HttpInput_LogbackTest {
         System.out.println("======print logEx");
         System.out.println(logEx.toString());
         System.out.println("======finsih print logEx");
-        Assert.assertEquals(3, logEx.get(1).getErrorCode());
         Assert.assertEquals("Invalid token", logEx.get(1).getErrorText());
+        Assert.assertEquals(4, logEx.get(1).getErrorCode());
 
 
         for (List<HttpInputLoggingEventInfo> infos : errors) {
@@ -293,6 +293,7 @@ public final class HttpInput_LogbackTest {
         TestUtil.resetLogbackConfiguration("logback_template.xml", "logback.xml", userInputs);
         Logger logger = LoggerFactory.getLogger(loggerName);
 
+
         //disable httpinput endpoint
         TestUtil.disableHttpinput();
         String jsonMsg = String.format("{EventDate:%s, EventMsg:'test event httpinput disabled}", new Date().toString());
@@ -320,5 +321,6 @@ public final class HttpInput_LogbackTest {
         }
 
         Assert.assertEquals(1, errors.size());
+
     }
 }

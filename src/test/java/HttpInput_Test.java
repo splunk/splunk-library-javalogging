@@ -97,14 +97,14 @@ public class HttpInput_Test {
     private static void CreateJavaUtilLog(String token, boolean batching) throws Exception {
         String LoggerConf =
                 "handlers=com.splunk.logging.HttpInputHandler\n" +
-                        "com.splunk.logging.HttpInputHandler.url=https://127.0.0.1:8089/services/receivers/token\n" +
+                        "com.splunk.logging.HttpInputHandler.url=https://127.0.0.1:8088/services/receivers/token\n" +
                         String.format("com.splunk.logging.HttpInputHandler.token=%s\n", token) +
                         "com.splunk.logging.HttpInputHandler.disableCertificateValidation=true\n";
         if (batching) {
             LoggerConf +=
                     "com.splunk.logging.HttpInputHandler.batch_interval=200\n" +
                             "com.splunk.logging.HttpInputHandler.batch_size_count=500\n" +
-                            "com.splunk.logging.HttpInputHandler.batch_size_bytes=512\n";
+                            "com.splunk.logging.HttpInputHandler.batch_size_bytes=12\n";
         }
         try {
             java.util.logging.LogManager.getLogManager().readConfiguration(
@@ -123,13 +123,13 @@ public class HttpInput_Test {
         fw.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n");
         fw.write("<configuration>\r\n");
         fw.write("    <appender name=\"http\" class=\"com.splunk.logging.HttpLogbackAppender\">\r\n");
-        fw.write("        <url>https://127.0.0.1:8089/services/receivers/token</url>\r\n");
+        fw.write("        <url>https://127.0.0.1:8088/services/receivers/token</url>\r\n");
         fw.write(String.format("        <token>%s</token>\r\n", token));
         fw.write("        <disableCertificateValidation>true</disableCertificateValidation>\r\n");
         if (batching) {
             fw.write("        <batch_interval>200</batch_interval>\r\n");
             fw.write("        <batch_size_count>500</batch_size_count>\r\n");
-            fw.write("        <batch_size_bytes>512</batch_size_bytes>\r\n");
+            fw.write("        <batch_size_bytes>12</batch_size_bytes>\r\n");
         }
         fw.write("        <source>splunktest</source>\r\n");
         fw.write("        <sourcetype>battlecat</sourcetype>\r\n");
@@ -166,7 +166,7 @@ public class HttpInput_Test {
         if (batching) {
             fw.write("              batch_interval=\"200\"\r\n");
             fw.write("              batch_size_count=\"500\"\r\n");
-            fw.write("              batch_size_bytes=\"512\"\r\n");
+            fw.write("              batch_size_bytes=\"12\"\r\n");
         }
         fw.write("              source=\"splunktest\" sourcetype=\"battlecat\">\r\n");
         fw.write("            <PatternLayout pattern=\"%m\"/>\r\n");
@@ -203,7 +203,7 @@ public class HttpInput_Test {
             org.apache.logging.log4j.core.LoggerContext context = TestUtil.resetLog4j2Configuration("log4j2.xml","log4j2.xml",new HashMap<String, String>());
             org.apache.logging.log4j.Logger LOG4J = context.getLogger("splunk.log4j");
             for (int i = 0; i < expectedCounter; i++) {
-                LOG4J.info(String.format("log4j message%d", i));
+                LOG4J.info(String.format("log4j message %d", i));
             }
         }
         if (loggerType == "logback") {

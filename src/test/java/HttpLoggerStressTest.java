@@ -60,7 +60,7 @@ public class HttpLoggerStressTest {
         serviceArgs.setUsername("admin");
         serviceArgs.setPassword("changeme");
         serviceArgs.setHost("127.0.0.1");
-        serviceArgs.setPort(8088);
+        serviceArgs.setPort(8089);
         serviceArgs.setScheme("https");
         Service service = Service.connect(serviceArgs);
         service.login();
@@ -156,7 +156,7 @@ public class HttpLoggerStressTest {
         fw.write("    <!--need the \"token=...\" line to be a single line for parsing purpose-->\r\n");
         fw.write("    <Appenders>\r\n");
         fw.write("        <Http name=\"Http\"\r\n");
-        fw.write("              url=\"https://127.0.0.1:8089/services/receivers/token\"\r\n");
+        fw.write("              url=\"https://127.0.0.1:8088/services/receivers/token\"\r\n");
         fw.write("              index=\"\"\r\n");
         fw.write(String.format("              token=\"%s\"\r\n", token));
         fw.write("              disableCertificateValidation=\"true\"\r\n");

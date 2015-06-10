@@ -121,8 +121,6 @@ public class TcpAppender extends AppenderBase<ILoggingEvent> implements Runnable
                     OutputStreamWriter writer = new OutputStreamWriter(socket.getOutputStream());
                     socket.setSoTimeout(0);
 
-                    System.out.println(socket.getSendBufferSize());
-
                     addInfo(host + ":" + port + " connection established");
 
                     while (true) {

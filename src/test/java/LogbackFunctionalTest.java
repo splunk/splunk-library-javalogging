@@ -28,7 +28,11 @@ public class LogbackFunctionalTest {
     public void logbackSocketAppenderTest() throws InterruptedException {
         final Util.StringContainer container = Util.readLineFromPort(Util.port, Util.timeoutInMs);
 
+        Assert.assertNotEquals(TcpAppender.getSocketBufferSize(), 16*1024);
+
         TcpAppender.setSocketBufferSize(16*1024);
+        Assert.assertEquals(TcpAppender.getSocketBufferSize(), 16*1024);
+
 
         String helloChina = "Hello, \u4E2D\u570B!";
 

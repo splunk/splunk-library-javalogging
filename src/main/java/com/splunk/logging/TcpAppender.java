@@ -38,6 +38,7 @@ public class TcpAppender extends AppenderBase<ILoggingEvent> implements Runnable
     private static final int DEFAULT_RECONNECTION_DELAY = 30000; // in ms
     private static final int DEFAULT_QUEUE_SIZE = 0;
     private static final int DEFAULT_ACCEPT_CONNECTION_DELAY = 5000;
+    private static int SOCKET_BUFFER_SIZE = 8 * 1024; // Default to 8192
 
     private String host;
     private int port;
@@ -80,6 +81,14 @@ public class TcpAppender extends AppenderBase<ILoggingEvent> implements Runnable
         }
     }
 
+    public static int getSocketBufferSize() {
+        return SOCKET_BUFFER_SIZE;
+    }
+
+    public static void setSocketBufferSize(int bufferSize) {
+        SOCKET_BUFFER_SIZE = bufferSize;
+    }
+
     @Override
     public void run() {
         try {
@@ -97,7 +106,11 @@ public class TcpAppender extends AppenderBase<ILoggingEvent> implements Runnable
 
                 try {
                     socket = connectorTask.get();
+                    socket.setSendBufferSize(SOCKET_BUFFER_SIZE);
                     connectorTask = null;
+                } catch (SocketException se) {
+                    socket = null;
+                    break;
                 } catch (ExecutionException e) {
                     socket = null;
                     break;
@@ -107,6 +120,8 @@ public class TcpAppender extends AppenderBase<ILoggingEvent> implements Runnable
                     socket.setSoTimeout(acceptConnectionTimeout);
                     OutputStreamWriter writer = new OutputStreamWriter(socket.getOutputStream());
                     socket.setSoTimeout(0);
+
+                    System.out.println(socket.getSendBufferSize());
 
                     addInfo(host + ":" + port + " connection established");
 

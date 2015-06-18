@@ -97,7 +97,7 @@ public class HttpInput_Test {
     private static void CreateJavaUtilLog(String token, boolean batching) throws Exception {
         String LoggerConf =
                 "handlers=com.splunk.logging.HttpInputHandler\n" +
-                        "com.splunk.logging.HttpInputHandler.url=https://127.0.0.1:8088/services/receivers/token\n" +
+                        "com.splunk.logging.HttpInputHandler.url=https://127.0.0.1:8088/services/collector\n" +
                         String.format("com.splunk.logging.HttpInputHandler.token=%s\n", token) +
                         "com.splunk.logging.HttpInputHandler.disableCertificateValidation=true\n";
         if (batching) {
@@ -123,7 +123,7 @@ public class HttpInput_Test {
         fw.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n");
         fw.write("<configuration>\r\n");
         fw.write("    <appender name=\"http\" class=\"com.splunk.logging.HttpLogbackAppender\">\r\n");
-        fw.write("        <url>https://127.0.0.1:8088/services/receivers/token</url>\r\n");
+        fw.write("        <url>https://127.0.0.1:8088/services/collector</url>\r\n");
         fw.write(String.format("        <token>%s</token>\r\n", token));
         fw.write("        <disableCertificateValidation>true</disableCertificateValidation>\r\n");
         if (batching) {
@@ -159,7 +159,7 @@ public class HttpInput_Test {
         fw.write("<Configuration status=\"info\" name=\"example\" packages=\"com.splunk.logging\">\r\n");
         fw.write("    <Appenders>\r\n");
         fw.write("        <Http name=\"Http\"\r\n");
-        fw.write("              url=\"https://127.0.0.1:8088/services/receivers/token\"\r\n");
+        fw.write("              url=\"https://127.0.0.1:8088/services/collector\"\r\n");
         fw.write("              index=\"\"\r\n");
         fw.write(String.format("              token=\"%s\"\r\n", token));
         fw.write("              disableCertificateValidation=\"true\"\r\n");

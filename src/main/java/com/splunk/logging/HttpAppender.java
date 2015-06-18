@@ -48,7 +48,6 @@ public final class HttpAppender extends AbstractAppender
                          long batchCount,
                          long batchSize,
                          long retriesOnError,
-                         final String HttpEventCollectorMiddlewareClass,
                          final String disableCertificateValidation)
     {
         super(name, filter, layout, ignoreExceptions);
@@ -87,7 +86,6 @@ public final class HttpAppender extends AbstractAppender
             @PluginAttribute("batch_size_count") final String batchCount,
             @PluginAttribute("batch_interval") final String batchInterval,
             @PluginAttribute("retries_on_error") final String retriesOnError,
-            @PluginAttribute("HttpEventCollectorMiddlewareClass") final String HttpEventCollectorMiddlewareClass,
             @PluginAttribute("disableCertificateValidation") final String disableCertificateValidation,
             @PluginElement("Layout") Layout<? extends Serializable> layout,
             @PluginElement("Filter") final Filter filter
@@ -124,7 +122,6 @@ public final class HttpAppender extends AbstractAppender
                 filter, layout, ignoreExceptions,
                 parseInt(batchInterval, 0), parseInt(batchCount, 0), parseInt(batchSize, 0),
                 parseInt(retriesOnError, 0),
-                HttpEventCollectorMiddlewareClass,
                 disableCertificateValidation);
     }
     

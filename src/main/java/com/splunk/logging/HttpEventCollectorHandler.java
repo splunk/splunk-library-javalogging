@@ -19,7 +19,7 @@ package com.splunk.logging;
  */
 
 /**
- * @brief A handler for java.util.logging that works with Splunk http input.
+ * @brief A handler for java.util.logging that works with Splunk http event collector.
  *
  * @details
  * This is a Splunk custom java.util.logging handler that intercepts logging

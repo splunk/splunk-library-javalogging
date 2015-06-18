@@ -18,8 +18,6 @@ import java.util.*;
 
 import com.splunk.logging.HttpEventCollectorErrorHandler;
 import com.splunk.logging.HttpEventCollectorEventInfo;
-import com.splunk.logging.HttpEventCollectorErrorHandler;
-import com.splunk.logging.HttpEventCollectorEventInfo;
 import org.junit.Assert;
 import org.junit.Test;
 import org.slf4j.Logger;

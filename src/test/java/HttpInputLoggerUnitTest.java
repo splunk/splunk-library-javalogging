@@ -20,8 +20,8 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 
-import com.splunk.logging.HttpInputLoggingErrorHandler;
-import com.splunk.logging.HttpInputLoggingEventInfo;
+import com.splunk.logging.HttpEventCollectorErrorHandler;
+import com.splunk.logging.HttpEventCollectorEventInfo;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
@@ -42,7 +42,7 @@ public class HttpInputLoggerUnitTest {
     private final static org.apache.logging.log4j.Logger LOG4J = org.apache.logging.log4j.LogManager.getLogger("splunk.log4j");
     private final static org.slf4j.Logger LOGBACK = org.slf4j.LoggerFactory.getLogger("splunk.logback");
     private String lastReply = "";
-    private HttpInputLoggingEventInfo lastEvent;
+    private HttpEventCollectorEventInfo lastEvent;
     private static final String SuccessReply = "{\"text\":\"Success\",\"code\":0}";
     private static final String ErrorReply = "{\"text\":\"Error\",\"code\":1}";
 
@@ -129,10 +129,10 @@ public class HttpInputLoggerUnitTest {
     @Test
     public void simpleLogging() {
 
-        HttpInputLoggingErrorHandler.onError(new HttpInputLoggingErrorHandler.ErrorCallback() {
-            public void error(final List<HttpInputLoggingEventInfo> data, final Exception ex) {
-                HttpInputLoggingErrorHandler.ServerErrorException serverErrorException =
-                        (HttpInputLoggingErrorHandler.ServerErrorException)ex;
+        HttpEventCollectorErrorHandler.onError(new HttpEventCollectorErrorHandler.ErrorCallback() {
+            public void error(final List<HttpEventCollectorEventInfo> data, final Exception ex) {
+                HttpEventCollectorErrorHandler.ServerErrorException serverErrorException =
+                        (HttpEventCollectorErrorHandler.ServerErrorException) ex;
                 lastReply = serverErrorException.getReply();
                 lastEvent = data.get(0);
             }

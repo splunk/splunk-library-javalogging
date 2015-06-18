@@ -35,8 +35,6 @@ import org.apache.logging.log4j.core.config.plugins.PluginFactory;
 @Plugin(name = "Http", category = "Core", elementType = "appender", printObject = true)
 public final class HttpAppender extends AbstractAppender
 {
-    private HttpInputEventSender _eventSender;
-
     private HttpAppender(final String name,
                          final String url,
                          final String token,
@@ -50,19 +48,24 @@ public final class HttpAppender extends AbstractAppender
                          long batchCount,
                          long batchSize,
                          long retriesOnError,
+                         final String HttpEventCollectorMiddlewareClass,
                          final String disableCertificateValidation)
     {
         super(name, filter, layout, ignoreExceptions);
-        // init events sender
-        Dictionary<String, String> metadata = new Hashtable<String, String>();
-        metadata.put(HttpInputEventSender.MetadataIndexTag, index != null ? index : "");
-        metadata.put(HttpInputEventSender.MetadataSourceTag, source != null ? source : "");
-        metadata.put(HttpInputEventSender.MetadataSourceTypeTag, sourcetype != null ? sourcetype : "");
-        // @todo - batching SPL-96375
-        _eventSender = new HttpInputEventSender(
-            url, token, batchInterval, batchCount, batchSize, retriesOnError, metadata);
-        if (disableCertificateValidation.equalsIgnoreCase("true")) {
-            _eventSender.disableCertificateValidation();
+
+        if (!HttpEventCollectorMiddleware.hasMiddleware()) {
+            Dictionary<String, String> metadata = new Hashtable<String, String>();
+            metadata.put(HttpEventCollectorSender.MetadataIndexTag, index != null ? index : "");
+            metadata.put(HttpEventCollectorSender.MetadataSourceTag, source != null ? source : "");
+            metadata.put(HttpEventCollectorSender.MetadataSourceTypeTag, sourcetype != null ? sourcetype : "");
+
+            HttpEventCollectorSender sender = new HttpEventCollectorSender(url, token, batchInterval, batchCount, batchSize, retriesOnError, metadata);
+
+            if (disableCertificateValidation.equalsIgnoreCase("true")) {
+                sender.disableCertificateValidation();
+            }
+
+            HttpEventCollectorMiddleware.setMiddleware(sender);
         }
     }
 
@@ -84,6 +87,7 @@ public final class HttpAppender extends AbstractAppender
             @PluginAttribute("batch_size_count") final String batchCount,
             @PluginAttribute("batch_interval") final String batchInterval,
             @PluginAttribute("retries_on_error") final String retriesOnError,
+            @PluginAttribute("HttpEventCollectorMiddlewareClass") final String HttpEventCollectorMiddlewareClass,
             @PluginAttribute("disableCertificateValidation") final String disableCertificateValidation,
             @PluginElement("Layout") Layout<? extends Serializable> layout,
             @PluginElement("Filter") final Filter filter
@@ -120,6 +124,7 @@ public final class HttpAppender extends AbstractAppender
                 filter, layout, ignoreExceptions,
                 parseInt(batchInterval, 0), parseInt(batchCount, 0), parseInt(batchSize, 0),
                 parseInt(retriesOnError, 0),
+                HttpEventCollectorMiddlewareClass,
                 disableCertificateValidation);
     }
     
@@ -131,7 +136,7 @@ public final class HttpAppender extends AbstractAppender
     @Override
     public void append(final LogEvent event)
     {
-        _eventSender.send(
+        HttpEventCollectorMiddleware.send(
             event.getLevel().toString(),
             event.getMessage().getFormattedMessage()
         );
@@ -139,7 +144,7 @@ public final class HttpAppender extends AbstractAppender
 
     @Override
     public void stop() {
-        _eventSender.flush();
+        HttpEventCollectorMiddleware.flush();
         super.stop();
     }
 }

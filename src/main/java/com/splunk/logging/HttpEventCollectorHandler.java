@@ -30,50 +30,51 @@ package com.splunk.logging;
  * -Djava.util.logging.config.file=splunk-http-input.properties
  * Properties file has include logging handler and its properties.
  *
- * # Splunk http input logging handler
- * handlers = com.splunk.logging.HttpInputHandler
+ * # Splunk http event collector handler
+ * handlers = com.splunk.logging.HttpEventCollectorHandler
  *
  * # Http input application token
- * com.splunk.logging.HttpInputHandler.token=<token guid>
+ * com.splunk.logging.HttpEventCollectorHandler.token=<token guid>
  *
  * # Splunk logging input url.
- * com.splunk.logging.HttpInputHandler.url
+ * com.splunk.logging.HttpEventCollectorHandler.url
  *
  * # Logging events metadata.
- * com.splunk.logging.HttpInputHandler.index
- * com.splunk.logging.HttpInputHandler.source
- * com.splunk.logging.HttpInputHandler.sourcetype
+ * com.splunk.logging.HttpEventCollectorHandler.index
+ * com.splunk.logging.HttpEventCollectorHandler.source
+ * com.splunk.logging.HttpEventCollectorHandler.sourcetype
  *
  * # Events batching parameters:
  * # Delay in millisecond between sending events, by default this value is 0, i.e., and events
  * # are sending immediately
- * com.splunk.logging.HttpInputHandler.batch_interval
+ * com.splunk.logging.HttpEventCollectorHandler.batch_interval
  *
  * # Max number of events in a batch. By default - 0, i.e., no batching
- * com.splunk.logging.HttpInputHandler.batch_size_count
+ * com.splunk.logging.HttpEventCollectorHandler.batch_size_count
  *
  * # Max size of events in a batch. By default - 0, i.e., no batching
- * com.splunk.logging.HttpInputHandler.batch_size_bytes
+ * com.splunk.logging.HttpEventCollectorHandler.batch_size_bytes
  *
  * An example of logging properties file:
- * handlers = com.splunk.logging.HttpInputHandler
- * com.splunk.logging.HttpInputHandler.token=81029a58-63db-4bef-9c6f-f6b7e500f098
+ * handlers = com.splunk.logging.HttpEventCollectorHandler
+ * com.splunk.logging.HttpEventCollectorHandler.token=81029a58-63db-4bef-9c6f-f6b7e500f098
  *
  * # Splunk server
- * com.splunk.logging.HttpInputHandler.url=https://localhost:8089
+ * com.splunk.logging.HttpEventCollectorHandler.url=https://localhost:8089
  *
  * # Metadata
- * com.splunk.logging.HttpInputHandler.index=default
- * com.splunk.logging.HttpInputHandler.source=localhost
- * com.splunk.logging.HttpInputHandler.sourcetype=syslog
+ * com.splunk.logging.HttpEventCollectorHandler.index=default
+ * com.splunk.logging.HttpEventCollectorHandler.source=localhost
+ * com.splunk.logging.HttpEventCollectorHandler.sourcetype=syslog
  *
  * # Batching
- * com.splunk.logging.HttpInputHandler.batch_interval = 500
- * com.splunk.logging.HttpInputHandler.batch_size_count = 1000
- * com.splunk.logging.HttpInputHandler.batch_size_count = 65536
+ * com.splunk.logging.HttpEventCollectorHandler.batch_interval = 500
+ * com.splunk.logging.HttpEventCollectorHandler.batch_size_count = 1000
+ * com.splunk.logging.HttpEventCollectorHandler.batch_size_count = 65536
  */
 
 import java.io.IOException;
+import java.lang.reflect.Constructor;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.logging.Handler;
@@ -82,12 +83,12 @@ import java.util.logging.LogRecord;
 import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
 
 /**
- * An input handler for Splunk http input logging. This handler can be used by
- * by specifying handlers = com.splunk.logging.HttpInputHandler in java.util.logging
+ * An input handler for Splunk http event collector. This handler can be used by
+ * by specifying handlers = com.splunk.logging.HttpEventCollectorHandler in java.util.logging
  * properties file.
  */
-public final class HttpInputHandler extends Handler {
-    private HttpInputEventSender eventSender;
+public final class HttpEventCollectorHandler extends Handler {
+    private HttpEventCollectorMiddleware.IHttpEventCollectorMiddleware eventSender;
 
     private final String BatchDelayConfTag = "batch_interval";
     private final String BatchCountConfTag = "batch_size_count";
@@ -96,38 +97,41 @@ public final class HttpInputHandler extends Handler {
     private final String UrlConfTag = "url";
 
     /** HttpInputHandler c-or */
-    public HttpInputHandler() {
-        // read configuration settings
-        Dictionary<String, String> metadata = new Hashtable<String, String>();
-        metadata.put(HttpInputEventSender.MetadataIndexTag,
-            getConfigurationProperty(HttpInputEventSender.MetadataIndexTag, ""));
+    public HttpEventCollectorHandler() {
+        if (!HttpEventCollectorMiddleware.hasMiddleware()) {
+            // read configuration settings
+            Dictionary<String, String> metadata = new Hashtable<String, String>();
+            metadata.put(HttpEventCollectorSender.MetadataIndexTag,
+                    getConfigurationProperty(HttpEventCollectorSender.MetadataIndexTag, ""));
 
-        metadata.put(HttpInputEventSender.MetadataSourceTag,
-            getConfigurationProperty(HttpInputEventSender.MetadataSourceTag, ""));
+            metadata.put(HttpEventCollectorSender.MetadataSourceTag,
+                    getConfigurationProperty(HttpEventCollectorSender.MetadataSourceTag, ""));
 
-        metadata.put(HttpInputEventSender.MetadataSourceTypeTag,
-            getConfigurationProperty(HttpInputEventSender.MetadataSourceTypeTag, ""));
+            metadata.put(HttpEventCollectorSender.MetadataSourceTypeTag,
+                    getConfigurationProperty(HttpEventCollectorSender.MetadataSourceTypeTag, ""));
 
-        // http input endpoint properties
-        String httpInputUrl = getConfigurationProperty(UrlConfTag, null);
+            // http input endpoint properties
+            String url = getConfigurationProperty(UrlConfTag, null);
 
-        // app token
-        String token = getConfigurationProperty("token", null);
+            // app token
+            String token = getConfigurationProperty("token", null);
 
-        // batching properties
-        long delay = getConfigurationNumericProperty(BatchDelayConfTag, 0);
-        long batchCount = getConfigurationNumericProperty(BatchCountConfTag, 0);
-        long batchSize = getConfigurationNumericProperty(BatchSizeConfTag, 0);
-        long retriesOnError = getConfigurationNumericProperty(RetriesOnErrorTag, 0);
+            // batching properties
+            long delay = getConfigurationNumericProperty(BatchDelayConfTag, 0);
+            long batchCount = getConfigurationNumericProperty(BatchCountConfTag, 0);
+            long batchSize = getConfigurationNumericProperty(BatchSizeConfTag, 0);
+            long retriesOnError = getConfigurationNumericProperty(RetriesOnErrorTag, 0);
 
-        // delegate all configuration params to event sender
-        eventSender = new HttpInputEventSender(
-            httpInputUrl, token, delay, batchCount, batchSize, retriesOnError, metadata);
+            // delegate all configuration params to event sender
+            HttpEventCollectorSender sender = new HttpEventCollectorSender(url, token, delay, batchCount, batchSize, retriesOnError, metadata);
+            if (getConfigurationProperty("disableCertificateValidation", "false").equalsIgnoreCase("true")) {
+                sender.disableCertificateValidation();
+            }
 
-        if (getConfigurationProperty("disableCertificateValidation", "false").equalsIgnoreCase("true")) {
-            eventSender.disableCertificateValidation();
+            HttpEventCollectorMiddleware.setMiddleware(sender);
         }
     }
+
 
     /**
      * java.util.logging data handler callback
@@ -160,7 +164,7 @@ public final class HttpInputHandler extends Handler {
     private String getConfigurationProperty(
             final String property, final String defaultValue) {
         String value = LogManager.getLogManager().getProperty(
-            getClass().getName() + '.' + property
+                getClass().getName() + '.' + property
         );
         if (value == null) {
             value = defaultValue;
@@ -173,8 +177,8 @@ public final class HttpInputHandler extends Handler {
     }
 
     private long getConfigurationNumericProperty(
-        final String property, long defaultValue) {
+            final String property, long defaultValue) {
         return Integer.parseInt(
-            getConfigurationProperty(property, String.format("%d", defaultValue)));
+                getConfigurationProperty(property, String.format("%d", defaultValue)));
     }
 }

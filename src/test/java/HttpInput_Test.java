@@ -17,8 +17,8 @@
  */
 
 import ch.qos.logback.core.joran.spi.JoranException;
-import com.splunk.logging.HttpInputLoggingErrorHandler;
-import com.splunk.logging.HttpInputLoggingEventInfo;
+import com.splunk.logging.HttpEventCollectorErrorHandler;
+import com.splunk.logging.HttpEventCollectorEventInfo;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -231,10 +231,10 @@ public class HttpInput_Test {
     }
 
     private void LogToSplunk(boolean batching) throws Exception {
-        HttpInputLoggingErrorHandler.onError(new HttpInputLoggingErrorHandler.ErrorCallback() {
-            public void error(final List<HttpInputLoggingEventInfo> data, final Exception ex) {
-                HttpInputLoggingErrorHandler.ServerErrorException serverErrorException =
-                        (HttpInputLoggingErrorHandler.ServerErrorException) ex;
+        HttpEventCollectorErrorHandler.onError(new HttpEventCollectorErrorHandler.ErrorCallback() {
+            public void error(final List<HttpEventCollectorEventInfo> data, final Exception ex) {
+                HttpEventCollectorErrorHandler.ServerErrorException serverErrorException =
+                        (HttpEventCollectorErrorHandler.ServerErrorException) ex;
                 System.out.printf("ERROR: %s", ex.toString());
                 Assert.assertTrue(false);
             }

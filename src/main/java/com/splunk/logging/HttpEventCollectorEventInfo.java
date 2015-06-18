@@ -21,7 +21,7 @@ package com.splunk.logging;
 /**
  * Container for Splunk http input logging event data
  */
-public class HttpInputLoggingEventInfo {
+public class HttpEventCollectorEventInfo {
     private long time; // time in "epoch" format
     private final String severity;
     private final String message;
@@ -31,7 +31,7 @@ public class HttpInputLoggingEventInfo {
      * @param severity of event
      * @param message is an event content
      */
-    public HttpInputLoggingEventInfo(final String severity, final String message) {
+    public HttpEventCollectorEventInfo(final String severity, final String message) {
         this.time = System.currentTimeMillis() / 1000;
         this.severity = severity;
         this.message = message;

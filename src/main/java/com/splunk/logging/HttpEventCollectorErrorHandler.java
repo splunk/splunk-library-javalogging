@@ -25,18 +25,18 @@ import org.json.simple.parser.ParseException;
 import java.util.List;
 
 /**
- * @brief Splunk http input error handler.
+ * @brief Splunk http event collector error handler.
  *
  * @details
- * A user application can utilize HttpInputLoggingErrorHandler in order to detect errors
+ * A user application can utilize HttpEventCollectorErrorHandler in order to detect errors
  * caused by network connection and/or Splunk server.
  *
  * Usage example:
- * HttpInputLoggingErrorHandler.onError(new HttpInputErrorHandler.ErrorCallback() {
+ * HttpEventCollectorErrorHandler.onError(new HttpEventErrorHandler.ErrorCallback() {
  *     public void error(final String data, final Exception ex) {  handle exception  }
  * });
  */
-public class HttpInputLoggingErrorHandler {
+public class HttpEventCollectorErrorHandler {
 
     /**
      * This exception is passed to error callback when Splunk server replies an error
@@ -88,7 +88,7 @@ public class HttpInputLoggingErrorHandler {
     }
 
     public interface ErrorCallback {
-        void error(final List<HttpInputLoggingEventInfo> data, final Exception ex);
+        void error(final List<HttpEventCollectorEventInfo> data, final Exception ex);
     }
 
     private static ErrorCallback errorCallback;
@@ -106,7 +106,7 @@ public class HttpInputLoggingErrorHandler {
      * @param data
      * @param ex is an exception thrown by posting or processing data
      */
-    public static void error(final List<HttpInputLoggingEventInfo> data, final Exception ex) {
+    public static void error(final List<HttpEventCollectorEventInfo> data, final Exception ex) {
         if (errorCallback != null) {
             errorCallback.error(data, ex);
         }

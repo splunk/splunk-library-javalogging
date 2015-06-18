@@ -36,10 +36,9 @@ import java.util.*;
 
 
 /**
- * This is an internal helper class that sends logging events to Splunk http
- * input. This class is not supposed to be used by Splunk customers.
+ * This is an internal helper class that sends logging events to Splunk http event collector.
  */
-final class HttpInputEventSender extends TimerTask {
+final class HttpEventCollectorSender extends TimerTask implements HttpEventCollectorMiddleware.IHttpEventCollectorMiddleware {
     public static final String MetadataTimeTag = "time";
     public static final String MetadataIndexTag = "index";
     public static final String MetadataSourceTag = "source";
@@ -48,33 +47,33 @@ final class HttpInputEventSender extends TimerTask {
     private static final String AuthorizationHeaderScheme = "Splunk %s";
     private static final String HttpContentType = "application/json; profile=urn:splunk:event:1.0; charset=utf-8";
 
-    private String httpInputUrl;
-    private final String token;
-    private final long maxEventsBatchCount;
-    private final long maxEventsBatchSize;
-    private final long retriesOnError;
+    private String url;
+    private String token;
+    private long maxEventsBatchCount;
+    private long maxEventsBatchSize;
+    private long retriesOnError;
     private Dictionary<String, String> metadata;
     private Timer timer;
-    private List<HttpInputLoggingEventInfo> eventsBatch = new LinkedList<HttpInputLoggingEventInfo>();
+    private List<HttpEventCollectorEventInfo> eventsBatch = new LinkedList<HttpEventCollectorEventInfo>();
     private long eventsBatchSize = 0; // estimated total size of events batch
     private CloseableHttpAsyncClient httpClient;
     private boolean disableCertificateValidation = false;
 
     /**
      * Initialize HttpInputEventSender
-     * @param httpInputUrl http input url
+     * @param Url http input url
      * @param token application token
      * @param delay batching delay
      * @param maxEventsBatchCount max number of events in a batch
      * @param maxEventsBatchSize max size of batch
      * @param metadata events metadata
      */
-    public HttpInputEventSender(
-        final String httpInputUrl, final String token,
-        long delay, long maxEventsBatchCount, long maxEventsBatchSize,
-        long retriesOnError,
-        Dictionary<String, String> metadata) {
-        this.httpInputUrl = httpInputUrl;
+    public HttpEventCollectorSender(
+            final String Url, final String token,
+            long delay, long maxEventsBatchCount, long maxEventsBatchSize,
+            long retriesOnError,
+            Dictionary<String, String> metadata) {
+        this.url = Url;
         this.token = token;
         // when size configuration setting is missing it's treated as "infinity",
         // i.e., any value is accepted.
@@ -103,8 +102,8 @@ final class HttpInputEventSender extends TimerTask {
      */
     public synchronized void send(final String severity, final String message) {
         // create event info container and add it to the batch
-        HttpInputLoggingEventInfo eventInfo =
-                new HttpInputLoggingEventInfo(severity, message);
+        HttpEventCollectorEventInfo eventInfo =
+                new HttpEventCollectorEventInfo(severity, message);
         eventsBatch.add(eventInfo);
         eventsBatchSize += severity.length() + message.length();
         if (eventsBatch.size() >= maxEventsBatchCount || eventsBatchSize > maxEventsBatchSize) {
@@ -122,7 +121,7 @@ final class HttpInputEventSender extends TimerTask {
         // Clear the batch. A new list should be created because events are
         // sending asynchronously and "previous" instance of eventsBatch object
         // is still in use.
-        eventsBatch = new LinkedList<HttpInputLoggingEventInfo>();
+        eventsBatch = new LinkedList<HttpEventCollectorEventInfo>();
         eventsBatchSize = 0;
     }
 
@@ -151,7 +150,7 @@ final class HttpInputEventSender extends TimerTask {
         disableCertificateValidation = true;
     }
 
-    private String serializeEventInfo(HttpInputLoggingEventInfo eventInfo) {
+    private String serializeEventInfo(HttpEventCollectorEventInfo eventInfo) {
         // create event json content
         JSONObject event = new JSONObject();
         // event timestamp and metadata
@@ -193,10 +192,10 @@ final class HttpInputEventSender extends TimerTask {
             SSLContext sslContext = null;
             try {
                 sslContext = SSLContexts.custom().loadTrustMaterial(
-                   null, acceptingTrustStrategy).build();
+                        null, acceptingTrustStrategy).build();
                 httpClient = HttpAsyncClients.custom()
-                    .setHostnameVerifier(SSLConnectionSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER)
-                    .setSSLContext(sslContext).build();
+                        .setHostnameVerifier(SSLConnectionSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER)
+                        .setSSLContext(sslContext).build();
             } catch (Exception e) { }
         }
         httpClient.start();
@@ -213,18 +212,18 @@ final class HttpInputEventSender extends TimerTask {
         }
     }
 
-    private void postEventsAsync(final List<HttpInputLoggingEventInfo> eventsBatch) {
+    private void postEventsAsync(final List<HttpEventCollectorEventInfo> eventsBatch) {
         startHttpClient();
         final String encoding = "utf-8";
         // convert events list into a string
         StringBuilder eventsBatchString = new StringBuilder();
-        for (HttpInputLoggingEventInfo eventInfo : eventsBatch)
+        for (HttpEventCollectorEventInfo eventInfo : eventsBatch)
             eventsBatchString.append(serializeEventInfo(eventInfo));
         // create http request
-        final HttpPost httpPost = new HttpPost(httpInputUrl);
+        final HttpPost httpPost = new HttpPost(url);
         httpPost.setHeader(
-            AuthorizationHeaderTag,
-            String.format(AuthorizationHeaderScheme, token));
+                AuthorizationHeaderTag,
+                String.format(AuthorizationHeaderScheme, token));
         StringEntity entity = new StringEntity(eventsBatchString.toString(), encoding);
         entity.setContentType(HttpContentType);
         httpPost.setEntity(entity);
@@ -238,15 +237,15 @@ final class HttpInputEventSender extends TimerTask {
                     try {
                         reply = EntityUtils.toString(response.getEntity(), encoding);
                     } catch (IOException e) {}
-                    HttpInputLoggingErrorHandler.error(
+                    HttpEventCollectorErrorHandler.error(
                             eventsBatch,
-                            new HttpInputLoggingErrorHandler.ServerErrorException(reply));
+                            new HttpEventCollectorErrorHandler.ServerErrorException(reply));
                 }
             }
 
             public void failed(final Exception ex) {
                 if (retriesCount >= retriesOnError) {
-                    HttpInputLoggingErrorHandler.error(eventsBatch, ex);
+                    HttpEventCollectorErrorHandler.error(eventsBatch, ex);
                 } else {
                     // retry
                     retriesCount ++;

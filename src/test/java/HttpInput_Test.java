@@ -122,7 +122,7 @@ public class HttpInput_Test {
         FileWriter fw = new FileWriter(configFilePath);
         fw.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n");
         fw.write("<configuration>\r\n");
-        fw.write("    <appender name=\"http\" class=\"com.splunk.logging.HttpLogbackAppender\">\r\n");
+        fw.write("    <appender name=\"http\" class=\"com.splunk.logging.HttpEventCollectorLogbackAppender\">\r\n");
         fw.write("        <url>https://127.0.0.1:8088/services/receivers/token</url>\r\n");
         fw.write(String.format("        <token>%s</token>\r\n", token));
         fw.write("        <disableCertificateValidation>true</disableCertificateValidation>\r\n");

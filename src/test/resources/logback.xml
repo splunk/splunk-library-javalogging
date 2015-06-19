@@ -52,7 +52,7 @@ under the License.
         <appender-ref ref="socket"/>
     </root>
 
-    <appender name="http" class="com.splunk.logging.HttpLogbackAppender">
+    <appender name="http" class="com.splunk.logging.HttpEventCollectorLogbackAppender">
         <url>http://localhost:5555/services/logging</url>
         <token>11111111-2222-3333-4444-555555555555</token>
         <source>splunktest</source>

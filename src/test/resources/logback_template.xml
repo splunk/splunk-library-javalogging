@@ -2,7 +2,7 @@
 
 <configuration>
 
-    <Appender name="%user_logger_name%" class="com.splunk.logging.HttpLogbackAppender">
+    <Appender name="%user_logger_name%" class="com.splunk.logging.HttpEventCollectorLogbackAppender">
         <url>%scheme%://%host%:8088/services/receivers/token</url>
         <token>%user_httpinput_token%</token>
         <index>%user_index%</index>

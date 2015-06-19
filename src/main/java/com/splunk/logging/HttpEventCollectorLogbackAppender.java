@@ -57,7 +57,7 @@ public class HttpEventCollectorLogbackAppender extends AppenderBase<ILoggingEven
 
             HttpEventCollectorSender sender = new HttpEventCollectorSender(_url, _token, _batchInterval, _batchCount, _batchSize, _retriesOnError, metadata);
 
-            if (_disableCertificateValidation.equalsIgnoreCase("true")) {
+            if (_disableCertificateValidation != null && _disableCertificateValidation.equalsIgnoreCase("true")) {
                 sender.disableCertificateValidation();
             }
 

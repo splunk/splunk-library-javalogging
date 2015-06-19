@@ -60,7 +60,7 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
 
             HttpEventCollectorSender sender = new HttpEventCollectorSender(url, token, batchInterval, batchCount, batchSize, retriesOnError, metadata);
 
-            if (disableCertificateValidation.equalsIgnoreCase("true")) {
+            if (disableCertificateValidation != null && disableCertificateValidation.equalsIgnoreCase("true")) {
                 sender.disableCertificateValidation();
             }
 

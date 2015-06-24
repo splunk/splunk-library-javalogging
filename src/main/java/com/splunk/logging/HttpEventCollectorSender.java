@@ -236,7 +236,9 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
                     String reply = "";
                     try {
                         reply = EntityUtils.toString(response.getEntity(), encoding);
-                    } catch (IOException e) {}
+                    } catch (IOException e) {
+                        reply = e.getMessage();
+                    }
                     HttpEventCollectorErrorHandler.error(
                             eventsBatch,
                             new HttpEventCollectorErrorHandler.ServerErrorException(reply));

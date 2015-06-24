@@ -16,8 +16,8 @@
 
 import java.util.*;
 
-import com.splunk.logging.HttpInputLoggingErrorHandler;
-import com.splunk.logging.HttpInputLoggingEventInfo;
+import com.splunk.logging.HttpEventCollectorErrorHandler;
+import com.splunk.logging.HttpEventCollectorEventInfo;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -26,8 +26,8 @@ import java.util.logging.Logger;
 public final class HttpInput_JavaLoggingTest {
 
     private String httpinputName = "JavaLoggingTest";
-    List<List<HttpInputLoggingEventInfo>> errors = new ArrayList<List<HttpInputLoggingEventInfo>>();
-    List<HttpInputLoggingErrorHandler.ServerErrorException> logEx = new ArrayList<HttpInputLoggingErrorHandler.ServerErrorException>();
+    List<List<HttpEventCollectorEventInfo>> errors = new ArrayList<List<HttpEventCollectorEventInfo>>();
+    List<HttpEventCollectorErrorHandler.ServerErrorException> logEx = new ArrayList<HttpEventCollectorErrorHandler.ServerErrorException>();
 
     /**
      * sending a message via httplogging using log4j2 to splunk
@@ -227,11 +227,11 @@ public final class HttpInput_JavaLoggingTest {
         errors.clear();
         logEx.clear();
         //define error callback
-        HttpInputLoggingErrorHandler.onError(new HttpInputLoggingErrorHandler.ErrorCallback() {
-            public void error(final List<HttpInputLoggingEventInfo> data, final Exception ex) {
+        HttpEventCollectorErrorHandler.onError(new HttpEventCollectorErrorHandler.ErrorCallback() {
+            public void error(final List<HttpEventCollectorEventInfo> data, final Exception ex) {
                 synchronized (errors) {
                     errors.add(data);
-                    logEx.add((HttpInputLoggingErrorHandler.ServerErrorException) ex);
+                    logEx.add((HttpEventCollectorErrorHandler.ServerErrorException) ex);
                 }
             }
         });
@@ -274,8 +274,8 @@ public final class HttpInput_JavaLoggingTest {
         Assert.assertEquals(4, logEx.get(1).getErrorCode());
 
 
-        for (List<HttpInputLoggingEventInfo> infos : errors) {
-            for (HttpInputLoggingEventInfo info : infos) {
+        for (List<HttpEventCollectorEventInfo> infos : errors) {
+            for (HttpEventCollectorEventInfo info : infos) {
                 System.out.println(info.getMessage());
             }
         }
@@ -292,11 +292,11 @@ public final class HttpInput_JavaLoggingTest {
         logEx.clear();
 
         //define error callback
-        HttpInputLoggingErrorHandler.onError(new HttpInputLoggingErrorHandler.ErrorCallback() {
-            public void error(final List<HttpInputLoggingEventInfo> data, final Exception ex) {
+        HttpEventCollectorErrorHandler.onError(new HttpEventCollectorErrorHandler.ErrorCallback() {
+            public void error(final List<HttpEventCollectorEventInfo> data, final Exception ex) {
                 synchronized (errors) {
                     errors.add(data);
-                    logEx.add((HttpInputLoggingErrorHandler.ServerErrorException) ex);
+                    logEx.add((HttpEventCollectorErrorHandler.ServerErrorException) ex);
                 }
             }
         });
@@ -330,8 +330,8 @@ public final class HttpInput_JavaLoggingTest {
         Assert.assertEquals(1, logEx.get(0).getErrorCode());
         Assert.assertTrue(logEx.get(0).getErrorText().contains("Token disabled"));
 
-        for (List<HttpInputLoggingEventInfo> infos : errors) {
-            for (HttpInputLoggingEventInfo info : infos) {
+        for (List<HttpEventCollectorEventInfo> infos : errors) {
+            for (HttpEventCollectorEventInfo info : infos) {
                 System.out.println(info.getMessage());
             }
         }

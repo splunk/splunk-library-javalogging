@@ -33,11 +33,9 @@ import org.apache.logging.log4j.core.config.plugins.PluginFactory;
  * Splunk Http Appender.
  */
 @Plugin(name = "Http", category = "Core", elementType = "appender", printObject = true)
-public final class HttpAppender extends AbstractAppender
+public final class HttpEventCollectorLog4jAppender extends AbstractAppender
 {
-    private HttpInputEventSender _eventSender;
-
-    private HttpAppender(final String name,
+    private HttpEventCollectorLog4jAppender(final String name,
                          final String url,
                          final String token,
                          final String source,
@@ -53,16 +51,20 @@ public final class HttpAppender extends AbstractAppender
                          final String disableCertificateValidation)
     {
         super(name, filter, layout, ignoreExceptions);
-        // init events sender
-        Dictionary<String, String> metadata = new Hashtable<String, String>();
-        metadata.put(HttpInputEventSender.MetadataIndexTag, index != null ? index : "");
-        metadata.put(HttpInputEventSender.MetadataSourceTag, source != null ? source : "");
-        metadata.put(HttpInputEventSender.MetadataSourceTypeTag, sourcetype != null ? sourcetype : "");
-        // @todo - batching SPL-96375
-        _eventSender = new HttpInputEventSender(
-            url, token, batchInterval, batchCount, batchSize, retriesOnError, metadata);
-        if (disableCertificateValidation.equalsIgnoreCase("true")) {
-            _eventSender.disableCertificateValidation();
+
+        if (!HttpEventCollectorMiddleware.hasMiddleware()) {
+            Dictionary<String, String> metadata = new Hashtable<String, String>();
+            metadata.put(HttpEventCollectorSender.MetadataIndexTag, index != null ? index : "");
+            metadata.put(HttpEventCollectorSender.MetadataSourceTag, source != null ? source : "");
+            metadata.put(HttpEventCollectorSender.MetadataSourceTypeTag, sourcetype != null ? sourcetype : "");
+
+            HttpEventCollectorSender sender = new HttpEventCollectorSender(url, token, batchInterval, batchCount, batchSize, retriesOnError, metadata);
+
+            if (disableCertificateValidation != null && disableCertificateValidation.equalsIgnoreCase("true")) {
+                sender.disableCertificateValidation();
+            }
+
+            HttpEventCollectorMiddleware.setMiddleware(sender);
         }
     }
 
@@ -71,14 +73,14 @@ public final class HttpAppender extends AbstractAppender
      * @return The Http Appender.
      */
     @PluginFactory
-    public static HttpAppender createAppender(
+    public static HttpEventCollectorLog4jAppender createAppender(
             // @formatter:off
             @PluginAttribute("url") final String url,
             @PluginAttribute("token") final String token,
             @PluginAttribute("name") final String name,
             @PluginAttribute("source") final String source,
-            @PluginAttribute("sourcetype") final String sourcetype, 
-            @PluginAttribute("index") final String index,             
+            @PluginAttribute("sourcetype") final String sourcetype,
+            @PluginAttribute("index") final String index,
             @PluginAttribute("ignoreExceptions") final String ignore,
             @PluginAttribute("batch_size_bytes") final String batchSize,
             @PluginAttribute("batch_size_count") final String batchCount,
@@ -87,23 +89,23 @@ public final class HttpAppender extends AbstractAppender
             @PluginAttribute("disableCertificateValidation") final String disableCertificateValidation,
             @PluginElement("Layout") Layout<? extends Serializable> layout,
             @PluginElement("Filter") final Filter filter
-            )
+    )
     {
         if (name == null)
         {
-            LOGGER.error("No name provided for HttpAppender");
+            LOGGER.error("No name provided for HttpEventCollectorLog4jAppender");
             return null;
         }
 
         if (url == null)
         {
-            LOGGER.error("No Splunk URL provided for HttpAppender");
+            LOGGER.error("No Splunk URL provided for HttpEventCollectorLog4jAppender");
             return null;
         }
 
         if (token == null)
         {
-            LOGGER.error("No token provided for HttpAppender");
+            LOGGER.error("No token provided for HttpEventCollectorLog4jAppender");
             return null;
         }
 
@@ -114,7 +116,7 @@ public final class HttpAppender extends AbstractAppender
 
         final boolean ignoreExceptions = true;
 
-        return new HttpAppender(
+        return new HttpEventCollectorLog4jAppender(
                 name, url, token,
                 source, sourcetype, index,
                 filter, layout, ignoreExceptions,
@@ -122,8 +124,8 @@ public final class HttpAppender extends AbstractAppender
                 parseInt(retriesOnError, 0),
                 disableCertificateValidation);
     }
-    
-   
+
+
     /**
      * Perform Appender specific appending actions.
      * @param event The Log event.
@@ -131,15 +133,15 @@ public final class HttpAppender extends AbstractAppender
     @Override
     public void append(final LogEvent event)
     {
-        _eventSender.send(
-            event.getLevel().toString(),
-            event.getMessage().getFormattedMessage()
+        HttpEventCollectorMiddleware.send(
+                event.getLevel().toString(),
+                event.getMessage().getFormattedMessage()
         );
     }
 
     @Override
     public void stop() {
-        _eventSender.flush();
+        HttpEventCollectorMiddleware.flush();
         super.stop();
     }
 }

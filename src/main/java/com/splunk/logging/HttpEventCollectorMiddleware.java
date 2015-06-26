@@ -46,7 +46,7 @@ public class HttpEventCollectorMiddleware {
     }
 
     public static boolean hasMiddleware() {
-        return senderMiddleware == null;
+        return senderMiddleware != null;
     }
 
     public static void send(String severity, String message) {

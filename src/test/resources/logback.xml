@@ -53,7 +53,7 @@ under the License.
     </root>
 
     <appender name="http" class="com.splunk.logging.HttpEventCollectorLogbackAppender">
-        <url>http://localhost:5555/services/logging</url>
+        <url>http://localhost:5555/services/collector</url>
         <token>11111111-2222-3333-4444-555555555555</token>
         <source>splunktest</source>
         <sourcetype>battlecat</sourcetype>

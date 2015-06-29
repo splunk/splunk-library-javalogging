@@ -33,7 +33,7 @@ public class TestUtil {
 
     private static final ServiceArgs serviceArgs = new ServiceArgs();
     private static Service service;
-    private static final String httpInputTokenEndpointPath = "/services/data/inputs/token/http";
+    private static final String httpInputTokenEndpointPath = "/services/data/inputs/http";
 
     /**
      * read splunk host info from .splunkrc file
@@ -154,7 +154,7 @@ public class TestUtil {
         //disable logging endpoint
         Map args = new HashMap();
         args.put("disabled", 1);
-        ResponseMessage response = service.post("/servicesNS/admin/search/data/inputs/token/http/http", args);
+        ResponseMessage response = service.post("/servicesNS/admin/search/data/inputs/http/http", args);
         assert response.getStatus() == 200;
     }
 
@@ -167,7 +167,7 @@ public class TestUtil {
         //enable logging endpoint
         Map args = new HashMap();
         args.put("disabled", 0);
-        ResponseMessage response = service.post("/servicesNS/admin/search/data/inputs/token/http/http", args);
+        ResponseMessage response = service.post("/servicesNS/admin/search/data/inputs/http/http", args);
         assert response.getStatus() == 200;
 
     }

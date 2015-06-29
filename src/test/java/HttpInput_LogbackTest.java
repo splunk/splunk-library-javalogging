@@ -34,6 +34,7 @@ public final class HttpInput_LogbackTest {
      */
     @Test
     public void canSendEventUsingLogback() throws Exception {
+        TestUtil.enableHttpinput();
         String token = TestUtil.createHttpinput(httpinputName);
 
         String loggerName = "logBackLogger";

@@ -34,6 +34,8 @@ public final class HttpInput_JavaLoggingTest {
      */
     @Test
     public void canSendEventUsingJavaLogging() throws Exception {
+        TestUtil.enableHttpinput();
+
         String token = TestUtil.createHttpinput(httpinputName);
 
         String loggerName = "splunkLogger";
@@ -43,7 +45,7 @@ public final class HttpInput_JavaLoggingTest {
         TestUtil.resetJavaLoggingConfiguration("logging_template.properties", "logging.properties", userInputs);
 
         Date date = new Date();
-        String jsonMsg = String.format("{EventDate:%s, EventMsg:'this is a test event for java logging}", date.toString());
+        String jsonMsg = String.format("{EventDate:%s, EventMsg:'this is a test event for java logging canSendEventUsingJavaLogging}", date.toString());
 
         Logger logger = Logger.getLogger(loggerName);
         logger.info(jsonMsg);
@@ -70,7 +72,7 @@ public final class HttpInput_JavaLoggingTest {
         TestUtil.resetJavaLoggingConfiguration("logging_template.properties", "logging.properties", userInputs);
 
         Date date = new Date();
-        String jsonMsg = String.format("{EventDate:%s, EventMsg:'this is a test event for java logging}", date.toString());
+        String jsonMsg = String.format("{EventDate:%s, EventMsg:'this is a test event for java logging canSendEventUsingJavaLoggingWithOptions}", date.toString());
 
         Logger logger = Logger.getLogger(loggerName);
         logger.info(jsonMsg);
@@ -97,7 +99,7 @@ public final class HttpInput_JavaLoggingTest {
 
         TestUtil.resetJavaLoggingConfiguration("logging_template.properties", "logging.properties", userInputs);
         Date date = new Date();
-        String jsonMsg = String.format("{EventDate:%s, EventMsg:'this is a test event for java logging}", date.toString());
+        String jsonMsg = String.format("{EventDate:%s, EventMsg:'this is a test event for java logging sendBatchedEventsUsingJavaLogging}", date.toString());
 
         Logger logger = Logger.getLogger(loggerName);
         logger.info(jsonMsg);
@@ -120,7 +122,7 @@ public final class HttpInput_JavaLoggingTest {
         userInputs.put("user_httpinput_token", token);
         userInputs.put("user_logger_name", loggerName);
         TestUtil.resetJavaLoggingConfiguration("logging_template.properties", "logging.properties", userInputs);
-        String jsonMsg = String.format("{EventDate:%s, EventMsg:'this is a test event for java logging}", new Date().toString());
+        String jsonMsg = String.format("{EventDate:%s, EventMsg:'this is a test event for java logging sendBatchedEventsByCount}", new Date().toString());
         Logger logger = Logger.getLogger(loggerName);
         logger.info(jsonMsg);
 

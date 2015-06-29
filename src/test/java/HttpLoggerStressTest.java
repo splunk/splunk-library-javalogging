@@ -116,7 +116,7 @@ public class HttpLoggerStressTest {
         //enable logging endpoint
         Map args = new HashMap();
         args.put("disabled", 0);
-        service.post("/servicesNS/admin/search/data/inputs/token/http/http", args);
+        service.post("/servicesNS/admin/search/data/inputs/http/http", args);
 
         //create a httpinput
         args = new HashMap();
@@ -124,14 +124,14 @@ public class HttpLoggerStressTest {
         args.put("description", "test http input");
 
         try {
-            service.delete("/services/data/inputs/token/http/" + httpinputName);
+            service.delete("/services/data/inputs/http/" + httpinputName);
         } catch (Exception e) {
         }
 
-        service.post("/services/data/inputs/token/http", args);
+        service.post("/services/data/inputs/http", args);
 
         args = new HashMap();
-        ResponseMessage response = service.get("/services/data/inputs/token/http/" + httpinputName, args);
+        ResponseMessage response = service.get("/services/data/inputs/http/" + httpinputName, args);
         BufferedReader reader = new BufferedReader(new InputStreamReader(response.getContent(), "UTF-8"));
         String token = "";
         while (true) {
@@ -156,7 +156,7 @@ public class HttpLoggerStressTest {
         fw.write("    <!--need the \"token=...\" line to be a single line for parsing purpose-->\r\n");
         fw.write("    <Appenders>\r\n");
         fw.write("        <Http name=\"Http\"\r\n");
-        fw.write("              url=\"https://127.0.0.1:8088/services/receivers/token\"\r\n");
+        fw.write("              url=\"https://127.0.0.1:8088/services/collector\"\r\n");
         fw.write("              index=\"\"\r\n");
         fw.write(String.format("              token=\"%s\"\r\n", token));
         fw.write("              disableCertificateValidation=\"true\"\r\n");

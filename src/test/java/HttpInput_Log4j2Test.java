@@ -34,7 +34,7 @@ public final class HttpInput_Log4j2Test {
      */
     @Test
     public void canSendEventUsingLog4j2() throws Exception, IOException, InterruptedException {
-
+        TestUtil.enableHttpinput();
         String token = TestUtil.createHttpinput(httpinputName);
         String loggerName = "splunkLogger4j2";
         HashMap<String, String> userInputs = new HashMap<String, String>();

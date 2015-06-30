@@ -36,6 +36,7 @@ public class HttpEventCollectorLogbackAppender extends AppenderBase<ILoggingEven
     private long _batchInterval = 0;
     private long _batchCount = 0;
     private long _batchSize = 0;
+    private String _sendMode;
     private long _retriesOnError = 0;
 
     @Override
@@ -55,7 +56,8 @@ public class HttpEventCollectorLogbackAppender extends AppenderBase<ILoggingEven
             if (_sourcetype != null)
                 metadata.put(HttpEventCollectorSender.MetadataSourceTypeTag, _sourcetype);
 
-            HttpEventCollectorSender sender = new HttpEventCollectorSender(_url, _token, _batchInterval, _batchCount, _batchSize, _retriesOnError, metadata);
+            HttpEventCollectorSender sender = new HttpEventCollectorSender(
+                    _url, _token, _batchInterval, _batchCount, _batchSize, _retriesOnError, _sendMode, metadata);
 
             if (_disableCertificateValidation != null && _disableCertificateValidation.equalsIgnoreCase("true")) {
                 sender.disableCertificateValidation();
@@ -148,8 +150,12 @@ public class HttpEventCollectorLogbackAppender extends AppenderBase<ILoggingEven
         _batchInterval = parseLong(value, 0);
     }
 
-    public void setretries_o_error(String value) {
+    public void setretries_on_error(String value) {
         _retriesOnError = parseLong(value, 0);
+    }
+
+    public void setsend_mode(String value) {
+        _sendMode = value;
     }
 
     public String getDisableCertificateValidation() {

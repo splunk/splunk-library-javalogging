@@ -22,7 +22,7 @@ package com.splunk.logging;
  * Container for Splunk http input logging event data
  */
 public class HttpEventCollectorEventInfo {
-    private long time; // time in "epoch" format
+    private double time; // time in "epoch" format
     private final String severity;
     private final String message;
 
@@ -32,7 +32,7 @@ public class HttpEventCollectorEventInfo {
      * @param message is an event content
      */
     public HttpEventCollectorEventInfo(final String severity, final String message) {
-        this.time = System.currentTimeMillis() / 1000;
+        this.time = System.currentTimeMillis() / 1000.0;
         this.severity = severity;
         this.message = message;
     }
@@ -40,7 +40,7 @@ public class HttpEventCollectorEventInfo {
     /**
      * @return event timestamp in epoch format
      */
-    public long getTime() {
+    public double getTime() {
         return time;
     }
 

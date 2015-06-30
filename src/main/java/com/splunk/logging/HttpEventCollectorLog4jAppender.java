@@ -48,6 +48,7 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
                          long batchCount,
                          long batchSize,
                          long retriesOnError,
+                         String sendMode,
                          final String disableCertificateValidation)
     {
         super(name, filter, layout, ignoreExceptions);
@@ -58,7 +59,7 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
             metadata.put(HttpEventCollectorSender.MetadataSourceTag, source != null ? source : "");
             metadata.put(HttpEventCollectorSender.MetadataSourceTypeTag, sourcetype != null ? sourcetype : "");
 
-            HttpEventCollectorSender sender = new HttpEventCollectorSender(url, token, batchInterval, batchCount, batchSize, retriesOnError, metadata);
+            HttpEventCollectorSender sender = new HttpEventCollectorSender(url, token, batchInterval, batchCount, batchSize, retriesOnError, sendMode, metadata);
 
             if (disableCertificateValidation != null && disableCertificateValidation.equalsIgnoreCase("true")) {
                 sender.disableCertificateValidation();
@@ -86,6 +87,7 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
             @PluginAttribute("batch_size_count") final String batchCount,
             @PluginAttribute("batch_interval") final String batchInterval,
             @PluginAttribute("retries_on_error") final String retriesOnError,
+            @PluginAttribute("send_mode") final String sendMode,
             @PluginAttribute("disableCertificateValidation") final String disableCertificateValidation,
             @PluginElement("Layout") Layout<? extends Serializable> layout,
             @PluginElement("Filter") final Filter filter
@@ -122,6 +124,7 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
                 filter, layout, ignoreExceptions,
                 parseInt(batchInterval, 0), parseInt(batchCount, 0), parseInt(batchSize, 0),
                 parseInt(retriesOnError, 0),
+                sendMode,
                 disableCertificateValidation);
     }
 

@@ -71,6 +71,13 @@ package com.splunk.logging;
  * com.splunk.logging.HttpEventCollectorLoggingHandler.batch_interval = 500
  * com.splunk.logging.HttpEventCollectorLoggingHandler.batch_size_count = 1000
  * com.splunk.logging.HttpEventCollectorLoggingHandler.batch_size_count = 65536
+ *
+ * # To improve system performance tracing events are sent asynchronously and
+ * events with the same timestamp (that has 1 millisecond resolution) may
+ * be indexed out of order by Splunk. send_mode parameter triggers
+ * "sequential mode" that guarantees preserving events order. In
+ * "sequential mode" performance of sending events to the server is lower.
+ * com.splunk.logging.HttpEventCollectorLoggingHandler.send_mode=sequential
  */
 
 import java.io.IOException;
@@ -94,6 +101,7 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
     private final String BatchSizeConfTag = "batch_size_bytes";
     private final String RetriesOnErrorTag = "retries_on_error";
     private final String UrlConfTag = "url";
+    private final String SendModeTag = "send_mode";
 
     /** HttpInputHandler c-or */
     public HttpEventCollectorLoggingHandler() {
@@ -120,9 +128,11 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
             long batchCount = getConfigurationNumericProperty(BatchCountConfTag, 0);
             long batchSize = getConfigurationNumericProperty(BatchSizeConfTag, 0);
             long retriesOnError = getConfigurationNumericProperty(RetriesOnErrorTag, 0);
+            String sendMode = getConfigurationProperty(SendModeTag, null);
 
             // delegate all configuration params to event sender
-            HttpEventCollectorSender sender = new HttpEventCollectorSender(url, token, delay, batchCount, batchSize, retriesOnError, metadata);
+            HttpEventCollectorSender sender = new HttpEventCollectorSender(
+                    url, token, delay, batchCount, batchSize, retriesOnError, sendMode, metadata);
             if (getConfigurationProperty("disableCertificateValidation", "false").equalsIgnoreCase("true")) {
                 sender.disableCertificateValidation();
             }

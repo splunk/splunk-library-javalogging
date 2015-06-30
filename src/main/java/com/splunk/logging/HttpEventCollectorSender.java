@@ -26,6 +26,7 @@ import org.apache.http.conn.ssl.SSLContexts;
 import org.apache.http.conn.ssl.TrustStrategy;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
+import org.apache.http.impl.nio.client.HttpAsyncClientBuilder;
 import org.apache.http.impl.nio.client.HttpAsyncClients;
 import org.apache.http.util.EntityUtils;
 import org.json.simple.JSONObject;
@@ -45,7 +46,19 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
     public static final String MetadataSourceTypeTag = "sourcetype";
     private static final String AuthorizationHeaderTag = "Authorization";
     private static final String AuthorizationHeaderScheme = "Splunk %s";
+    private static final String HttpEventCollectorUriPath = "/services/collector/event/1.0";
     private static final String HttpContentType = "application/json; profile=urn:splunk:event:1.0; charset=utf-8";
+
+    /**
+     * Sender operation mode. Parallel means that all HTTP requests are
+     * asynchronous and may be indexed out of order. Sequential mode guarantees
+     * sequential order of the indexed events.
+     */
+    public enum SendMode
+    {
+        Sequential,
+        Parallel
+    };
 
     private String url;
     private String token;
@@ -58,6 +71,7 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
     private long eventsBatchSize = 0; // estimated total size of events batch
     private CloseableHttpAsyncClient httpClient;
     private boolean disableCertificateValidation = false;
+    private SendMode sendMode = SendMode.Sequential;
 
     /**
      * Initialize HttpInputEventSender
@@ -72,8 +86,9 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
             final String Url, final String token,
             long delay, long maxEventsBatchCount, long maxEventsBatchSize,
             long retriesOnError,
+            String sendModeStr,
             Dictionary<String, String> metadata) {
-        this.url = Url;
+        this.url = Url + HttpEventCollectorUriPath;
         this.token = token;
         // when size configuration setting is missing it's treated as "infinity",
         // i.e., any value is accepted.
@@ -86,6 +101,10 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
         this.maxEventsBatchSize = maxEventsBatchSize;
         this.retriesOnError = retriesOnError;
         this.metadata = metadata;
+        if (sendModeStr != null) {
+            this.sendMode =  sendModeStr.equals("sequential") ?
+                    SendMode.Sequential : SendMode.Parallel;
+        }
 
         if (delay > 0) {
             // start heartbeat timer
@@ -157,7 +176,7 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
         String index = metadata.get(MetadataIndexTag);
         String source = metadata.get(MetadataSourceTag);
         String sourceType = metadata.get(MetadataSourceTypeTag);
-        event.put(MetadataTimeTag, String.format("%d", eventInfo.getTime()));
+        event.put(MetadataTimeTag, String.format("%.3f", eventInfo.getTime()));
         if (index != null && index.length() > 0)
             event.put(MetadataIndexTag, index);
         if (source  != null && source.length() > 0)
@@ -178,9 +197,14 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
             // http client is already started
             return;
         }
+        // limit max  number of async requests in sequential mode, 0 means "use
+        // default limit"
+        int maxConnTotal = sendMode == SendMode.Sequential ? 1 : 0;
         if (! disableCertificateValidation) {
             // create an http client that validates certificates
-            httpClient = HttpAsyncClients.createDefault();
+            httpClient = HttpAsyncClients.custom()
+                    .setMaxConnTotal(maxConnTotal)
+                    .build();
         } else {
             // create strategy that accepts all certificates
             TrustStrategy acceptingTrustStrategy = new TrustStrategy() {
@@ -194,8 +218,10 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
                 sslContext = SSLContexts.custom().loadTrustMaterial(
                         null, acceptingTrustStrategy).build();
                 httpClient = HttpAsyncClients.custom()
+                        .setMaxConnTotal(maxConnTotal)
                         .setHostnameVerifier(SSLConnectionSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER)
-                        .setSSLContext(sslContext).build();
+                        .setSSLContext(sslContext)
+						.build();
             } catch (Exception e) { }
         }
         httpClient.start();

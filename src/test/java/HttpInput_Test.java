@@ -200,8 +200,9 @@ public class HttpInput_Test {
     public void TryToLogToSplunkWithDisabledHttpEventCollector() throws Exception {
         HttpEventCollectorErrorHandler.onError(new HttpEventCollectorErrorHandler.ErrorCallback() {
             public void error(final List<HttpEventCollectorEventInfo> data, final Exception ex) {
+                String exceptionInfo = ex.getMessage() + " " + ex.getStackTrace();
                 HttpEventCollectorErrorHandler.ServerErrorException serverErrorException =
-                        (HttpEventCollectorErrorHandler.ServerErrorException) ex;
+                        new HttpEventCollectorErrorHandler.ServerErrorException(exceptionInfo);
                 System.out.printf("ERROR: %s", ex.toString());
                 exceptionWasRaised = true;
             }

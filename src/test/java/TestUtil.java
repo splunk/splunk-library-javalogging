@@ -71,6 +71,11 @@ public class TestUtil {
         }
     }
 
+    public static void resetConnection()
+    {
+        service = null;
+    }
+
     public static Service connectToSplunk() throws IOException {
 
         if (service == null) {
@@ -86,7 +91,7 @@ public class TestUtil {
 
 
     /**
-     * create http input token
+     * create http event collector token
      */
     public static String createHttpinput(String httpinputName) throws Exception {
         connectToSplunk();
@@ -97,7 +102,7 @@ public class TestUtil {
         //create a httpinput
         Map args = new HashMap();
         args.put("name", httpinputName);
-        args.put("description", "test http input");
+        args.put("description", "test http event collector");
 
         deleteHttpinput(httpinputName);
 
@@ -129,7 +134,7 @@ public class TestUtil {
     }
 
     /**
-     * delete http input token
+     * delete http event collector token
      */
     public static void deleteHttpinput(String httpinputName) throws Exception {
         connectToSplunk();
@@ -146,7 +151,7 @@ public class TestUtil {
     }
 
     /**
-     * disable http input featuren
+     * disable http event collector feature
      */
     public static void disableHttpinput() throws IOException {
         connectToSplunk();
@@ -159,7 +164,7 @@ public class TestUtil {
     }
 
     /**
-     * enable http input featuren
+     * enable http event collector feature
      */
     public static void enableHttpinput() throws IOException {
         connectToSplunk();
@@ -173,7 +178,7 @@ public class TestUtil {
     }
 
     /**
-     * disable http input token
+     * disable http event collector token
      */
     public static void disableHttpinput(String httpinputName) throws IOException {
         connectToSplunk();

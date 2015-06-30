@@ -11,7 +11,6 @@ import java.net.URLClassLoader;
 import java.util.*;
 import java.lang.reflect.*;
 
-import com.splunk.logging.*;
 import com.splunk.*;
 
 public class HttpLoggerStressTest {
@@ -102,7 +101,7 @@ public class HttpLoggerStressTest {
     private static ServiceArgs serviceArgs;
     private static String httpinputName = "stresshttpinput";
 
-    private static void setupHttpInput() throws Exception {
+    private static void setupHttpEventCollector() throws Exception {
         //connect to localhost
         serviceArgs = new ServiceArgs();
         serviceArgs.setUsername("admin");
@@ -121,7 +120,7 @@ public class HttpLoggerStressTest {
         //create a httpinput
         args = new HashMap();
         args.put("name", httpinputName);
-        args.put("description", "test http input");
+        args.put("description", "test http event collector");
 
         try {
             service.delete("/services/data/inputs/http/" + httpinputName);
@@ -187,8 +186,8 @@ public class HttpLoggerStressTest {
         int numberOfThreads = 1;
         int testDurationInSecs = 300;
 
-        System.out.printf("\tSetting up http inputs ... ");
-        setupHttpInput();
+        System.out.printf("\tSetting up http event collector ... ");
+        setupHttpEventCollector();
         System.out.printf("Inserting data ... ");
         DataSender[] dsList = new DataSender[numberOfThreads];
         Thread[] tList = new Thread[numberOfThreads];

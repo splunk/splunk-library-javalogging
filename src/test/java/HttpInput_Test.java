@@ -203,7 +203,7 @@ public class HttpInput_Test {
                 String exceptionInfo = ex.getMessage() + " " + ex.getStackTrace();
                 HttpEventCollectorErrorHandler.ServerErrorException serverErrorException =
                         new HttpEventCollectorErrorHandler.ServerErrorException(exceptionInfo);
-                System.out.printf("ERROR: %s", ex.toString());
+                System.out.printf("Callback has been called on error\n");
                 exceptionWasRaised = true;
             }
         });
@@ -226,7 +226,7 @@ public class HttpInput_Test {
             LOGGER.info(String.format("javautil message%d", i));
         }
 
-        Thread.sleep(2000);
+        Thread.sleep(5000);
         Assert.assertTrue(exceptionWasRaised);
         System.out.printf("PASSED.\n\n");
     }

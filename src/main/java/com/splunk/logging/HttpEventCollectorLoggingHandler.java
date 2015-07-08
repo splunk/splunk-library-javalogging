@@ -128,7 +128,7 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
             long batchCount = getConfigurationNumericProperty(BatchCountConfTag, 0);
             long batchSize = getConfigurationNumericProperty(BatchSizeConfTag, 0);
             long retriesOnError = getConfigurationNumericProperty(RetriesOnErrorTag, 0);
-            String sendMode = getConfigurationProperty(SendModeTag, null);
+            String sendMode = getConfigurationProperty(SendModeTag, "sequential");
 
             // delegate all configuration params to event sender
             HttpEventCollectorSender sender = new HttpEventCollectorSender(

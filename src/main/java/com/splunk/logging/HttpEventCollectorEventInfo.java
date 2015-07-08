@@ -19,7 +19,7 @@ package com.splunk.logging;
  */
 
 /**
- * Container for Splunk http input logging event data
+ * Container for Splunk http event collector event data
  */
 public class HttpEventCollectorEventInfo {
     private double time; // time in "epoch" format
@@ -27,7 +27,7 @@ public class HttpEventCollectorEventInfo {
     private final String message;
 
     /**
-     * Create a new HttpInputLoggingEventInfo container
+     * Create a new HttpEventCollectorEventInfo container
      * @param severity of event
      * @param message is an event content
      */

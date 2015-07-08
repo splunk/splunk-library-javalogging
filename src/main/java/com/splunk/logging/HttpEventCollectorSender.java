@@ -279,7 +279,7 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
 
             public void failed(final Exception ex) {
                 if (retriesCount >= retriesOnError) {
-                    HttpEventCollectorErrorHandler.error(eventsBatch, ex);
+                    HttpEventCollectorErrorHandler.error(eventsBatch, new HttpEventCollectorErrorHandler.ServerErrorException(ex.getMessage()));
                 } else {
                     // retry
                     retriesCount ++;

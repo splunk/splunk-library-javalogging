@@ -80,6 +80,16 @@ entries.
     </dependency>
     ```
 
+    You might also want to add the following repository to your repositories section:
+
+    ```
+    <repository>
+        <id>splunk</id>
+        <name>splunk-releases</name>
+        <url>http://splunk.artifactoryonline.com/splunk/ext-releases-local</url>
+    </repository>
+    ```
+
    If you are using Ant, download the corresponding JAR file from 
    [http://dev.splunk.com/goto/sdk-slj](http://dev.splunk.com/goto/sdk-slj).</li>
 

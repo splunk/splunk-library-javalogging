@@ -48,6 +48,8 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
     private static final String AuthorizationHeaderScheme = "Splunk %s";
     private static final String HttpEventCollectorUriPath = "/services/collector/event/1.0";
     private static final String HttpContentType = "application/json; profile=urn:splunk:event:1.0; charset=utf-8";
+    private static final String SendModeSequential = "sequential";
+    private static final String SendModeSParallel = "parallel";
 
     /**
      * Sender operation mode. Parallel means that all HTTP requests are
@@ -74,8 +76,8 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
     private SendMode sendMode = SendMode.Sequential;
 
     /**
-     * Initialize HttpInputEventSender
-     * @param Url http input url
+     * Initialize HttpEventCollectorSender
+     * @param Url http event collector input server
      * @param token application token
      * @param delay batching delay
      * @param maxEventsBatchCount max number of events in a batch
@@ -102,8 +104,12 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
         this.retriesOnError = retriesOnError;
         this.metadata = metadata;
         if (sendModeStr != null) {
-            this.sendMode =  sendModeStr.equals("sequential") ?
-                    SendMode.Sequential : SendMode.Parallel;
+            if (sendModeStr.equals(SendModeSequential))
+                this.sendMode = SendMode.Sequential;
+            else if (sendModeStr.equals(SendModeSParallel))
+                this.sendMode = SendMode.Parallel;
+            else
+                throw new IllegalArgumentException("Unknown send mode: " + sendModeStr);
         }
 
         if (delay > 0) {
@@ -221,7 +227,7 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
                         .setMaxConnTotal(maxConnTotal)
                         .setHostnameVerifier(SSLConnectionSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER)
                         .setSSLContext(sslContext)
-						.build();
+                        .build();
             } catch (Exception e) { }
         }
         httpClient.start();

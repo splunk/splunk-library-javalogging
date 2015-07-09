@@ -23,7 +23,7 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 
 /**
- * Logback Appender which writes its events to Splunk http input rest endpoint.
+ * Logback Appender which writes its events to Splunk http event collector rest endpoint.
  */
 public class HttpEventCollectorLogbackAppender extends AppenderBase<ILoggingEvent> {
     private Layout<ILoggingEvent> _layout;

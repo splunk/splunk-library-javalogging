@@ -23,8 +23,8 @@ package com.splunk.logging;
  *
  * @details
  * This is a Splunk custom java.util.logging handler that intercepts logging
- * information and forwards it to a Splunk server through http input.
- * @todo - link to http input documentation
+ * information and forwards it to a Splunk server through http event collector.
+ * @todo - link to http event collector documentation
  * java.util.logging is configure by specifying java.util.logging.config.file
  * properties file. For example:
  * -Djava.util.logging.config.file=splunk-http-input.properties
@@ -33,7 +33,7 @@ package com.splunk.logging;
  * # Splunk http event collector handler
  * handlers = com.splunk.logging.HttpEventCollectorLoggingHandler
  *
- * # Http input application token
+ * # Http event collector application token
  * com.splunk.logging.HttpEventCollectorLoggingHandler.token=<token guid>
  *
  * # Splunk logging input url.
@@ -103,7 +103,7 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
     private final String UrlConfTag = "url";
     private final String SendModeTag = "send_mode";
 
-    /** HttpInputHandler c-or */
+    /** HttpEventCollectorLoggingHandler c-or */
     public HttpEventCollectorLoggingHandler() {
         if (!HttpEventCollectorMiddleware.hasMiddleware()) {
             // read configuration settings
@@ -117,7 +117,7 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
             metadata.put(HttpEventCollectorSender.MetadataSourceTypeTag,
                     getConfigurationProperty(HttpEventCollectorSender.MetadataSourceTypeTag, ""));
 
-            // http input endpoint properties
+            // http event collector endpoint properties
             String url = getConfigurationProperty(UrlConfTag, null);
 
             // app token

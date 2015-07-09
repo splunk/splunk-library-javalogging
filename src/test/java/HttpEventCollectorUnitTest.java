@@ -37,7 +37,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.LogManager;
 
-public class HttpInputLoggerUnitTest {
+public class HttpEventCollectorUnitTest {
     private final static java.util.logging.Logger LOGGER = java.util.logging.Logger.getLogger("splunk.java.util");
     private final static org.apache.logging.log4j.Logger LOG4J = org.apache.logging.log4j.LogManager.getLogger("splunk.log4j");
     private final static org.slf4j.Logger LOGBACK = org.slf4j.LoggerFactory.getLogger("splunk.logback");
@@ -102,7 +102,7 @@ public class HttpInputLoggerUnitTest {
         "com.splunk.logging.HttpEventCollectorLoggingHandler.token=22C712B0-E6EE-4355-98DD-2DDE23D968D7\n" +
         "com.splunk.logging.HttpEventCollectorLoggingHandler.disableCertificateValidation=true\n";
 
-    public HttpInputLoggerUnitTest() {
+    public HttpEventCollectorUnitTest() {
 
         try {
             HttpServer server = HttpServer.create(new InetSocketAddress(5555), 0);

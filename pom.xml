@@ -60,7 +60,7 @@
                         <version>2.18.1</version>
                         <configuration>
                             <includes>
-                                <include>**/HttpInput_*.class</include>
+                                <include>**/HttpEventCollector_*.class</include>
                             </includes>
                         </configuration>
                     </plugin>
@@ -77,7 +77,7 @@
                         <version>2.18.1</version>
                         <configuration>
                             <includes>
-                                <include>**/HttpInputLoggerUnitTest.class</include>
+                                <include>**/HttpEventCollectorLoggerUnitTest.class</include>
                             </includes>
                         </configuration>
                     </plugin>

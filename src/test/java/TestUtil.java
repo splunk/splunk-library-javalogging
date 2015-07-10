@@ -26,6 +26,7 @@ import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
 import java.util.logging.LogManager;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -72,8 +73,7 @@ public class TestUtil {
         }
     }
 
-    public static void resetConnection()
-    {
+    public static void resetConnection() {
         service = null;
     }
 
@@ -88,6 +88,17 @@ public class TestUtil {
         }
 
         return service;
+    }
+
+    public static void createIndex(String indexName) throws Exception {
+        connectToSplunk();
+        IndexCollection indexes = service.getIndexes();
+        if (indexes.containsKey(indexName)) {
+            Index index = indexes.get(indexName);
+            indexes.remove(indexName);
+        }
+
+        indexes.create(indexName);
     }
 
 
@@ -146,7 +157,7 @@ public class TestUtil {
                 assert response.getStatus() == 200;
             }
         } catch (com.splunk.HttpException e) {
-            if (e.getStatus()!=404)
+            if (e.getStatus() != 404)
                 throw e;
         }
     }
@@ -371,6 +382,40 @@ public class TestUtil {
             resultsStream.close();
 
             Assert.assertTrue(eventCount == 1);
+        }
+    }
+
+    public static void verifyEventsSentInOrder(String prefix, int totalEventsCount, String index) throws IOException {
+        connectToSplunk();
+
+        long startTime = System.currentTimeMillis();
+        InputStream resultsStream = null;
+        ResultsReaderXml resultsReader = null;
+        List<String> results = new ArrayList<String>();
+        while (System.currentTimeMillis() - startTime < 100 * 1000)/*wait for up to 30s*/ {
+            results.clear();
+            String searchstr = "search index=" + index;
+            resultsStream = service.oneshotSearch(searchstr, new Args("count", 0));
+            resultsReader = new ResultsReaderXml(resultsStream);
+
+            for (Event event : resultsReader) {
+                results.add(event.getSegmentedRaw());
+            }
+
+            if (results.size() == totalEventsCount)
+                break;
+        }
+
+        resultsReader.close();
+        resultsStream.close();
+
+        assert (results.size() == totalEventsCount) : String.format("expect: %d, actual: %d", totalEventsCount, results.size());
+
+        //verify events record is in correct order
+        for (int i = 0; i < totalEventsCount; i++) {
+            String expect = String.format("%s %s", prefix, totalEventsCount - 1 - i);
+            assert results.get(i).contains(expect) :
+                    String.format("expect: %s, actual: %s", expect, results.get(i));
         }
     }
 }

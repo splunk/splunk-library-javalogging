@@ -404,6 +404,7 @@ public final class HttpInput_JavaLoggingTest {
         userInputs.put("user_httpinput_token", token);
         userInputs.put("user_logger_name", loggerName);
         userInputs.put("user_index", indexName);
+        userInputs.put("user_send_mode", "sequential");
         TestUtil.resetJavaLoggingConfiguration("logging_template.properties", "logging.properties", userInputs);
 
         Logger logger = Logger.getLogger(loggerName);

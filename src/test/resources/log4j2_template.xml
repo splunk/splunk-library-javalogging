@@ -3,7 +3,7 @@
     <Appenders>
         <Http
               name="http"
-              url="%scheme%://%host%:8088/services/collector"
+              url="%scheme%://%host%:8088"
               token="%user_httpinput_token%"
               index="%user_index%"
               source="%user_source%"
@@ -12,6 +12,7 @@
               batch_size_bytes="%user_batch_size_bytes%"
               batch_size_count="%user_batch_size_count%"
               disableCertificateValidation="true"
+              send_mode="%user_send_mode%"
               >
             <PatternLayout pattern="%m"/>
         </Http>

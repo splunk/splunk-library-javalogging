@@ -341,6 +341,7 @@ public final class HttpInput_LogbackTest {
         userInputs.put("user_httpinput_token", token);
         userInputs.put("user_defined_httpinput_token", token);
         userInputs.put("user_index", indexName);
+        userInputs.put("user_send_mode", "sequential");
         TestUtil.resetLogbackConfiguration("logback_template.xml", "logback.xml", userInputs);
 
         Date date = new Date();

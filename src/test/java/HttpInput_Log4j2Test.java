@@ -345,6 +345,7 @@ public final class HttpInput_Log4j2Test {
         userInputs.put("user_logger_name", loggerName);
         userInputs.put("user_httpinput_token", token);
         userInputs.put("user_index", indexName);
+        userInputs.put("user_send_mode", "sequential");
 
         org.apache.logging.log4j.core.LoggerContext context = TestUtil.resetLog4j2Configuration("log4j2_template.xml", "log4j2.xml", userInputs);
 

@@ -3,7 +3,7 @@
 <configuration>
 
     <Appender name="%user_logger_name%" class="com.splunk.logging.HttpEventCollectorLogbackAppender">
-        <url>%scheme%://%host%:8088/services/collector</url>
+        <url>%scheme%://%host%:8088</url>
         <token>%user_httpinput_token%</token>
         <index>%user_index%</index>
         <source>splunktest_accept</source>
@@ -12,6 +12,7 @@
         <batch_interval>%user_batch_interval%</batch_interval>
         <batch_size_bytes>%user_batch_size_bytes%</batch_size_bytes>
         <batch_size_count>%user_batch_size_count%</batch_size_count>
+        <send_mode>%user_send_mode%</send_mode>
 
         <layout class="ch.qos.logback.classic.PatternLayout">
             <pattern>%msg</pattern>

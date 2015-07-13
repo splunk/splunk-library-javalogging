@@ -96,15 +96,15 @@ public class HttpEventCollector_Test {
 
     private static void CreateJavaUtilLog(String token, boolean batching) throws Exception {
         String LoggerConf =
-                "handlers=com.splunk.logging.HttpEventCollectorLoggingHandler\n" +
-                        "com.splunk.logging.HttpEventCollectorLoggingHandler.url=https://127.0.0.1:8088/services/collector\n" +
-                        String.format("com.splunk.logging.HttpEventCollectorLoggingHandler.token=%s\n", token) +
-                        "com.splunk.logging.HttpEventCollectorLoggingHandler.disableCertificateValidation=true\n";
+                "handlers=com.splunk.logging.HttpEventCollectorHandler\n" +
+                        "com.splunk.logging.HttpEventCollectorHandler.url=https://127.0.0.1:8088/services/collector\n" +
+                        String.format("com.splunk.logging.HttpEventCollectorHandler.token=%s\n", token) +
+                        "com.splunk.logging.HttpEventCollectorHandler.disableCertificateValidation=true\n";
         if (batching) {
             LoggerConf +=
-                    "com.splunk.logging.HttpEventCollectorLoggingHandler.batch_interval=200\n" +
-                            "com.splunk.logging.HttpEventCollectorLoggingHandler.batch_size_count=500\n" +
-                            "com.splunk.logging.HttpEventCollectorLoggingHandler.batch_size_bytes=12\n";
+                    "com.splunk.logging.HttpEventCollectorHandler.batch_interval=200\n" +
+                            "com.splunk.logging.HttpEventCollectorHandler.batch_size_count=500\n" +
+                            "com.splunk.logging.HttpEventCollectorHandler.batch_size_bytes=12\n";
         }
         try {
             java.util.logging.LogManager.getLogManager().readConfiguration(

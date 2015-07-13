@@ -95,6 +95,7 @@ import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
  * properties file.
  */
 public final class HttpEventCollectorLoggingHandler extends Handler {
+    private HttpEventCollectorSender sender = null;
 
     private final String BatchDelayConfTag = "batch_interval";
     private final String BatchCountConfTag = "batch_size_count";
@@ -102,42 +103,53 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
     private final String RetriesOnErrorTag = "retries_on_error";
     private final String UrlConfTag = "url";
     private final String SendModeTag = "send_mode";
+    private final String MiddlewareTag = "middleware";
 
     /** HttpEventCollectorLoggingHandler c-or */
     public HttpEventCollectorLoggingHandler() {
-        if (!HttpEventCollectorMiddleware.hasMiddleware()) {
-            // read configuration settings
-            Dictionary<String, String> metadata = new Hashtable<String, String>();
-            metadata.put(HttpEventCollectorSender.MetadataIndexTag,
-                    getConfigurationProperty(HttpEventCollectorSender.MetadataIndexTag, ""));
+        // read configuration settings
+        Dictionary<String, String> metadata = new Hashtable<String, String>();
+        metadata.put(HttpEventCollectorSender.MetadataIndexTag,
+                getConfigurationProperty(HttpEventCollectorSender.MetadataIndexTag, ""));
 
-            metadata.put(HttpEventCollectorSender.MetadataSourceTag,
-                    getConfigurationProperty(HttpEventCollectorSender.MetadataSourceTag, ""));
+        metadata.put(HttpEventCollectorSender.MetadataSourceTag,
+                getConfigurationProperty(HttpEventCollectorSender.MetadataSourceTag, ""));
 
-            metadata.put(HttpEventCollectorSender.MetadataSourceTypeTag,
-                    getConfigurationProperty(HttpEventCollectorSender.MetadataSourceTypeTag, ""));
+        metadata.put(HttpEventCollectorSender.MetadataSourceTypeTag,
+                getConfigurationProperty(HttpEventCollectorSender.MetadataSourceTypeTag, ""));
 
-            // http event collector endpoint properties
-            String url = getConfigurationProperty(UrlConfTag, null);
+        // http event collector endpoint properties
+        String url = getConfigurationProperty(UrlConfTag, null);
 
-            // app token
-            String token = getConfigurationProperty("token", null);
+        // app token
+        String token = getConfigurationProperty("token", null);
 
-            // batching properties
-            long delay = getConfigurationNumericProperty(BatchDelayConfTag, 0);
-            long batchCount = getConfigurationNumericProperty(BatchCountConfTag, 0);
-            long batchSize = getConfigurationNumericProperty(BatchSizeConfTag, 0);
-            long retriesOnError = getConfigurationNumericProperty(RetriesOnErrorTag, 0);
-            String sendMode = getConfigurationProperty(SendModeTag, "sequential");
+        // batching properties
+        long delay = getConfigurationNumericProperty(BatchDelayConfTag, 0);
+        long batchCount = getConfigurationNumericProperty(BatchCountConfTag, 0);
+        long batchSize = getConfigurationNumericProperty(BatchSizeConfTag, 0);
+        long retriesOnError = getConfigurationNumericProperty(RetriesOnErrorTag, 0);
+        String sendMode = getConfigurationProperty(SendModeTag, "sequential");
+        String middleware = getConfigurationProperty(MiddlewareTag, "");
 
-            // delegate all configuration params to event sender
-            HttpEventCollectorSender sender = new HttpEventCollectorSender(
-                    url, token, delay, batchCount, batchSize, retriesOnError, sendMode, metadata);
-            if (getConfigurationProperty("disableCertificateValidation", "false").equalsIgnoreCase("true")) {
-                sender.disableCertificateValidation();
-            }
+        // delegate all configuration params to event sender
+        this.sender = new HttpEventCollectorSender(
+                url, token, delay, batchCount, batchSize, sendMode, metadata);
 
-            HttpEventCollectorMiddleware.setMiddleware(sender);
+        // plug a user middleware
+        if (!middleware.isEmpty()) {
+            try {
+                this.sender.addMiddleware((HttpEventCollectorMiddleware.HttpSenderMiddleware)(Class.forName(middleware).newInstance()));
+            } catch (Exception e) {}
+        }
+
+        // plug retries middleware
+        if (retriesOnError > 0) {
+            this.sender.addMiddleware(new HttpEventCollectorResendMiddleware(retriesOnError));
+        }
+
+        if (getConfigurationProperty("disableCertificateValidation", "false").equalsIgnoreCase("true")) {
+            this.sender.disableCertificateValidation();
         }
     }
 
@@ -147,7 +159,7 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
      */
     @Override
     public void publish(LogRecord record) {
-        HttpEventCollectorMiddleware.send(record.getLevel().toString(), record.getMessage());
+        this.sender.send(record.getLevel().toString(), record.getMessage());
     }
 
     /**
@@ -155,7 +167,7 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
      */
     @Override
     public void flush() {
-        HttpEventCollectorMiddleware.flush();
+        this.sender.flush();
     }
 
     /**
@@ -163,7 +175,7 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
      * @throws SecurityException
      */
     @Override public void close() throws SecurityException {
-        HttpEventCollectorMiddleware.close();
+        this.sender.close();
     }
 
 

@@ -26,6 +26,7 @@ import java.util.Hashtable;
  * Logback Appender which writes its events to Splunk http event collector rest endpoint.
  */
 public class HttpEventCollectorLogbackAppender extends AppenderBase<ILoggingEvent> {
+    private HttpEventCollectorSender sender = null;
     private Layout<ILoggingEvent> _layout;
     private String _source;
     private String _sourcetype;
@@ -46,24 +47,24 @@ public class HttpEventCollectorLogbackAppender extends AppenderBase<ILoggingEven
 
         // init events sender
         Dictionary<String, String> metadata = new Hashtable<String, String>();
-        if (!HttpEventCollectorMiddleware.hasMiddleware()) {
-            if (_index != null)
-                metadata.put(HttpEventCollectorSender.MetadataIndexTag, _index);
+        if (_index != null)
+            metadata.put(HttpEventCollectorSender.MetadataIndexTag, _index);
 
-            if (_source != null)
-                metadata.put(HttpEventCollectorSender.MetadataSourceTag, _source);
+        if (_source != null)
+            metadata.put(HttpEventCollectorSender.MetadataSourceTag, _source);
 
-            if (_sourcetype != null)
-                metadata.put(HttpEventCollectorSender.MetadataSourceTypeTag, _sourcetype);
+        if (_sourcetype != null)
+            metadata.put(HttpEventCollectorSender.MetadataSourceTypeTag, _sourcetype);
 
-            HttpEventCollectorSender sender = new HttpEventCollectorSender(
-                    _url, _token, _batchInterval, _batchCount, _batchSize, _retriesOnError, _sendMode, metadata);
+        this.sender = new HttpEventCollectorSender(
+                _url, _token, _batchInterval, _batchCount, _batchSize, _sendMode, metadata);
 
-            if (_disableCertificateValidation != null && _disableCertificateValidation.equalsIgnoreCase("true")) {
-                sender.disableCertificateValidation();
-            }
+        if (_retriesOnError > 0) {
+            this.sender.addMiddleware(new HttpEventCollectorResendMiddleware(_retriesOnError));
+        }
 
-            HttpEventCollectorMiddleware.setMiddleware(sender);
+        if (_disableCertificateValidation != null && _disableCertificateValidation.equalsIgnoreCase("true")) {
+            sender.disableCertificateValidation();
         }
 
         super.start();
@@ -73,7 +74,7 @@ public class HttpEventCollectorLogbackAppender extends AppenderBase<ILoggingEven
     public void stop() {
         if (!started)
             return;
-        HttpEventCollectorMiddleware.flush();
+        this.sender.flush();
         super.stop();
     }
 
@@ -82,7 +83,7 @@ public class HttpEventCollectorLogbackAppender extends AppenderBase<ILoggingEven
         event.prepareForDeferredProcessing();
         event.getCallerData();
         if (event != null && started) {
-            HttpEventCollectorMiddleware.send(event.getLevel().toString(), _layout.doLayout(event));
+            this.sender.send(event.getLevel().toString(), _layout.doLayout(event));
         }
     }
 

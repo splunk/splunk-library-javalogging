@@ -35,6 +35,8 @@ import org.apache.logging.log4j.core.config.plugins.PluginFactory;
 @Plugin(name = "Http", category = "Core", elementType = "appender", printObject = true)
 public final class HttpEventCollectorLog4jAppender extends AbstractAppender
 {
+    private HttpEventCollectorSender sender = null;
+
     private HttpEventCollectorLog4jAppender(final String name,
                          final String url,
                          final String token,
@@ -52,20 +54,19 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
                          final String disableCertificateValidation)
     {
         super(name, filter, layout, ignoreExceptions);
+        Dictionary<String, String> metadata = new Hashtable<String, String>();
+        metadata.put(HttpEventCollectorSender.MetadataIndexTag, index != null ? index : "");
+        metadata.put(HttpEventCollectorSender.MetadataSourceTag, source != null ? source : "");
+        metadata.put(HttpEventCollectorSender.MetadataSourceTypeTag, sourcetype != null ? sourcetype : "");
 
-        if (!HttpEventCollectorMiddleware.hasMiddleware()) {
-            Dictionary<String, String> metadata = new Hashtable<String, String>();
-            metadata.put(HttpEventCollectorSender.MetadataIndexTag, index != null ? index : "");
-            metadata.put(HttpEventCollectorSender.MetadataSourceTag, source != null ? source : "");
-            metadata.put(HttpEventCollectorSender.MetadataSourceTypeTag, sourcetype != null ? sourcetype : "");
+        this.sender = new HttpEventCollectorSender(url, token, batchInterval, batchCount, batchSize, sendMode, metadata);
 
-            HttpEventCollectorSender sender = new HttpEventCollectorSender(url, token, batchInterval, batchCount, batchSize, retriesOnError, sendMode, metadata);
+        if (retriesOnError > 0) {
+            this.sender.addMiddleware(new HttpEventCollectorResendMiddleware(retriesOnError));
+        }
 
-            if (disableCertificateValidation != null && disableCertificateValidation.equalsIgnoreCase("true")) {
-                sender.disableCertificateValidation();
-            }
-
-            HttpEventCollectorMiddleware.setMiddleware(sender);
+        if (disableCertificateValidation != null && disableCertificateValidation.equalsIgnoreCase("true")) {
+            this.sender.disableCertificateValidation();
         }
     }
 
@@ -136,7 +137,7 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
     @Override
     public void append(final LogEvent event)
     {
-        HttpEventCollectorMiddleware.send(
+        this.sender.send(
                 event.getLevel().toString(),
                 event.getMessage().getFormattedMessage()
         );
@@ -144,7 +145,7 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
 
     @Override
     public void stop() {
-        HttpEventCollectorMiddleware.flush();
+        this.sender.flush();
         super.stop();
     }
 }

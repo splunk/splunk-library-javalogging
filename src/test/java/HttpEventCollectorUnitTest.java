@@ -22,6 +22,7 @@ import java.net.InetSocketAddress;
 
 import com.splunk.logging.HttpEventCollectorErrorHandler;
 import com.splunk.logging.HttpEventCollectorEventInfo;
+import com.splunk.logging.HttpEventCollectorMiddleware;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
@@ -31,8 +32,6 @@ import org.json.simple.parser.ParseException;
 import org.junit.Assert;
 import org.junit.Test;
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.OutputStream;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.LogManager;
@@ -100,7 +99,9 @@ public class HttpEventCollectorUnitTest {
         "handlers=com.splunk.logging.HttpEventCollectorLoggingHandler\n" +
         "com.splunk.logging.HttpEventCollectorLoggingHandler.url=http://localhost:5555\n" +
         "com.splunk.logging.HttpEventCollectorLoggingHandler.token=22C712B0-E6EE-4355-98DD-2DDE23D968D7\n" +
-        "com.splunk.logging.HttpEventCollectorLoggingHandler.disableCertificateValidation=true\n";
+        "com.splunk.logging.HttpEventCollectorLoggingHandler.middleware=HttpEventCollectorUnitTestMiddleware\n" +
+        "com.splunk.logging.HttpEventCollectorLoggingHandler.retries_on_error=100\n";
+
 
     public HttpEventCollectorUnitTest() {
 
@@ -126,6 +127,7 @@ public class HttpEventCollectorUnitTest {
         }
     }
 
+
     @Test
     public void simpleLogging() {
 
@@ -137,6 +139,12 @@ public class HttpEventCollectorUnitTest {
                 lastEvent = data.get(0);
             }
         });
+
+        try {
+            Class.forName("HttpEventCollectorUnitTest.TestMiddleware");
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
 
         // java.util.logger
         LOGGER.info("this is info");

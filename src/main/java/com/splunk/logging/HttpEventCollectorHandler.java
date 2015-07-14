@@ -31,70 +31,72 @@ package com.splunk.logging;
  * Properties file has include logging handler and its properties.
  *
  * # Splunk http event collector handler
- * handlers = com.splunk.logging.HttpEventCollectorLoggingHandler
+ * handlers = com.splunk.logging.HttpEventCollectorHandler
  *
+<<<<<<< HEAD:src/main/java/com/splunk/logging/HttpEventCollectorHandler.java
+ * # Http input application token
+ * com.splunk.logging.HttpEventCollectorHandler.token=<token guid>
+=======
  * # Http event collector application token
  * com.splunk.logging.HttpEventCollectorLoggingHandler.token=<token guid>
+>>>>>>> develop:src/main/java/com/splunk/logging/HttpEventCollectorLoggingHandler.java
  *
  * # Splunk logging input url.
- * com.splunk.logging.HttpEventCollectorLoggingHandler.url
+ * com.splunk.logging.HttpEventCollectorHandler.url
  *
  * # Logging events metadata.
- * com.splunk.logging.HttpEventCollectorLoggingHandler.index
- * com.splunk.logging.HttpEventCollectorLoggingHandler.source
- * com.splunk.logging.HttpEventCollectorLoggingHandler.sourcetype
+ * com.splunk.logging.HttpEventCollectorHandler.index
+ * com.splunk.logging.HttpEventCollectorHandler.source
+ * com.splunk.logging.HttpEventCollectorHandler.sourcetype
  *
  * # Events batching parameters:
  * # Delay in millisecond between sending events, by default this value is 0, i.e., and events
  * # are sending immediately
- * com.splunk.logging.HttpEventCollectorLoggingHandler.batch_interval
+ * com.splunk.logging.HttpEventCollectorHandler.batch_interval
  *
  * # Max number of events in a batch. By default - 0, i.e., no batching
- * com.splunk.logging.HttpEventCollectorLoggingHandler.batch_size_count
+ * com.splunk.logging.HttpEventCollectorHandler.batch_size_count
  *
  * # Max size of events in a batch. By default - 0, i.e., no batching
- * com.splunk.logging.HttpEventCollectorLoggingHandler.batch_size_bytes
+ * com.splunk.logging.HttpEventCollectorHandler.batch_size_bytes
  *
  * An example of logging properties file:
- * handlers = com.splunk.logging.HttpEventCollectorLoggingHandler
- * com.splunk.logging.HttpEventCollectorLoggingHandler.token=81029a58-63db-4bef-9c6f-f6b7e500f098
+ * handlers = com.splunk.logging.HttpEventCollectorHandler
+ * com.splunk.logging.HttpEventCollectorHandler.token=81029a58-63db-4bef-9c6f-f6b7e500f098
  *
  * # Splunk server
- * com.splunk.logging.HttpEventCollectorLoggingHandler.url=https://localhost:8089
+ * com.splunk.logging.HttpEventCollectorHandler.url=https://localhost:8089
  *
  * # Metadata
- * com.splunk.logging.HttpEventCollectorLoggingHandler.index=default
- * com.splunk.logging.HttpEventCollectorLoggingHandler.source=localhost
- * com.splunk.logging.HttpEventCollectorLoggingHandler.sourcetype=syslog
+ * com.splunk.logging.HttpEventCollectorHandler.index=default
+ * com.splunk.logging.HttpEventCollectorHandler.source=localhost
+ * com.splunk.logging.HttpEventCollectorHandler.sourcetype=syslog
  *
  * # Batching
- * com.splunk.logging.HttpEventCollectorLoggingHandler.batch_interval = 500
- * com.splunk.logging.HttpEventCollectorLoggingHandler.batch_size_count = 1000
- * com.splunk.logging.HttpEventCollectorLoggingHandler.batch_size_count = 65536
+ * com.splunk.logging.HttpEventCollectorHandler.batch_interval = 500
+ * com.splunk.logging.HttpEventCollectorHandler.batch_size_count = 1000
+ * com.splunk.logging.HttpEventCollectorHandler.batch_size_count = 65536
  *
  * # To improve system performance tracing events are sent asynchronously and
  * events with the same timestamp (that has 1 millisecond resolution) may
  * be indexed out of order by Splunk. send_mode parameter triggers
  * "sequential mode" that guarantees preserving events order. In
  * "sequential mode" performance of sending events to the server is lower.
- * com.splunk.logging.HttpEventCollectorLoggingHandler.send_mode=sequential
+ * com.splunk.logging.HttpEventCollectorHandler.send_mode=sequential
  */
 
-import java.io.IOException;
-import java.lang.reflect.Constructor;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.logging.Handler;
 import java.util.logging.LogManager;
 import java.util.logging.LogRecord;
-import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
 
 /**
  * An input handler for Splunk http event collector. This handler can be used by
- * by specifying handlers = com.splunk.logging.HttpEventCollectorLoggingHandler in java.util.logging
+ * by specifying handlers = com.splunk.logging.HttpEventCollectorHandler in java.util.logging
  * properties file.
  */
-public final class HttpEventCollectorLoggingHandler extends Handler {
+public final class HttpEventCollectorHandler extends Handler {
 
     private final String BatchDelayConfTag = "batch_interval";
     private final String BatchCountConfTag = "batch_size_count";
@@ -103,8 +105,10 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
     private final String UrlConfTag = "url";
     private final String SendModeTag = "send_mode";
 
-    /** HttpEventCollectorLoggingHandler c-or */
-    public HttpEventCollectorLoggingHandler() {
+
+    /** HttpEventCollectorHandler c-or */
+    public HttpEventCollectorHandler() {
+
         if (!HttpEventCollectorMiddleware.hasMiddleware()) {
             // read configuration settings
             Dictionary<String, String> metadata = new Hashtable<String, String>();

@@ -35,7 +35,7 @@ public class TestUtil {
 
     private static final ServiceArgs serviceArgs = new ServiceArgs();
     private static Service service;
-    private static final String httpInputTokenEndpointPath = "/services/data/inputs/http";
+    private static final String httpEventCollectorTokenEndpointPath = "/services/data/inputs/http";
 
     /**
      * read splunk host info from .splunkrc file
@@ -105,25 +105,25 @@ public class TestUtil {
     /**
      * create http event collector token
      */
-    public static String createHttpinput(String httpinputName) throws Exception {
+    public static String createHttpEventCollectorToken(String httpEventCollectorName) throws Exception {
         connectToSplunk();
 
         //enable logging endpoint
-        TestUtil.enableHttpinput();
+        enableHttpEventCollector();
 
-        //create a httpinput
+        //create an httpEventCollector
         Map args = new HashMap();
-        args.put("name", httpinputName);
+        args.put("name", httpEventCollectorName);
         args.put("description", "test http event collector");
 
-        deleteHttpinput(httpinputName);
+        deleteHttpEventCollectorToken(httpEventCollectorName);
 
-        ResponseMessage msg = service.post(httpInputTokenEndpointPath, args);
+        ResponseMessage msg = service.post(httpEventCollectorTokenEndpointPath, args);
         assert msg.getStatus() == 201;
 
-        //get httpinput token
+        //get httpEventCollector token
         args = new HashMap();
-        ResponseMessage response = service.get(httpInputTokenEndpointPath + "/" + httpinputName, args);
+        ResponseMessage response = service.get(httpEventCollectorTokenEndpointPath + "/" + httpEventCollectorName, args);
         BufferedReader reader = new BufferedReader(new InputStreamReader(response.getContent(), "UTF-8"));
         String token = "";
         while (true) {
@@ -139,7 +139,7 @@ public class TestUtil {
         reader.close();
 
         if (token.isEmpty()) {
-            Assert.fail("no httpinput token is created");
+            Assert.fail("no httpEventCollector token is created");
         }
 
         return token;
@@ -148,12 +148,12 @@ public class TestUtil {
     /**
      * delete http event collector token
      */
-    public static void deleteHttpinput(String httpinputName) throws Exception {
+    public static void deleteHttpEventCollectorToken(String httpEventCollectorName) throws Exception {
         connectToSplunk();
         try {
-            ResponseMessage response = service.get(httpInputTokenEndpointPath + "/" + httpinputName);
+            ResponseMessage response = service.get(httpEventCollectorTokenEndpointPath + "/" + httpEventCollectorName);
             if (response.getStatus() == 200) {
-                response = service.delete(httpInputTokenEndpointPath + "/" + httpinputName);
+                response = service.delete(httpEventCollectorTokenEndpointPath + "/" + httpEventCollectorName);
                 assert response.getStatus() == 200;
             }
         } catch (com.splunk.HttpException e) {
@@ -165,7 +165,7 @@ public class TestUtil {
     /**
      * disable http event collector feature
      */
-    public static void disableHttpinput() throws IOException {
+    public static void disableHttpEventCollector() throws IOException {
         connectToSplunk();
 
         //disable logging endpoint
@@ -178,7 +178,7 @@ public class TestUtil {
     /**
      * enable http event collector feature
      */
-    public static void enableHttpinput() throws IOException {
+    public static void enableHttpEventCollector() throws IOException {
         connectToSplunk();
 
         //enable logging endpoint
@@ -192,13 +192,13 @@ public class TestUtil {
     /**
      * disable http event collector token
      */
-    public static void disableHttpinput(String httpinputName) throws IOException {
+    public static void disableHttpEventCollector(String httpEventCollectorName) throws IOException {
         connectToSplunk();
 
         Map args = new HashMap();
         args.put("disabled", 1);
 
-        ResponseMessage response = service.post(httpInputTokenEndpointPath + "/" + httpinputName, args);
+        ResponseMessage response = service.post(httpEventCollectorTokenEndpointPath + "/" + httpEventCollectorName, args);
         assert response.getStatus() == 200;
     }
 
@@ -288,6 +288,7 @@ public class TestUtil {
     create logging.property and force java logging  manager to reload the configurations
     */
     public static void resetJavaLoggingConfiguration(String configFileTemplate, String configFile, HashMap<String, String> userInputs) throws IOException, JoranException {
+        HttpEventCollectorMiddleware.setMiddleware(null);
         String configFilePath = updateConfigFile(configFileTemplate, configFile, userInputs);
         FileInputStream configFileStream = new FileInputStream(configFilePath);
         LogManager.getLogManager().readConfiguration(configFileStream);

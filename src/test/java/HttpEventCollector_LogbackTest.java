@@ -324,4 +324,42 @@ public final class HttpEventCollector_LogbackTest {
         Assert.assertEquals(1, errors.size());
 
     }
+
+    /**
+     * verify events are index in correct order of the events were sent
+     */
+    @Test
+    public void eventsIsIndexedInOrderOfSent() throws Exception {
+        TestUtil.enableHttpEventCollector();
+        String token = TestUtil.createHttpEventCollectorToken(httpEventCollectorName);
+        String indexName = "httpevents_in_order";
+        TestUtil.createIndex(indexName);
+
+        String loggerName = "logBackLogger";
+        HashMap<String, String> userInputs = new HashMap<String, String>();
+        userInputs.put("user_logger_name", loggerName);
+        userInputs.put("user_httpEventCollector_token", token);
+        userInputs.put("user_defined_httpinput_token", token);
+        userInputs.put("user_index", indexName);
+        userInputs.put("user_send_mode", "sequential");
+        TestUtil.resetLogbackConfiguration("logback_template.xml", "logback.xml", userInputs);
+
+        Date date = new Date();
+        List<String> msgs = new ArrayList<String>();
+        Logger logger = LoggerFactory.getLogger(loggerName);
+
+        //send multiple events and verify they are indexed in the order of sending
+        int totalEventsCount = 1000;
+        String prefix = "logback multiple events";
+        for (int i = 0; i < totalEventsCount; i++) {
+            String jsonMsg = String.format("%s %s", prefix, i);
+            logger.info(jsonMsg);
+            msgs.add(jsonMsg);
+        }
+
+        TestUtil.verifyEventsSentInOrder(prefix, totalEventsCount, indexName);
+
+        TestUtil.deleteHttpEventCollectorToken(httpEventCollectorName);
+        System.out.println("====================== Test pass=========================");
+    }
 }

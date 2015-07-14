@@ -23,8 +23,8 @@ package com.splunk.logging;
  *
  * @details
  * This is a Splunk custom java.util.logging handler that intercepts logging
- * information and forwards it to a Splunk server through http input.
- * @todo - link to http input documentation
+ * information and forwards it to a Splunk server through http event collector.
+ * @todo - link to http event collector documentation
  * java.util.logging is configure by specifying java.util.logging.config.file
  * properties file. For example:
  * -Djava.util.logging.config.file=splunk-http-input.properties
@@ -33,8 +33,13 @@ package com.splunk.logging;
  * # Splunk http event collector handler
  * handlers = com.splunk.logging.HttpEventCollectorHandler
  *
+<<<<<<< HEAD:src/main/java/com/splunk/logging/HttpEventCollectorHandler.java
  * # Http input application token
  * com.splunk.logging.HttpEventCollectorHandler.token=<token guid>
+=======
+ * # Http event collector application token
+ * com.splunk.logging.HttpEventCollectorLoggingHandler.token=<token guid>
+>>>>>>> develop:src/main/java/com/splunk/logging/HttpEventCollectorLoggingHandler.java
  *
  * # Splunk logging input url.
  * com.splunk.logging.HttpEventCollectorHandler.url
@@ -100,8 +105,10 @@ public final class HttpEventCollectorHandler extends Handler {
     private final String UrlConfTag = "url";
     private final String SendModeTag = "send_mode";
 
-    /** HttpInputHandler c-or */
+
+    /** HttpEventCollectorHandler c-or */
     public HttpEventCollectorHandler() {
+
         if (!HttpEventCollectorMiddleware.hasMiddleware()) {
             // read configuration settings
             Dictionary<String, String> metadata = new Hashtable<String, String>();
@@ -114,7 +121,7 @@ public final class HttpEventCollectorHandler extends Handler {
             metadata.put(HttpEventCollectorSender.MetadataSourceTypeTag,
                     getConfigurationProperty(HttpEventCollectorSender.MetadataSourceTypeTag, ""));
 
-            // http input endpoint properties
+            // http event collector endpoint properties
             String url = getConfigurationProperty(UrlConfTag, null);
 
             // app token

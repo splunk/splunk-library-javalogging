@@ -12,6 +12,7 @@
         <batch_interval>%user_batch_interval%</batch_interval>
         <batch_size_bytes>%user_batch_size_bytes%</batch_size_bytes>
         <batch_size_count>%user_batch_size_count%</batch_size_count>
+        <send_mode>%user_send_mode%</send_mode>
 
         <layout class="ch.qos.logback.classic.PatternLayout">
             <pattern>%msg</pattern>

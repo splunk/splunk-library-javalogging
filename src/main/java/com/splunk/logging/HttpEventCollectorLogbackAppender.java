@@ -34,6 +34,7 @@ public class HttpEventCollectorLogbackAppender extends AppenderBase<ILoggingEven
     private String _url;
     private String _token;
     private String _disableCertificateValidation;
+    private String _middleware;
     private long _batchInterval = 0;
     private long _batchCount = 0;
     private long _batchSize = 0;
@@ -59,6 +60,14 @@ public class HttpEventCollectorLogbackAppender extends AppenderBase<ILoggingEven
         this.sender = new HttpEventCollectorSender(
                 _url, _token, _batchInterval, _batchCount, _batchSize, _sendMode, metadata);
 
+        // plug a user middleware
+        if (!_middleware.isEmpty()) {
+            try {
+                this.sender.addMiddleware((HttpEventCollectorMiddleware.HttpSenderMiddleware)(Class.forName(_middleware).newInstance()));
+            } catch (Exception e) {}
+        }
+
+        // plug resend middleware
         if (_retriesOnError > 0) {
             this.sender.addMiddleware(new HttpEventCollectorResendMiddleware(_retriesOnError));
         }
@@ -157,6 +166,10 @@ public class HttpEventCollectorLogbackAppender extends AppenderBase<ILoggingEven
 
     public void setsend_mode(String value) {
         _sendMode = value;
+    }
+
+    public void setmiddleware(String value) {
+        _middleware = value;
     }
 
     public String getDisableCertificateValidation() {

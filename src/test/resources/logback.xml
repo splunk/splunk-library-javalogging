@@ -57,6 +57,7 @@ under the License.
         <token>11111111-2222-3333-4444-555555555555</token>
         <source>splunktest</source>
         <sourcetype>battlecat</sourcetype>
+        <middleware>HttpEventCollectorUnitTestMiddleware</middleware>
         <layout class="ch.qos.logback.classic.PatternLayout">
             <pattern>%msg</pattern>
         </layout>

@@ -22,13 +22,35 @@ import java.util.List;
  */
 
 public class HttpEventCollectorUnitTestMiddleware extends HttpEventCollectorMiddleware.HttpSenderMiddleware {
-
     @Override
     public void postEvents(List<HttpEventCollectorEventInfo> events,
                            HttpEventCollectorMiddleware.IHttpSender sender,
                            HttpEventCollectorMiddleware.IHttpSenderCallback callback) {
-        callback.completed(200, "ok");
+        eventsReceived += events.size();
+        io.input(events);
+        HttpResponse response = io.output();
+        if (response.status > 0)
+            callback.completed(response.status, response.reply);
+        else
+            callback.failed(new Exception(response.reply));
     }
 
-    static class
+    public static class HttpResponse {
+        public int status = 200;
+        public String reply = "{\"text\":\"Success\",\"code\":0}";
+        public HttpResponse(int status, final String reply) {
+            this.status = status;
+            this.reply = reply;
+        }
+        public HttpResponse() {}
+    }
+
+    public static class IO {
+        public void input(List<HttpEventCollectorEventInfo> events) {}
+        public HttpResponse output() { return new HttpResponse(); }
+    }
+
+    public static IO io = new IO();
+
+    public static int eventsReceived = 0;
 }

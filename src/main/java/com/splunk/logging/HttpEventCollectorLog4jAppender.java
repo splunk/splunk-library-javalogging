@@ -51,6 +51,7 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
                          long batchSize,
                          long retriesOnError,
                          String sendMode,
+                         String middleware,
                          final String disableCertificateValidation)
     {
         super(name, filter, layout, ignoreExceptions);
@@ -61,6 +62,14 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
 
         this.sender = new HttpEventCollectorSender(url, token, batchInterval, batchCount, batchSize, sendMode, metadata);
 
+        // plug a user middleware
+        if (!middleware.isEmpty()) {
+            try {
+                this.sender.addMiddleware((HttpEventCollectorMiddleware.HttpSenderMiddleware)(Class.forName(middleware).newInstance()));
+            } catch (Exception e) {}
+        }
+
+        // plug resend middleware
         if (retriesOnError > 0) {
             this.sender.addMiddleware(new HttpEventCollectorResendMiddleware(retriesOnError));
         }
@@ -89,6 +98,7 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
             @PluginAttribute("batch_interval") final String batchInterval,
             @PluginAttribute("retries_on_error") final String retriesOnError,
             @PluginAttribute("send_mode") final String sendMode,
+            @PluginAttribute("middleware") final String middleware,
             @PluginAttribute("disableCertificateValidation") final String disableCertificateValidation,
             @PluginElement("Layout") Layout<? extends Serializable> layout,
             @PluginElement("Filter") final Filter filter
@@ -126,6 +136,7 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
                 parseInt(batchInterval, 0), parseInt(batchCount, 0), parseInt(batchSize, 0),
                 parseInt(retriesOnError, 0),
                 sendMode,
+                middleware,
                 disableCertificateValidation);
     }
 

@@ -389,4 +389,40 @@ public final class HttpInput_JavaLoggingTest {
     }
 
 
+    /**
+     * verify events are index in correct order of the events were sent
+     */
+    @Test
+    public void eventsIsIndexedInOrderOfSent() throws Exception {
+        TestUtil.enableHttpinput();
+        String indexName="httpevents_in_order";
+        TestUtil.createIndex(indexName);
+        String token = TestUtil.createHttpinput(httpinputName);
+
+        String loggerName = "splunkLoggerMultipleEvents";
+        HashMap<String, String> userInputs = new HashMap<String, String>();
+        userInputs.put("user_httpinput_token", token);
+        userInputs.put("user_logger_name", loggerName);
+        userInputs.put("user_index", indexName);
+        userInputs.put("user_send_mode", "sequential");
+        TestUtil.resetJavaLoggingConfiguration("logging_template.properties", "logging.properties", userInputs);
+
+        Logger logger = Logger.getLogger(loggerName);
+
+        //send multiple events and verify they are indexed in the order of sending
+        List<String> msgs = new ArrayList<String>();
+        Date date = new Date();
+        int totalEventsCount = 1000;
+        String prefix="javalogging multiple events";
+        for (int i = 0; i < totalEventsCount; i++) {
+            String jsonMsg = String.format("%s %s", prefix,i);
+            logger.info(jsonMsg);
+            msgs.add(jsonMsg);
+        }
+
+        TestUtil.verifyEventsSentInOrder(prefix, totalEventsCount, indexName);
+
+        TestUtil.deleteHttpinput(httpinputName);
+        System.out.println("====================== Test pass=========================");
+    }
 }

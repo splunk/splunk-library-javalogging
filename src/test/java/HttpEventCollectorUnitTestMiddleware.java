@@ -21,6 +21,9 @@ import java.util.List;
  * under the License.
  */
 
+/**
+ * Middleware component that mimics a real http event collector server.
+ */
 public class HttpEventCollectorUnitTestMiddleware extends HttpEventCollectorMiddleware.HttpSenderMiddleware {
     @Override
     public void postEvents(List<HttpEventCollectorEventInfo> events,

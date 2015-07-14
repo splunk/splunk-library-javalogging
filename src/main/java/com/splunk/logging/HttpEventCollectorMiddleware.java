@@ -25,7 +25,7 @@ import java.util.List;
  *
  * @details
  * A user application can utilize HttpEventCollectorMiddleware to customize the behavior
- * of sending events to Splunk. The user application can plug middleware components to
+ * of sending events to Splunk. A user application plugs middleware components to
  * the HttpEventCollectorSender by calling addMiddleware method.
  *
  * HttpEventCollectorResendMiddleware.java is an example of how middleware can be used.

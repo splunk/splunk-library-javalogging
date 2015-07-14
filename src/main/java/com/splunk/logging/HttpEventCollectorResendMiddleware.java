@@ -25,7 +25,8 @@ import java.util.List;
  *
  * @details
  * HTTP event collector middleware plug in that implements a simple resend policy.
- * When HTTP post reply isn't an application error we try to resend the data.
+ * When HTTP post reply isn't an application error it tries to resend the data.
+ * An exponentially growing delay is used to prevent server overflow.
  */
 public class HttpEventCollectorResendMiddleware
         extends HttpEventCollectorMiddleware.HttpSenderMiddleware {

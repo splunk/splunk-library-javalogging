@@ -22,17 +22,9 @@ import java.net.InetSocketAddress;
 
 import com.splunk.logging.HttpEventCollectorErrorHandler;
 import com.splunk.logging.HttpEventCollectorEventInfo;
-import com.splunk.logging.HttpEventCollectorMiddleware;
-import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
-import com.sun.net.httpserver.HttpServer;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
 import org.junit.Assert;
 import org.junit.Test;
 import java.io.ByteArrayInputStream;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.LogManager;
 

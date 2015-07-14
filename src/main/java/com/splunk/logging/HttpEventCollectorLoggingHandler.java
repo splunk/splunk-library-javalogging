@@ -80,14 +80,11 @@ package com.splunk.logging;
  * com.splunk.logging.HttpEventCollectorLoggingHandler.send_mode=sequential
  */
 
-import java.io.IOException;
-import java.lang.reflect.Constructor;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.logging.Handler;
 import java.util.logging.LogManager;
 import java.util.logging.LogRecord;
-import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
 
 /**
  * An input handler for Splunk http event collector. This handler can be used by

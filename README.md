@@ -76,7 +76,7 @@ entries.
     <dependency>
         <groupId>com.splunk.dev</groupId>
         <artifactId>splunk-library-javalogging</artifactId>
-        <version>1.0.0</version>
+        <version>1.5.0</version>
     </dependency>
     ```
 

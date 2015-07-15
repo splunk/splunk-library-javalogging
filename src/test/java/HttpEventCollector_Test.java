@@ -31,7 +31,7 @@ import java.lang.reflect.*;
 
 import com.splunk.*;
 
-public class HttpInput_Test {
+public class HttpEventCollector_Test {
     public static void addPath(String s) throws Exception {
         File f = new File(s);
         URI u = f.toURI();
@@ -81,11 +81,11 @@ public class HttpInput_Test {
     }
 
     private static ServiceArgs serviceArgs;
-    private static String httpinputName = "functionalhttp";
+    private static String httpEventCollectorName = "functionalhttp";
 
-    private static void setupHttpInput(boolean batching) throws Exception {
-        TestUtil.enableHttpinput();
-        String token=TestUtil.createHttpinput(httpinputName);
+    private static void setupHttpEventCollector(boolean batching) throws Exception {
+        TestUtil.enableHttpEventCollector();
+        String token=TestUtil.createHttpEventCollectorToken(httpEventCollectorName);
 
         //modify the config file with the generated token
         String configFileDir = HttpLoggerStressTest.class.getProtectionDomain().getCodeSource().getLocation().getPath();
@@ -96,15 +96,15 @@ public class HttpInput_Test {
 
     private static void CreateJavaUtilLog(String token, boolean batching) throws Exception {
         String LoggerConf =
-                "handlers=com.splunk.logging.HttpEventCollectorLoggingHandler\n" +
-                        "com.splunk.logging.HttpEventCollectorLoggingHandler.url=https://127.0.0.1:8088/services/collector\n" +
-                        String.format("com.splunk.logging.HttpEventCollectorLoggingHandler.token=%s\n", token) +
-                        "com.splunk.logging.HttpEventCollectorLoggingHandler.disableCertificateValidation=true\n";
+                "handlers=com.splunk.logging.HttpEventCollectorHandler\n" +
+                        "com.splunk.logging.HttpEventCollectorHandler.url=https://127.0.0.1:8088/services/collector\n" +
+                        String.format("com.splunk.logging.HttpEventCollectorHandler.token=%s\n", token) +
+                        "com.splunk.logging.HttpEventCollectorHandler.disableCertificateValidation=true\n";
         if (batching) {
             LoggerConf +=
-                    "com.splunk.logging.HttpEventCollectorLoggingHandler.batch_interval=200\n" +
-                            "com.splunk.logging.HttpEventCollectorLoggingHandler.batch_size_count=500\n" +
-                            "com.splunk.logging.HttpEventCollectorLoggingHandler.batch_size_bytes=12\n";
+                    "com.splunk.logging.HttpEventCollectorHandler.batch_interval=200\n" +
+                            "com.splunk.logging.HttpEventCollectorHandler.batch_size_count=500\n" +
+                            "com.splunk.logging.HttpEventCollectorHandler.batch_size_bytes=12\n";
         }
         try {
             java.util.logging.LogManager.getLogManager().readConfiguration(
@@ -211,13 +211,13 @@ public class HttpInput_Test {
         exceptionWasRaised = false;
         boolean batching = false;
         System.out.printf("\tSetting up http event collector with %s ... ", batching ? "batching" : "no batching");
-        TestUtil.enableHttpinput();
-        String token=TestUtil.createHttpinput(httpinputName);
+        TestUtil.enableHttpEventCollector();
+        String token=TestUtil.createHttpEventCollectorToken(httpEventCollectorName);
         System.out.printf("set\n");
 
         //modify the config file with the generated token
         CreateJavaUtilLog(token, batching);
-        TestUtil.disableHttpinput();
+        TestUtil.disableHttpEventCollector();
         Thread.sleep(2000);
 
         // HTTP event collector is disabled now, expect exception to be raised and reported
@@ -277,7 +277,7 @@ public class HttpInput_Test {
         });
         int expectedCounter = 2;
         System.out.printf("\tSetting up http event collector with %s ... ", batching ? "batching" : "no batching");
-        setupHttpInput(batching);
+        setupHttpEventCollector(batching);
         System.out.printf("Set\n");
         Boolean testPassed = true;
         testPassed &= insertDataWithLoggerAndVerify("log4j", expectedCounter, batching);
@@ -337,7 +337,7 @@ public class HttpInput_Test {
         });
         boolean batching = false;
         System.out.printf("\tSetting up http event collector with %s ... ", batching ? "batching" : "no batching");
-        setupHttpInput(batching);
+        setupHttpEventCollector(batching);
         System.out.printf("HTTP event collector fully set\n");
         Service service = TestUtil.connectToSplunk();
         java.util.logging.Logger LOGGER = java.util.logging.Logger.getLogger("splunk.java.util");

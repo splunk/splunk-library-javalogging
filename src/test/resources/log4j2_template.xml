@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration status="info" name="example" packages="">
     <Appenders>
-        <Http
+        <Http>
               name="http"
               url="%scheme%://%host%:8088"
-              token="%user_httpinput_token%"
+              token="%user_httpEventCollector_token%"
+
               index="%user_index%"
               source="%user_source%"
               sourcetype="%user_sourcetype%"
@@ -13,7 +14,7 @@
               batch_size_count="%user_batch_size_count%"
               disableCertificateValidation="true"
               send_mode="%user_send_mode%"
-              >
+
             <PatternLayout pattern="%m"/>
         </Http>
 

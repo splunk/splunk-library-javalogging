@@ -99,7 +99,7 @@ public class HttpLoggerStressTest {
     }
 
     private static ServiceArgs serviceArgs;
-    private static String httpinputName = "stresshttpinput";
+    private static String httpEventCollectorName = "stressHttpEventCollector";
 
     private static void setupHttpEventCollector() throws Exception {
         //connect to localhost
@@ -117,20 +117,20 @@ public class HttpLoggerStressTest {
         args.put("disabled", 0);
         service.post("/servicesNS/admin/search/data/inputs/http/http", args);
 
-        //create a httpinput
+        //create an httpEventCollector
         args = new HashMap();
-        args.put("name", httpinputName);
+        args.put("name", httpEventCollectorName);
         args.put("description", "test http event collector");
 
         try {
-            service.delete("/services/data/inputs/http/" + httpinputName);
+            service.delete("/services/data/inputs/http/" + httpEventCollectorName);
         } catch (Exception e) {
         }
 
         service.post("/services/data/inputs/http", args);
 
         args = new HashMap();
-        ResponseMessage response = service.get("/services/data/inputs/http/" + httpinputName, args);
+        ResponseMessage response = service.get("/services/data/inputs/http/" + httpEventCollectorName, args);
         BufferedReader reader = new BufferedReader(new InputStreamReader(response.getContent(), "UTF-8"));
         String token = "";
         while (true) {

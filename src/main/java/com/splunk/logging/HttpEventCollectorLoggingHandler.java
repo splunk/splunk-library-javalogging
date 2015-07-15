@@ -31,13 +31,13 @@ package com.splunk.logging;
  * Properties file has include logging handler and its properties.
  *
  * # Splunk http event collector handler
- * handlers = com.splunk.logging.HttpEventCollectorLoggingHandler
+ * handlers = com.splunk.logging.HttpEventCollectorHandler
  *
  * # Http event collector application token
  * com.splunk.logging.HttpEventCollectorLoggingHandler.token=<token guid>
  *
  * # Splunk logging input url.
- * com.splunk.logging.HttpEventCollectorLoggingHandler.url
+ * com.splunk.logging.HttpEventCollectorHandler.url
  *
  * # Logging events metadata.
  * com.splunk.logging.HttpEventCollectorLoggingHandler.index
@@ -93,7 +93,6 @@ import java.util.logging.LogRecord;
  */
 public final class HttpEventCollectorLoggingHandler extends Handler {
     private HttpEventCollectorSender sender = null;
-
     private final String BatchDelayConfTag = "batch_interval";
     private final String BatchCountConfTag = "batch_size_count";
     private final String BatchSizeConfTag = "batch_size_bytes";
@@ -171,7 +170,8 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
      * java.util.logging data handler close callback
      * @throws SecurityException
      */
-    @Override public void close() throws SecurityException {
+    @Override
+    public void close() throws SecurityException {
         this.sender.close();
     }
 

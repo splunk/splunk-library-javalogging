@@ -56,7 +56,9 @@ public class HttpEventCollectorErrorHandler {
                 JSONObject json = (JSONObject)jsonParser.parse(serverReply);
                 errorCode = (Long)json.get("code");
                 errorText = (String)json.get("text");
-            } catch (Exception e) {}
+            } catch (Exception e) {
+                errorText = e.getMessage();
+            }
         }
 
         /**

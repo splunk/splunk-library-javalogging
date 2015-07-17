@@ -42,7 +42,7 @@
                                 <include>**/*.class</include>
                             </includes>
                             <excludes>
-                                <exclude>**/HttpLoggerStressTest.class</exclude>
+                                <exclude>**/**Test.class</exclude>
                             </excludes>
                         </configuration>
                     </plugin>

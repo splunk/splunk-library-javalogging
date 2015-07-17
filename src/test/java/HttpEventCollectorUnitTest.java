@@ -97,10 +97,10 @@ public class HttpEventCollectorUnitTest {
     private static TestHttpServerHandler httpHandler = new TestHttpServerHandler();
 
     private final String LoggerConf =
-        "handlers=com.splunk.logging.HttpEventCollectorLoggingHandler\n" +
-        "com.splunk.logging.HttpEventCollectorLoggingHandler.url=http://localhost:5555\n" +
-        "com.splunk.logging.HttpEventCollectorLoggingHandler.token=22C712B0-E6EE-4355-98DD-2DDE23D968D7\n" +
-        "com.splunk.logging.HttpEventCollectorLoggingHandler.disableCertificateValidation=true\n";
+        "handlers=com.splunk.logging.HttpEventCollectorHandler\n" +
+        "com.splunk.logging.HttpEventCollectorHandler.url=http://localhost:5555\n" +
+        "com.splunk.logging.HttpEventCollectorHandler.token=22C712B0-E6EE-4355-98DD-2DDE23D968D7\n" +
+        "com.splunk.logging.HttpEventCollectorHandler.disableCertificateValidation=true\n";
 
     public HttpEventCollectorUnitTest() {
 

@@ -20,8 +20,6 @@ package com.splunk.logging;
 
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
-
 import java.util.List;
 
 /**
@@ -58,7 +56,9 @@ public class HttpEventCollectorErrorHandler {
                 JSONObject json = (JSONObject)jsonParser.parse(serverReply);
                 errorCode = (Long)json.get("code");
                 errorText = (String)json.get("text");
-            } catch (ParseException e) {}
+            } catch (Exception e) {
+                errorText = e.getMessage();
+            }
         }
 
         /**

@@ -35,6 +35,8 @@ import org.apache.logging.log4j.core.config.plugins.PluginFactory;
 @Plugin(name = "Http", category = "Core", elementType = "appender", printObject = true)
 public final class HttpEventCollectorLog4jAppender extends AbstractAppender
 {
+    private HttpEventCollectorSender sender = null;
+
     private HttpEventCollectorLog4jAppender(final String name,
                          final String url,
                          final String token,
@@ -49,23 +51,31 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
                          long batchSize,
                          long retriesOnError,
                          String sendMode,
+                         String middleware,
                          final String disableCertificateValidation)
     {
         super(name, filter, layout, ignoreExceptions);
+        Dictionary<String, String> metadata = new Hashtable<String, String>();
+        metadata.put(HttpEventCollectorSender.MetadataIndexTag, index != null ? index : "");
+        metadata.put(HttpEventCollectorSender.MetadataSourceTag, source != null ? source : "");
+        metadata.put(HttpEventCollectorSender.MetadataSourceTypeTag, sourcetype != null ? sourcetype : "");
 
-        if (!HttpEventCollectorMiddleware.hasMiddleware()) {
-            Dictionary<String, String> metadata = new Hashtable<String, String>();
-            metadata.put(HttpEventCollectorSender.MetadataIndexTag, index != null ? index : "");
-            metadata.put(HttpEventCollectorSender.MetadataSourceTag, source != null ? source : "");
-            metadata.put(HttpEventCollectorSender.MetadataSourceTypeTag, sourcetype != null ? sourcetype : "");
+        this.sender = new HttpEventCollectorSender(url, token, batchInterval, batchCount, batchSize, sendMode, metadata);
 
-            HttpEventCollectorSender sender = new HttpEventCollectorSender(url, token, batchInterval, batchCount, batchSize, retriesOnError, sendMode, metadata);
+        // plug a user middleware
+        if (!middleware.isEmpty()) {
+            try {
+                this.sender.addMiddleware((HttpEventCollectorMiddleware.HttpSenderMiddleware)(Class.forName(middleware).newInstance()));
+            } catch (Exception e) {}
+        }
 
-            if (disableCertificateValidation != null && disableCertificateValidation.equalsIgnoreCase("true")) {
-                sender.disableCertificateValidation();
-            }
+        // plug resend middleware
+        if (retriesOnError > 0) {
+            this.sender.addMiddleware(new HttpEventCollectorResendMiddleware(retriesOnError));
+        }
 
-            HttpEventCollectorMiddleware.setMiddleware(sender);
+        if (disableCertificateValidation != null && disableCertificateValidation.equalsIgnoreCase("true")) {
+            this.sender.disableCertificateValidation();
         }
     }
 
@@ -88,6 +98,7 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
             @PluginAttribute("batch_interval") final String batchInterval,
             @PluginAttribute("retries_on_error") final String retriesOnError,
             @PluginAttribute("send_mode") final String sendMode,
+            @PluginAttribute("middleware") final String middleware,
             @PluginAttribute("disableCertificateValidation") final String disableCertificateValidation,
             @PluginElement("Layout") Layout<? extends Serializable> layout,
             @PluginElement("Filter") final Filter filter
@@ -125,6 +136,7 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
                 parseInt(batchInterval, 0), parseInt(batchCount, 0), parseInt(batchSize, 0),
                 parseInt(retriesOnError, 0),
                 sendMode,
+                middleware,
                 disableCertificateValidation);
     }
 
@@ -136,7 +148,7 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
     @Override
     public void append(final LogEvent event)
     {
-        HttpEventCollectorMiddleware.send(
+        this.sender.send(
                 event.getLevel().toString(),
                 event.getMessage().getFormattedMessage()
         );
@@ -144,7 +156,7 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
 
     @Override
     public void stop() {
-        HttpEventCollectorMiddleware.flush();
+        this.sender.flush();
         super.stop();
     }
 }

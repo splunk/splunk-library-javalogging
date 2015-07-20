@@ -261,7 +261,6 @@ public class TestUtil {
         create log4j2.xml and force log4j2 context manager to reload the configurations, return context and using this context to retrieve logger instead of using LogManager
     */
     public static org.apache.logging.log4j.core.LoggerContext resetLog4j2Configuration(String configFileTemplate, String configFile, HashMap<String, String> userInputs) throws IOException, JoranException {
-        HttpEventCollectorMiddleware.setMiddleware(null);
         String configFilePath = updateConfigFile(configFileTemplate, configFile, userInputs);
         org.apache.logging.log4j.core.LoggerContext context = new org.apache.logging.log4j.core.LoggerContext("new");
         context.reconfigure();
@@ -280,7 +279,6 @@ public class TestUtil {
         LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
         jc.setContext(context);
         context.reset();
-        HttpEventCollectorMiddleware.setMiddleware(null);
         jc.doConfigure(configFilePath);
     }
 
@@ -288,7 +286,6 @@ public class TestUtil {
     create logging.property and force java logging  manager to reload the configurations
     */
     public static void resetJavaLoggingConfiguration(String configFileTemplate, String configFile, HashMap<String, String> userInputs) throws IOException, JoranException {
-        HttpEventCollectorMiddleware.setMiddleware(null);
         String configFilePath = updateConfigFile(configFileTemplate, configFile, userInputs);
         FileInputStream configFileStream = new FileInputStream(configFilePath);
         LogManager.getLogManager().readConfiguration(configFileStream);

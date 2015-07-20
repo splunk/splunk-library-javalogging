@@ -22,175 +22,213 @@ import java.net.InetSocketAddress;
 
 import com.splunk.logging.HttpEventCollectorErrorHandler;
 import com.splunk.logging.HttpEventCollectorEventInfo;
-import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
-import com.sun.net.httpserver.HttpServer;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
 import org.junit.Assert;
 import org.junit.Test;
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.LogManager;
 
 public class HttpEventCollectorUnitTest {
-    private final static java.util.logging.Logger LOGGER = java.util.logging.Logger.getLogger("splunk.java.util");
-    private final static org.apache.logging.log4j.Logger LOG4J = org.apache.logging.log4j.LogManager.getLogger("splunk.log4j");
-    private final static org.slf4j.Logger LOGBACK = org.slf4j.LoggerFactory.getLogger("splunk.logback");
-    private String lastReply = "";
-    private HttpEventCollectorEventInfo lastEvent;
-    private static final String SuccessReply = "{\"text\":\"Success\",\"code\":0}";
-    private static final String ErrorReply = "{\"text\":\"Error\",\"code\":1}";
-
-    private static class TestHttpServerHandler implements HttpHandler {
-        private List<JSONObject> jsonObjects = new LinkedList<JSONObject>();
-
-        public void handle(HttpExchange httpExchange) throws IOException {
-            byte[] bodyBytes = new byte[httpExchange.getRequestBody().available()];
-            httpExchange.getRequestBody().read(
-                    bodyBytes, 0, httpExchange.getRequestBody().available());
-            List<String> contentTypeList =  httpExchange.getRequestHeaders().get("content-type");
-            Assert.assertTrue(contentTypeList.size() == 1);
-            Assert.assertTrue(contentTypeList.get(0).contains("profile=urn:splunk:event:1.0"));
-            String body = new String(bodyBytes);
-            System.out.println(body);
-            // extract individual json documents and parse
-            boolean error = body.contains("fail");
-            int bracketBalance = 0;
-            int begin = 0, end = 0;
-            for (end = 0; end < body.length(); end ++) {
-                if (body.charAt(end) == '{') bracketBalance ++;
-                else if (body.charAt(end) == '}') bracketBalance --;
-                if (bracketBalance == 0) {
-                    String json = body.substring(begin, end+1);
-                    JSONParser jsonParser = new JSONParser();
-                    try {
-                        jsonObjects.add(jsonObjects.size(), (JSONObject) jsonParser.parse(json));
-                    } catch (ParseException e) {
-                        e.printStackTrace();
-                        Assert.fail();
-                    }
-                    begin = end;
-                }
+    @Test
+    public void log4j_simple() {
+        org.apache.logging.log4j.Logger LOG4J = org.apache.logging.log4j.LogManager.getLogger("splunk.log4j");
+        // send 3 events
+        HttpEventCollectorUnitTestMiddleware.eventsReceived = 0;
+        HttpEventCollectorUnitTestMiddleware.io = new HttpEventCollectorUnitTestMiddleware.IO() {
+            @Override
+            public void input(List<HttpEventCollectorEventInfo> events) {
+                Assert.assertTrue(events.size() == 1);
+                Assert.assertTrue(events.get(0).getMessage().compareTo("hello log4j") == 0);
+                Assert.assertTrue(events.get(0).getSeverity().compareTo("INFO") == 0);
             }
-            // reply
-            String response = error ? ErrorReply : SuccessReply;;
-            httpExchange.sendResponseHeaders(error ? 500 : 200, response.length());
-            OutputStream os = httpExchange.getResponseBody();
-            os.write(response.getBytes());
-            os.close();
-        }
-
-        public JSONObject pop() {
-            if (jsonObjects.size() == 0)
-                return null;
-            JSONObject jsonObject = jsonObjects.get(0);
-            jsonObjects.remove(jsonObject);
-            return jsonObject;
-        }
-    }
-
-    private static TestHttpServerHandler httpHandler = new TestHttpServerHandler();
-
-    private final String LoggerConf =
-        "handlers=com.splunk.logging.HttpEventCollectorHandler\n" +
-        "com.splunk.logging.HttpEventCollectorHandler.url=http://localhost:5555\n" +
-        "com.splunk.logging.HttpEventCollectorHandler.token=22C712B0-E6EE-4355-98DD-2DDE23D968D7\n" +
-        "com.splunk.logging.HttpEventCollectorHandler.disableCertificateValidation=true\n";
-
-    public HttpEventCollectorUnitTest() {
-
-        try {
-            HttpServer server = HttpServer.create(new InetSocketAddress(5555), 0);
-            server.createContext("/", httpHandler);
-            server.setExecutor(null); // creates a default executor
-            server.start();
-        } catch (Exception e) {
-            System.out.print(e);
-            e.printStackTrace();
-            Assert.fail();
-        }
-
-        try {
-            LogManager.getLogManager().readConfiguration(
-                new ByteArrayInputStream(LoggerConf.getBytes())
-            );
-        } catch (IOException e) {
-            System.out.print(e);
-            e.printStackTrace();
-            Assert.fail();
-        }
+        };
+        LOG4J.info("hello log4j");
+        LOG4J.info("hello log4j");
+        LOG4J.info("hello log4j");
+        Assert.assertTrue(HttpEventCollectorUnitTestMiddleware.eventsReceived == 3);
     }
 
     @Test
-    public void simpleLogging() {
+    public void logback_simple() {
+        org.slf4j.Logger LOGBACK = org.slf4j.LoggerFactory.getLogger("splunk.logback");
+        // send 3 events
+        HttpEventCollectorUnitTestMiddleware.eventsReceived = 0;
+        HttpEventCollectorUnitTestMiddleware.io = new HttpEventCollectorUnitTestMiddleware.IO() {
+            @Override
+            public void input(List<HttpEventCollectorEventInfo> events) {
+                Assert.assertTrue(events.size() == 1);
+                Assert.assertTrue(events.get(0).getMessage().compareTo("hello logback") == 0);
+                Assert.assertTrue(events.get(0).getSeverity().compareTo("ERROR") == 0);
+            }
+        };
+        LOGBACK.error("hello logback");
+        LOGBACK.error("hello logback");
+        LOGBACK.error("hello logback");
+        Assert.assertTrue(HttpEventCollectorUnitTestMiddleware.eventsReceived == 3);
+    }
 
+    @Test
+    public void java_util_logger_simple() {
+        java.util.logging.Logger LOGGER = java.util.logging.Logger.getLogger("splunk.java.util");
+        readConf(
+            "handlers=com.splunk.logging.HttpEventCollectorLoggingHandler\n" +
+            "com.splunk.logging.HttpEventCollectorLoggingHandler.url=http://localhost:8088\n" +
+            "com.splunk.logging.HttpEventCollectorLoggingHandler.token=TOKEN\n" +
+            "com.splunk.logging.HttpEventCollectorLoggingHandler.middleware=HttpEventCollectorUnitTestMiddleware\n"
+        );
+
+        // send 3 events
+        HttpEventCollectorUnitTestMiddleware.eventsReceived = 0;
+        HttpEventCollectorUnitTestMiddleware.io = new HttpEventCollectorUnitTestMiddleware.IO() {
+            @Override
+            public void input(List<HttpEventCollectorEventInfo> events) {
+                Assert.assertTrue(events.size() == 1);
+                Assert.assertTrue(events.get(0).getMessage().compareTo("hello java logger") == 0);
+                Assert.assertTrue(events.get(0).getSeverity().compareTo("WARNING") == 0);
+            }
+        };
+        LOGGER.warning("hello java logger");
+        LOGGER.warning("hello java logger");
+        LOGGER.warning("hello java logger");
+        Assert.assertTrue(HttpEventCollectorUnitTestMiddleware.eventsReceived == 3);
+    }
+
+    @Test
+    public void java_util_logger_error_handler() {
+        java.util.logging.Logger LOGGER = java.util.logging.Logger.getLogger("splunk.java.util");
+        readConf(
+            "handlers=com.splunk.logging.HttpEventCollectorLoggingHandler\n" +
+            "com.splunk.logging.HttpEventCollectorLoggingHandler.url=http://localhost:8088\n" +
+            "com.splunk.logging.HttpEventCollectorLoggingHandler.token=TOKEN\n" +
+            "com.splunk.logging.HttpEventCollectorLoggingHandler.middleware=HttpEventCollectorUnitTestMiddleware\n"
+        );
+
+        // mimic server 404
+        HttpEventCollectorUnitTestMiddleware.eventsReceived = 0;
+        HttpEventCollectorUnitTestMiddleware.io = new HttpEventCollectorUnitTestMiddleware.IO() {
+            @Override
+            public HttpEventCollectorUnitTestMiddleware.HttpResponse output() {
+                return new HttpEventCollectorUnitTestMiddleware.HttpResponse(
+                        404, "{\"text\":\"error\",\"code\":4}"
+                );
+            }
+        };
         HttpEventCollectorErrorHandler.onError(new HttpEventCollectorErrorHandler.ErrorCallback() {
             public void error(final List<HttpEventCollectorEventInfo> data, final Exception ex) {
                 HttpEventCollectorErrorHandler.ServerErrorException serverErrorException =
                         (HttpEventCollectorErrorHandler.ServerErrorException) ex;
-                lastReply = serverErrorException.getReply();
-                lastEvent = data.get(0);
+                Assert.assertTrue(serverErrorException.getReply().compareTo("{\"text\":\"error\",\"code\":4}") == 0);
+                Assert.assertTrue(serverErrorException.getErrorCode() == 4);
             }
         });
-
-        // java.util.logger
-        LOGGER.info("this is info");
-        shortSleep();
-        LOGGER.warning("this is warning");
-
-        sleep(); // wait for http server to receive all data
-        testEvent(httpHandler.pop(), "INFO", "this is info");
-        testEvent(httpHandler.pop(), "WARNING", "this is warning");
-
-        // log4j
-        LOG4J.info("this is info");
-        shortSleep();
-        LOG4J.error("this is error");
-        sleep();
-        testEvent(httpHandler.pop(), "INFO", "this is info");
-        testEvent(httpHandler.pop(), "ERROR", "this is error");
-
-        // logback
-        LOGBACK.info("this is info");
-        sleep();
-        shortSleep();
-        LOGBACK.error("this is error");
-        sleep(); // wait for http server to receive all data
-        testEvent(httpHandler.pop(), "INFO", "this is info");
-        testEvent(httpHandler.pop(), "ERROR", "this is error");
-
-        // error detection
-        Assert.assertFalse(lastReply.equalsIgnoreCase(ErrorReply));
-        LOGGER.info("fail");
-        sleep();
-        Assert.assertTrue(lastReply.equalsIgnoreCase(ErrorReply));
-        Assert.assertTrue(lastEvent.getSeverity().equalsIgnoreCase("INFO"));
-        Assert.assertTrue(lastEvent.getMessage().equalsIgnoreCase("fail"));
+        LOGGER.info("hello");
+        Assert.assertTrue(HttpEventCollectorUnitTestMiddleware.eventsReceived == 1);
     }
 
-    private void testEvent(JSONObject json, String severity, String message) {
-        Assert.assertNotNull(json);
-        JSONObject event = (JSONObject)json.get("event");
-        Assert.assertNotNull(event);
-        Assert.assertTrue(String.format((String)event.get("severity")).equalsIgnoreCase(severity));
-        Assert.assertTrue(((String)event.get("message")).equalsIgnoreCase(message));
+    @Test
+    public void java_util_logger_resend() {
+        java.util.logging.Logger LOGGER = java.util.logging.Logger.getLogger("splunk.java.util");
+        readConf(
+            "handlers=com.splunk.logging.HttpEventCollectorLoggingHandler\n" +
+            "com.splunk.logging.HttpEventCollectorLoggingHandler.url=http://localhost:8088\n" +
+            "com.splunk.logging.HttpEventCollectorLoggingHandler.token=TOKEN\n" +
+            "com.splunk.logging.HttpEventCollectorLoggingHandler.middleware=HttpEventCollectorUnitTestMiddleware\n" +
+            "com.splunk.logging.HttpEventCollectorLoggingHandler.retries_on_error=2\n"
+        );
+
+        HttpEventCollectorUnitTestMiddleware.eventsReceived = 0;
+        HttpEventCollectorUnitTestMiddleware.io = new HttpEventCollectorUnitTestMiddleware.IO() {
+            int retries = 0;
+            @Override
+            public void input(List<HttpEventCollectorEventInfo> events) {
+                Assert.assertTrue(events.get(0).getMessage().compareTo("hello") == 0);
+                Assert.assertTrue(events.get(0).getSeverity().compareTo("INFO") == 0);
+            }
+            @Override
+            public HttpEventCollectorUnitTestMiddleware.HttpResponse output() {
+                retries++;
+                if (retries <= 1) {
+                    // mimic server error
+                    return new HttpEventCollectorUnitTestMiddleware.HttpResponse(
+                            0, ""
+                    );
+                } else {
+                    return new HttpEventCollectorUnitTestMiddleware.HttpResponse();
+                }
+            }
+        };
+        LOGGER.info("hello");
+        // the system should make 2 retries
+        Assert.assertTrue(HttpEventCollectorUnitTestMiddleware.eventsReceived == 2);
     }
 
-    // shot sleep to deliver logging requests in order
-    private void shortSleep() {
+    @Test
+    public void java_util_logger_resend_max_retries() {
+        java.util.logging.Logger LOGGER = java.util.logging.Logger.getLogger("splunk.java.util");
+        readConf(
+            "handlers=com.splunk.logging.HttpEventCollectorLoggingHandler\n" +
+            "com.splunk.logging.HttpEventCollectorLoggingHandler.url=http://localhost:8088\n" +
+            "com.splunk.logging.HttpEventCollectorLoggingHandler.token=TOKEN\n" +
+            "com.splunk.logging.HttpEventCollectorLoggingHandler.middleware=HttpEventCollectorUnitTestMiddleware\n" +
+            "com.splunk.logging.HttpEventCollectorLoggingHandler.retries_on_error=2\n"
+        );
+
+        HttpEventCollectorUnitTestMiddleware.eventsReceived = 0;
+        HttpEventCollectorUnitTestMiddleware.io = new HttpEventCollectorUnitTestMiddleware.IO() {
+            @Override
+            public void input(List<HttpEventCollectorEventInfo> events) {
+                Assert.assertTrue(events.get(0).getMessage().compareTo("hello") == 0);
+                Assert.assertTrue(events.get(0).getSeverity().compareTo("INFO") == 0);
+            }
+            @Override
+            public HttpEventCollectorUnitTestMiddleware.HttpResponse output() {
+                // mimic server error
+                return new HttpEventCollectorUnitTestMiddleware.HttpResponse(
+                        0, "{\"text\":\"error\",\"code\":4}");
+            }
+        };
+        HttpEventCollectorErrorHandler.onError(new HttpEventCollectorErrorHandler.ErrorCallback() {
+            public void error(final List<HttpEventCollectorEventInfo> data, final Exception ex) {
+                // ignore errors
+            }
+        });
+        LOGGER.info("hello");
+        // the system should make only 2 retries and stop after that
+        Assert.assertTrue(HttpEventCollectorUnitTestMiddleware.eventsReceived == 3);
+    }
+
+    @Test
+    public void java_util_logger_batching() {
+        java.util.logging.Logger LOGGER = java.util.logging.Logger.getLogger("splunk.java.util");
+        readConf(
+            "handlers=com.splunk.logging.HttpEventCollectorLoggingHandler\n" +
+            "com.splunk.logging.HttpEventCollectorLoggingHandler.url=http://localhost:8088\n" +
+            "com.splunk.logging.HttpEventCollectorLoggingHandler.token=TOKEN\n" +
+            "com.splunk.logging.HttpEventCollectorLoggingHandler.middleware=HttpEventCollectorUnitTestMiddleware\n" +
+            "com.splunk.logging.HttpEventCollectorLoggingHandler.batch_size_count=3\n"
+        );
+
+        HttpEventCollectorUnitTestMiddleware.eventsReceived = 0;
+        HttpEventCollectorUnitTestMiddleware.io = new HttpEventCollectorUnitTestMiddleware.IO() {
+            @Override
+            public void input(List<HttpEventCollectorEventInfo> events) {
+                Assert.assertTrue(events.size() == 3);
+                Assert.assertTrue(events.get(0).getMessage().compareTo("one") == 0);
+                Assert.assertTrue(events.get(1).getMessage().compareTo("two") == 0);
+                Assert.assertTrue(events.get(2).getMessage().compareTo("three") == 0);
+            }
+        };
+        LOGGER.info("one");
+        LOGGER.info("two");
+        LOGGER.info("three");
+        Assert.assertTrue(HttpEventCollectorUnitTestMiddleware.eventsReceived == 3);
+    }
+
+    private void readConf(final String conf) {
         try {
-            Thread.sleep(100);
-        } catch (Exception e) {}
-    }
-
-    private void sleep() {
-        try {
-            Thread.sleep(2000);
-        } catch (Exception e) {}
+            LogManager.getLogManager().readConfiguration(new ByteArrayInputStream(conf.getBytes()));
+        } catch (IOException e) {
+            Assert.fail();
+        }
     }
 }

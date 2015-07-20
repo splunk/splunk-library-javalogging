@@ -26,7 +26,6 @@ import org.apache.http.conn.ssl.SSLContexts;
 import org.apache.http.conn.ssl.TrustStrategy;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
-import org.apache.http.impl.nio.client.HttpAsyncClientBuilder;
 import org.apache.http.impl.nio.client.HttpAsyncClients;
 import org.apache.http.util.EntityUtils;
 import org.json.simple.JSONObject;
@@ -39,7 +38,7 @@ import java.util.*;
 /**
  * This is an internal helper class that sends logging events to Splunk http event collector.
  */
-final class HttpEventCollectorSender extends TimerTask implements HttpEventCollectorMiddleware.IHttpEventCollectorMiddleware {
+final class HttpEventCollectorSender extends TimerTask implements HttpEventCollectorMiddleware.IHttpSender {
     public static final String MetadataTimeTag = "time";
     public static final String MetadataIndexTag = "index";
     public static final String MetadataSourceTag = "source";
@@ -66,7 +65,6 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
     private String token;
     private long maxEventsBatchCount;
     private long maxEventsBatchSize;
-    private long retriesOnError;
     private Dictionary<String, String> metadata;
     private Timer timer;
     private List<HttpEventCollectorEventInfo> eventsBatch = new LinkedList<HttpEventCollectorEventInfo>();
@@ -74,6 +72,7 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
     private CloseableHttpAsyncClient httpClient;
     private boolean disableCertificateValidation = false;
     private SendMode sendMode = SendMode.Sequential;
+    private HttpEventCollectorMiddleware middleware = new HttpEventCollectorMiddleware();
 
     /**
      * Initialize HttpEventCollectorSender
@@ -87,7 +86,6 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
     public HttpEventCollectorSender(
             final String Url, final String token,
             long delay, long maxEventsBatchCount, long maxEventsBatchSize,
-            long retriesOnError,
             String sendModeStr,
             Dictionary<String, String> metadata) {
         this.url = Url + HttpEventCollectorUriPath;
@@ -101,7 +99,6 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
         }
         this.maxEventsBatchCount = maxEventsBatchCount;
         this.maxEventsBatchSize = maxEventsBatchSize;
-        this.retriesOnError = retriesOnError;
         this.metadata = metadata;
         if (sendModeStr != null) {
             if (sendModeStr.equals(SendModeSequential))
@@ -117,6 +114,10 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
             timer = new Timer();
             timer.scheduleAtFixedRate(this, delay, delay);
         }
+    }
+
+    public void addMiddleware(HttpEventCollectorMiddleware.HttpSenderMiddleware middleware) {
+        this.middleware.add(middleware);
     }
 
     /**
@@ -244,8 +245,29 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
         }
     }
 
-    private void postEventsAsync(final List<HttpEventCollectorEventInfo> eventsBatch) {
-        startHttpClient();
+    private void postEventsAsync(final List<HttpEventCollectorEventInfo> events) {
+        this.middleware.postEvents(events, this, new HttpEventCollectorMiddleware.IHttpSenderCallback() {
+            @Override
+            public void completed(int statusCode, String reply) {
+                if (statusCode != 200) {
+                    HttpEventCollectorErrorHandler.error(
+                            events,
+                            new HttpEventCollectorErrorHandler.ServerErrorException(reply));
+                }
+            }
+
+            @Override
+            public void failed(Exception ex) {
+                HttpEventCollectorErrorHandler.error(
+                        eventsBatch,
+                        new HttpEventCollectorErrorHandler.ServerErrorException(ex.getMessage()));
+            }
+        });
+    }
+
+    public void postEvents(final List<HttpEventCollectorEventInfo> events,
+                           final HttpEventCollectorMiddleware.IHttpSenderCallback callback) {
+        startHttpClient(); // make sure http client is started
         final String encoding = "utf-8";
         // convert events list into a string
         StringBuilder eventsBatchString = new StringBuilder();
@@ -259,34 +281,28 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
         StringEntity entity = new StringEntity(eventsBatchString.toString(), encoding);
         entity.setContentType(HttpContentType);
         httpPost.setEntity(entity);
-        // post request
         httpClient.execute(httpPost, new FutureCallback<HttpResponse>() {
-            long retriesCount = 0;
-
-            public void completed(final HttpResponse response) {
-                if (response.getStatusLine().getStatusCode() != 200) {
-                    String reply = "";
+            @Override
+            public void completed(HttpResponse response) {
+                String reply = "";
+                int httpStatusCode = response.getStatusLine().getStatusCode();
+                // read reply only in case of a server error
+                if (httpStatusCode != 200) {
                     try {
                         reply = EntityUtils.toString(response.getEntity(), encoding);
                     } catch (IOException e) {
                         reply = e.getMessage();
                     }
-                    HttpEventCollectorErrorHandler.error(
-                            eventsBatch,
-                            new HttpEventCollectorErrorHandler.ServerErrorException(reply));
                 }
+                callback.completed(httpStatusCode, reply);
             }
 
-            public void failed(final Exception ex) {
-                if (retriesCount >= retriesOnError) {
-                    HttpEventCollectorErrorHandler.error(eventsBatch, new HttpEventCollectorErrorHandler.ServerErrorException(ex.getMessage()));
-                } else {
-                    // retry
-                    retriesCount ++;
-                    httpClient.execute(httpPost, this);
-                }
+            @Override
+            public void failed(Exception ex) {
+                callback.failed(ex);
             }
 
+            @Override
             public void cancelled() {}
         });
     }

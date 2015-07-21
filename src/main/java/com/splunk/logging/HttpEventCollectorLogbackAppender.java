@@ -61,7 +61,7 @@ public class HttpEventCollectorLogbackAppender extends AppenderBase<ILoggingEven
                 _url, _token, _batchInterval, _batchCount, _batchSize, _sendMode, metadata);
 
         // plug a user middleware
-        if (!_middleware.isEmpty()) {
+        if (_middleware != null && !_middleware.isEmpty()) {
             try {
                 this.sender.addMiddleware((HttpEventCollectorMiddleware.HttpSenderMiddleware)(Class.forName(_middleware).newInstance()));
             } catch (Exception e) {}

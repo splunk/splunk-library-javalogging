@@ -18,7 +18,6 @@ import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.joran.JoranConfigurator;
 import ch.qos.logback.core.joran.spi.JoranException;
 import com.splunk.*;
-import com.splunk.logging.HttpEventCollectorMiddleware;
 import org.junit.Assert;
 import org.slf4j.*;
 
@@ -26,7 +25,6 @@ import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.util.*;
-import java.util.concurrent.ExecutionException;
 import java.util.logging.LogManager;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -262,7 +260,7 @@ public class TestUtil {
     */
     public static org.apache.logging.log4j.core.LoggerContext resetLog4j2Configuration(String configFileTemplate, String configFile, HashMap<String, String> userInputs) throws IOException, JoranException {
         String configFilePath = updateConfigFile(configFileTemplate, configFile, userInputs);
-        org.apache.logging.log4j.core.LoggerContext context = new org.apache.logging.log4j.core.LoggerContext("new");
+        org.apache.logging.log4j.core.LoggerContext context = new org.apache.logging.log4j.core.LoggerContext(userInputs.get("user_logger_name"));
         context.reconfigure();
         context.updateLoggers();
         return context;

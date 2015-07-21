@@ -63,7 +63,7 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
         this.sender = new HttpEventCollectorSender(url, token, batchInterval, batchCount, batchSize, sendMode, metadata);
 
         // plug a user middleware
-        if (!middleware.isEmpty()) {
+        if (middleware != null && !middleware.isEmpty()) {
             try {
                 this.sender.addMiddleware((HttpEventCollectorMiddleware.HttpSenderMiddleware)(Class.forName(middleware).newInstance()));
             } catch (Exception e) {}

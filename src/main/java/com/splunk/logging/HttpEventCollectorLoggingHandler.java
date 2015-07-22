@@ -133,7 +133,7 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
                 url, token, delay, batchCount, batchSize, sendMode, metadata);
 
         // plug a user middleware
-        if (!middleware.isEmpty()) {
+        if (middleware != null && !middleware.isEmpty()) {
             try {
                 this.sender.addMiddleware((HttpEventCollectorMiddleware.HttpSenderMiddleware)(Class.forName(middleware).newInstance()));
             } catch (Exception e) {}

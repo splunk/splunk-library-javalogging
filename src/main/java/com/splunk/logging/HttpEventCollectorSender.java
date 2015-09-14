@@ -271,7 +271,7 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
         final String encoding = "utf-8";
         // convert events list into a string
         StringBuilder eventsBatchString = new StringBuilder();
-        for (HttpEventCollectorEventInfo eventInfo : eventsBatch)
+        for (HttpEventCollectorEventInfo eventInfo : events)
             eventsBatchString.append(serializeEventInfo(eventInfo));
         // create http request
         final HttpPost httpPost = new HttpPost(url);

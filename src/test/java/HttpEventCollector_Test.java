@@ -97,7 +97,7 @@ public class HttpEventCollector_Test {
     private static void CreateJavaUtilLog(String token, boolean batching) throws Exception {
         String LoggerConf =
                 "handlers=com.splunk.logging.HttpEventCollectorHandler\n" +
-                        "com.splunk.logging.HttpEventCollectorHandler.url=https://127.0.0.1:8088/services/collector\n" +
+                        "com.splunk.logging.HttpEventCollectorHandler.url=https://127.0.0.1:8088/services/collector/event/1.0\n" +
                         String.format("com.splunk.logging.HttpEventCollectorHandler.token=%s\n", token) +
                         "com.splunk.logging.HttpEventCollectorHandler.disableCertificateValidation=true\n";
         if (batching) {
@@ -123,7 +123,7 @@ public class HttpEventCollector_Test {
         fw.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n");
         fw.write("<configuration>\r\n");
         fw.write("    <appender name=\"http\" class=\"com.splunk.logging.HttpEventCollectorLogbackAppender\">\r\n");
-        fw.write("        <url>https://127.0.0.1:8088/services/collector</url>\r\n");
+        fw.write("        <url>https://127.0.0.1:8088/services/collector/event/1.0</url>\r\n");
         fw.write(String.format("        <token>%s</token>\r\n", token));
         fw.write("        <disableCertificateValidation>true</disableCertificateValidation>\r\n");
         if (batching) {
@@ -159,7 +159,7 @@ public class HttpEventCollector_Test {
         fw.write("<Configuration status=\"info\" name=\"example\" packages=\"com.splunk.logging\">\r\n");
         fw.write("    <Appenders>\r\n");
         fw.write("        <Http name=\"Http\"\r\n");
-        fw.write("              url=\"https://127.0.0.1:8088/services/collector\"\r\n");
+        fw.write("              url=\"https://127.0.0.1:8088/services/collector/event/1.0\"\r\n");
         fw.write("              index=\"\"\r\n");
         fw.write(String.format("              token=\"%s\"\r\n", token));
         fw.write("              disableCertificateValidation=\"true\"\r\n");

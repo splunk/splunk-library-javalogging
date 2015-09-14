@@ -61,6 +61,13 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
         Parallel
     };
 
+    /**
+     * Recommended default values for events batching.
+     */
+    public static final int DefaultBatchInterval = 10 * 1000; // 10 seconds
+    public static final int DefaultBatchSize = 10 * 1024; // 10KB
+    public static final int DefaultBatchCount = 10; // 10 events
+
     private String url;
     private String token;
     private long maxEventsBatchCount;

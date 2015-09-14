@@ -33,7 +33,7 @@ under the License.
         </Socket>
         
         <Http name="http-input"
-              url="http://localhost:5555/services/collector"
+              url="http://localhost:5555/services/collector/event/1.0"
               token="11111111-2222-3333-4444-555555555555"
               index=""
               source="splunktest" 

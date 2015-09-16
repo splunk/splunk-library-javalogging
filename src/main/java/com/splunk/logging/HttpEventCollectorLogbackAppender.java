@@ -149,15 +149,15 @@ public class HttpEventCollectorLogbackAppender extends AppenderBase<ILoggingEven
     }
 
     public void setbatch_size_count(String value) {
-        _batchCount = parseLong(value, 0);
+        _batchCount = parseLong(value, HttpEventCollectorSender.DefaultBatchCount);
     }
 
     public void setbatch_size_bytes(String value) {
-        _batchSize = parseLong(value, 0);
+        _batchSize = parseLong(value, HttpEventCollectorSender.DefaultBatchSize);
     }
 
     public void setbatch_interval(String value) {
-        _batchInterval = parseLong(value, 0);
+        _batchInterval = parseLong(value, HttpEventCollectorSender.DefaultBatchInterval);
     }
 
     public void setretries_on_error(String value) {

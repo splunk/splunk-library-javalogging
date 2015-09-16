@@ -121,9 +121,9 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
         String token = getConfigurationProperty("token", null);
 
         // batching properties
-        long delay = getConfigurationNumericProperty(BatchDelayConfTag, 0);
-        long batchCount = getConfigurationNumericProperty(BatchCountConfTag, 0);
-        long batchSize = getConfigurationNumericProperty(BatchSizeConfTag, 0);
+        long delay = getConfigurationNumericProperty(BatchDelayConfTag, HttpEventCollectorSender.DefaultBatchInterval);
+        long batchCount = getConfigurationNumericProperty(BatchCountConfTag, HttpEventCollectorSender.DefaultBatchCount);
+        long batchSize = getConfigurationNumericProperty(BatchSizeConfTag, HttpEventCollectorSender.DefaultBatchSize);
         long retriesOnError = getConfigurationNumericProperty(RetriesOnErrorTag, 0);
         String sendMode = getConfigurationProperty(SendModeTag, "sequential");
         String middleware = getConfigurationProperty(MiddlewareTag, "");

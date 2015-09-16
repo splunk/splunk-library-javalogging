@@ -39,6 +39,9 @@ under the License.
               source="splunktest" 
               sourcetype="battlecat"
               middleware="HttpEventCollectorUnitTestMiddleware"
+              batch_size_bytes="0"
+              batch_size_count="0"
+              batch_interval="0"
               disableCertificateValidation="true">
             <PatternLayout pattern="%m"/>
         </Http>

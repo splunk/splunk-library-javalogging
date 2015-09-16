@@ -31,6 +31,17 @@ under the License.
         <Socket name="socket" host="127.0.0.1" port="15000">
             <PatternLayout pattern="%p: %m%n" charset="UTF-8"/>
         </Socket>
+        
+        <Http name="http-input"
+              url="http://localhost:5555/services/collector/event/1.0"
+              token="11111111-2222-3333-4444-555555555555"
+              index=""
+              source="splunktest" 
+              sourcetype="battlecat"
+              middleware="HttpEventCollectorUnitTestMiddleware"
+              disableCertificateValidation="true">
+            <PatternLayout pattern="%m"/>
+        </Http>
     </Appenders>
     <!-- Define a logger named 'splunk.logger' which writes to the socket appender we defined above. -->
     <Loggers>
@@ -39,6 +50,11 @@ under the License.
         <Logger name="splunk.logger" level="info">
             <AppenderRef ref="socket"/>
         </Logger>
+        
+        <Logger name="splunk.log4j" level="info">
+            <AppenderRef ref="http-input"/>
+        </Logger>
+
     </Loggers>
 
 </Configuration>

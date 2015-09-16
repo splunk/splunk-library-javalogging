@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<configuration>
+
+    <Appender name="%user_logger_name%" class="com.splunk.logging.HttpEventCollectorLogbackAppender">
+        <url>%scheme%://%host%:8088</url>
+        <token>%user_httpEventCollector_token%</token>
+        <index>%user_index%</index>
+        <source>splunktest_accept</source>
+        <sourcetype>battlecat_test</sourcetype>
+        <disableCertificateValidation>true</disableCertificateValidation>
+        <batch_interval>%user_batch_interval%</batch_interval>
+        <batch_size_bytes>%user_batch_size_bytes%</batch_size_bytes>
+        <batch_size_count>%user_batch_size_count%</batch_size_count>
+        <send_mode>%user_send_mode%</send_mode>
+
+        <layout class="ch.qos.logback.classic.PatternLayout">
+            <pattern>%msg</pattern>
+        </layout>
+    </Appender>
+
+    <logger name ="%user_logger_name%" level="debug">
+        <appender-ref ref="%user_logger_name%" />
+    </logger>
+
+</configuration>

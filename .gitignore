@@ -1,6 +1,8 @@
+.DS_Store
 *~
 .idea
 target
 *.iml
 pom.xml.old
+pom.xml.orig
 TODOS

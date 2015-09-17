@@ -58,27 +58,31 @@ Log4j and Logback are thread-safe.
 ### Sending events to HTTP Event Collector
 
 HTTP Event Collector requires Splunk 6.3+. Splunk Java library supports sending
-events through *java.util.logging*, *log4j* and *logback* standard loggers. 
+events through `java.util.logging`, `log4j` and `logback` standard loggers. 
 In order to use HTTP Event Collector it has to be enabled on the server and an 
 application token should be created.
 
 Splunk logging library for Java includes several examples of configuration files in 
-*src/test/resources* folder.  For instance *java.util.logging* configuration looks like:
+`src/test/resources` folder.  For instance `java.util.logging` configuration looks like:
+
 ```
 handlers=com.splunk.logging.HttpEventCollectorLoggingHandler
 com.splunk.logging.HttpEventCollectorLoggingHandler.url=https://splunk-server:8088
 com.splunk.logging.HttpEventCollectorLoggingHandler.token=<token-guid>
 ```
+
 Sending events is simple:
+
 ```java
 Logger LOGGER = java.util.logging.Logger.getLogger("splunk.java.util");
 LOGGER.info("hello world");
 ```
+
 For more information, see http://dev.splunk.com/view/SP-CAAAE2K.
 
 # License
 
-The Splunk Java Logging Framework is licensed under the Apache License 2.0.
+The Splunk logging for Java is licensed under the Apache License 2.0.
 
 Details can be found in the LICENSE file.
 

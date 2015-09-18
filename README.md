@@ -1,5 +1,7 @@
 # Splunk Logging for Java
 
+#### Version 1.5.0
+
 This project provides utilities to easily log data using Splunk's recommended 
 best practices to any supported logger, using any of the three major Java 
 logging frameworks (Logback, Log4J 2, and java.util.logging), and to Splunk TCP 

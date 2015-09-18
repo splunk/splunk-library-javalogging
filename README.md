@@ -7,7 +7,7 @@ inputs.
 
 In particular, it provides:
 
-* The **SplunkCimLogEvent** class, which encapsulates the CIM (Common 
+* The `SplunkCimLogEvent` class, which encapsulates the CIM (Common 
   Information Model) in Splunk Enterprise and best practices for semantic 
   logging.
 * A TCP appender for Logback, which is the only one of the three frameworks 
@@ -25,7 +25,7 @@ Forwarder, and added robustness from having persistent files. However, there
 are situations where using a Universal Forwarder is not a possibility. In 
 these cases, writing directly to a TCP input is a reasonable approach.
 
-In either scenario, we recommend using the **SplunkCimLogEvent** class 
+In either scenario, we recommend using the `SplunkCimLogEvent` class 
 provided by this library to construct your log events according to Splunk's 
 recommended best practices.
 
@@ -82,7 +82,7 @@ For more information, see http://dev.splunk.com/view/SP-CAAAE2K.
 
 # License
 
-The Splunk logging for Java is licensed under the Apache License 2.0.
+Splunk logging for Java is licensed under the Apache License 2.0.
 
 Details can be found in the LICENSE file.
 
@@ -91,7 +91,7 @@ Details can be found in the LICENSE file.
 To use the Splunk Logging for Java library, you will need to add it and the 
 logging library you have chosen to use to your project, open a TCP input on a 
 Splunk instance to write your log events to, configure your logging system, 
-and then use the **SplunkCimLogEvent** class to generate well formed log 
+and then use the `SplunkCimLogEvent` class to generate well formed log 
 entries.
 
 1. Add the Splunk Logging for Java library to your project. If you are using 
@@ -111,7 +111,7 @@ entries.
 2. Add the logging framework you plan to use. The three big ones in use today 
    are *Logback*, *Log4J 2.x*, and *java.util.logging* (which comes with your 
    JDK). If you are using Maven, add the corresponding dependencies below to 
-   your **pom.xml**:
+   your `pom.xml`:
 
     * Logback:
 
@@ -148,7 +148,7 @@ entries.
    [Get data from TCP and UDP ports](http://docs.splunk.com/Documentation/Splunk/latest/Data/Monitornetworkports).
 
 4. Configure your logging system. Here are simple example configurations for 
-   each of the three systems. The **log4j2.xml** and **logback.xml** files 
+   each of the three systems. The `log4j2.xml` and `logback.xml` files 
    should be put somewhere in the classpath of your program. 
    jdklogging.properties should be specified to your program by passing the 
    following to the Java executable:
@@ -157,7 +157,7 @@ entries.
    -Djava.util.logging.config.file=/path/to/jdklogging.properties
    ```
 
-   * Logback (to be put in **logback.xml** on the classpath)
+   * Logback (to be put in `logback.xml` on the classpath)
 
     ```xml
     <configuration>
@@ -201,7 +201,7 @@ entries.
     </configuration>
     ```
 
-   * Log4j 2.x (to be put in **log4j2.xml** on the classpath)
+   * Log4j 2.x (to be put in `log4j2.xml` on the classpath)
 
     ```xml
     <Configuration status="info" name="example" packages="">
@@ -267,9 +267,9 @@ entries.
     java.util.logging.SimpleFormatter.format = "%1$F %1$r %4$s: %6$s%n"
     ```
 
-5. Import **com.splunk.logging.SplunkCimLogEvent** and use it to create 
+5. Import `com.splunk.logging.SplunkCimLogEvent` and use it to create 
    events. This example code uses Logback as the logger, but the part 
-   relevant to **SplunkCimLogEvent** will be unchanged for other frameworks:
+   relevant to `SplunkCimLogEvent` will be unchanged for other frameworks:
 
    ```java
     logger.info(new SplunkCimLogEvent("Event name", "event-id") {{
@@ -333,7 +333,7 @@ inputs.
 
 In particular, it provides:
 
-* The **SplunkCimLogEvent** class, which encapsulates the CIM (Common 
+* The `SplunkCimLogEvent` class, which encapsulates the CIM (Common 
   Information Model) in Splunk Enterprise and best practices for semantic 
   logging.
 * A TCP appender for Logback, which is the only one of the three frameworks 
@@ -351,7 +351,7 @@ Forwarder, and added robustness from having persistent files. However, there
 are situations where using a Universal Forwarder is not a possibility. In 
 these cases, writing directly to a TCP input is a reasonable approach.
 
-In either scenario, we recommend using the **SplunkCimLogEvent** class 
+In either scenario, we recommend using the `SplunkCimLogEvent` class 
 provided by this library to construct your log events according to Splunk's 
 recommended best practices.
 
@@ -417,7 +417,7 @@ Details can be found in the LICENSE file.
 To use the Splunk Logging for Java library, you will need to add it and the 
 logging library you have chosen to use to your project, open a TCP input on a 
 Splunk instance to write your log events to, configure your logging system, 
-and then use the **SplunkCimLogEvent** class to generate well formed log 
+and then use the `SplunkCimLogEvent` class to generate well formed log 
 entries.
 
 1. Add the Splunk Logging for Java library to your project. If you are using 
@@ -437,7 +437,7 @@ entries.
 2. Add the logging framework you plan to use. The three big ones in use today 
    are *Logback*, *Log4J 2.x*, and *java.util.logging* (which comes with your 
    JDK). If you are using Maven, add the corresponding dependencies below to 
-   your **pom.xml**:
+   your `pom.xml`:
 
     * Logback:
 
@@ -474,7 +474,7 @@ entries.
    [Get data from TCP and UDP ports](http://docs.splunk.com/Documentation/Splunk/latest/Data/Monitornetworkports).
 
 4. Configure your logging system. Here are simple example configurations for 
-   each of the three systems. The **log4j2.xml** and **logback.xml** files 
+   each of the three systems. The `log4j2.xml` and `logback.xml` files 
    should be put somewhere in the classpath of your program. 
    jdklogging.properties should be specified to your program by passing the 
    following to the Java executable:
@@ -483,7 +483,7 @@ entries.
    -Djava.util.logging.config.file=/path/to/jdklogging.properties
    ```
 
-   * Logback (to be put in **logback.xml** on the classpath)
+   * Logback (to be put in `logback.xml` on the classpath)
 
     ```xml
     <configuration>
@@ -527,7 +527,7 @@ entries.
     </configuration>
     ```
 
-   * Log4j 2.x (to be put in **log4j2.xml** on the classpath)
+   * Log4j 2.x (to be put in `log4j2.xml` on the classpath)
 
     ```xml
     <Configuration status="info" name="example" packages="">
@@ -593,9 +593,9 @@ entries.
     java.util.logging.SimpleFormatter.format = "%1$F %1$r %4$s: %6$s%n"
     ```
 
-5. Import **com.splunk.logging.SplunkCimLogEvent** and use it to create 
+5. Import `com.splunk.logging.SplunkCimLogEvent` and use it to create 
    events. This example code uses Logback as the logger, but the part 
-   relevant to **SplunkCimLogEvent** will be unchanged for other frameworks:
+   relevant to `SplunkCimLogEvent` will be unchanged for other frameworks:
 
    ```java
     logger.info(new SplunkCimLogEvent("Event name", "event-id") {{

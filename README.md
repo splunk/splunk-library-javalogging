@@ -423,7 +423,7 @@ entries.
 1. Add the Splunk Logging for Java library to your project. If you are using 
    Maven, add the following to your dependencies section:
 
-    ```
+    ```xml
     <dependency>
         <groupId>com.splunk.dev</groupId>
         <artifactId>splunk-library-javalogging</artifactId>
@@ -460,12 +460,12 @@ entries.
     ```
     * Log4J 2.x:
 
-    ```
-        <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-core</artifactId>
-            <version>2.0-beta9</version>
-        </dependency>
+    ```xml
+    <dependency>
+        <groupId>org.apache.logging.log4j</groupId>
+        <artifactId>log4j-core</artifactId>
+        <version>2.0-beta9</version>
+    </dependency>
     ```
     
     * java.util.logging ships with the JDK.

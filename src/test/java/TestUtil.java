@@ -79,15 +79,24 @@ public class TestUtil {
 
     public static Service connectToSplunk() throws IOException {
 
-        if (service == null) {
-            getSplunkHostInfo();
+        int retry = 0;
+        while (true) {
+            try {
 
-            //get splunk service and login
-            service = Service.connect(serviceArgs);
-            service.login();
+                if (service == null) {
+                    getSplunkHostInfo();
+
+                    service = Service.connect(serviceArgs);
+                    service.login();
+                }
+
+                return service;
+            } catch (IOException ex) {
+                retry++;
+                if (retry > 5)
+                    throw ex;
+            }
         }
-
-        return service;
     }
 
     public static void createIndex(String indexName) throws Exception {

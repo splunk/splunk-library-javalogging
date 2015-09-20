@@ -55,13 +55,7 @@ public class HttpLoggerStressTest {
 
     private static int getEventsCount(String searchQuery) throws IOException, InterruptedException {
         //connect to localhost
-        serviceArgs = new ServiceArgs();
-        serviceArgs.setUsername("admin");
-        serviceArgs.setPassword("changeme");
-        serviceArgs.setHost("127.0.0.1");
-        serviceArgs.setPort(8089);
-        serviceArgs.setScheme("https");
-        Service service = Service.connect(serviceArgs);
+        Service service = TestUtil.connectToSplunk();
         service.login();
 
         // Check the syntax of the query.
@@ -103,13 +97,7 @@ public class HttpLoggerStressTest {
 
     private static void setupHttpEventCollector() throws Exception {
         //connect to localhost
-        serviceArgs = new ServiceArgs();
-        serviceArgs.setUsername("admin");
-        serviceArgs.setPassword("changeme");
-        serviceArgs.setHost("127.0.0.1");
-        serviceArgs.setPort(8089);
-        serviceArgs.setScheme("https");
-        Service service = Service.connect(serviceArgs);
+        Service service = TestUtil.connectToSplunk();
         service.login();
 
         //enable logging endpoint

@@ -69,6 +69,8 @@ public class TestUtil {
                 }
             }
         }
+        // Use TLSv1 intead of SSLv3
+        serviceArgs.setSSLSecurityProtocol(SSLSecurityProtocol.TLSv1);
     }
 
     public static void resetConnection() {

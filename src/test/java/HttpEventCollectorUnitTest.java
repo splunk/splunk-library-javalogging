@@ -27,13 +27,25 @@ import org.junit.Test;
 import sun.rmi.runtime.Log;
 
 import java.io.ByteArrayInputStream;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.logging.LogManager;
+import java.util.logging.Logger;
 
 public class HttpEventCollectorUnitTest {
     @Test
-    public void log4j_simple() {
-        org.apache.logging.log4j.Logger LOG4J = org.apache.logging.log4j.LogManager.getLogger("splunk.log4j");
+    public void log4j_simple() throws Exception {
+        HashMap<String, String> userInputs = new HashMap<String, String>();
+        String loggerName = "splunk.log4jSimple";
+        userInputs.put("user_logger_name", loggerName);
+        userInputs.put("user_httpEventCollector_token", "11111111-2222-3333-4444-555555555555");
+        userInputs.put("user_middleware", "HttpEventCollectorUnitTestMiddleware");
+        userInputs.put("user_batch_size_count", "1");
+        userInputs.put("user_batch_size_bytes", "0");
+        TestUtil.resetLog4j2Configuration("log4j2_template.xml", "log4j2.xml", userInputs);
+        org.apache.logging.log4j.Logger LOG4J = org.apache.logging.log4j.LogManager.getLogger(loggerName);
+
         // send 3 events
         HttpEventCollectorUnitTestMiddleware.eventsReceived = 0;
         HttpEventCollectorUnitTestMiddleware.io = new HttpEventCollectorUnitTestMiddleware.IO() {
@@ -47,12 +59,21 @@ public class HttpEventCollectorUnitTest {
         LOG4J.info("hello log4j");
         LOG4J.info("hello log4j");
         LOG4J.info("hello log4j");
+        if (HttpEventCollectorUnitTestMiddleware.eventsReceived == 0)
+            sleep(15000);
         Assert.assertTrue(HttpEventCollectorUnitTestMiddleware.eventsReceived == 3);
     }
 
     @Test
-    public void logback_simple() {
-        org.slf4j.Logger LOGBACK = org.slf4j.LoggerFactory.getLogger("splunk.logback");
+    public void logback_simple() throws Exception {
+        HashMap<String, String> userInputs = new HashMap<String, String>();
+        String loggerName = "splunk.logback";
+        userInputs.put("user_logger_name", loggerName);
+        userInputs.put("user_httpEventCollector_token", "11111111-2222-3333-4444-555555555555");
+        userInputs.put("user_middleware", "HttpEventCollectorUnitTestMiddleware");
+        TestUtil.resetLogbackConfiguration("logback_template.xml", "logback.xml", userInputs);
+        org.slf4j.Logger LOGBACK = org.slf4j.LoggerFactory.getLogger(loggerName);
+
         // send 3 events
         HttpEventCollectorUnitTestMiddleware.eventsReceived = 0;
         HttpEventCollectorUnitTestMiddleware.io = new HttpEventCollectorUnitTestMiddleware.IO() {

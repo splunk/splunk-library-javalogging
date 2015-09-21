@@ -100,7 +100,7 @@ public class HttpEventCollector_Test {
         LogToSplunk(true);
     }
 
-    public  static boolean exceptionWasRaised = false;
+    public  static volatile boolean exceptionWasRaised = false;
     @Test
     public void TryToLogToSplunkWithDisabledHttpEventCollector() throws Exception {
         HttpEventCollectorErrorHandler.onError(new HttpEventCollectorErrorHandler.ErrorCallback() {
@@ -121,7 +121,7 @@ public class HttpEventCollector_Test {
         System.out.printf("set\n");
 
         //modify the config file with the generated token
-        String loggerName = "splunkLogger";
+        String loggerName = "splunkLogger_disabled";
         HashMap<String, String> userInputs = new HashMap<String, String>();
         userInputs.put("user_httpEventCollector_token", token);
         if (batching) {
@@ -132,17 +132,18 @@ public class HttpEventCollector_Test {
         userInputs.put("user_logger_name", loggerName);
         TestUtil.resetJavaLoggingConfiguration("logging_template.properties", "logging.properties", userInputs);
         TestUtil.disableHttpEventCollector();
-        Thread.sleep(2000);
+        Thread.sleep(5000);
 
         // HTTP event collector is disabled now, expect exception to be raised and reported
         java.util.logging.Logger LOGGER = java.util.logging.Logger.getLogger(loggerName);
         for (int i = 0; i < expectedCounter; i++) {
             LOGGER.info(String.format("javautil message%d", i));
         }
-
-        Thread.sleep(5000);
+        if (!exceptionWasRaised) {
+            Thread.sleep(15000);
+        }
         Assert.assertTrue(exceptionWasRaised);
-        System.out.printf("PASSED.\n\n");
+        System.out.printf("PASSED with %d events sent.\n\n", expectedCounter);
     }
 
     private boolean insertDataWithLoggerAndVerify(String token, String loggerType, int expectedCounter, boolean batching) throws IOException, InterruptedException, JoranException {
@@ -158,7 +159,7 @@ public class HttpEventCollector_Test {
         }
 
         if (loggerType == "log4j") {
-            String loggerName = "splunk.log4j";
+            String loggerName = "splunk.log4jInsertVerify";
             userInputs.put("user_logger_name", loggerName);
             org.apache.logging.log4j.core.LoggerContext context = TestUtil.resetLog4j2Configuration("log4j2_template.xml", "log4j2.xml", userInputs);
             org.apache.logging.log4j.Logger LOG4J = context.getLogger(loggerName);
@@ -177,7 +178,7 @@ public class HttpEventCollector_Test {
             }
         }
         if (loggerType == "javautil") {
-            String loggerName = "splunkLogger";
+            String loggerName = batching?"splunkLogger_batching":"splunkLogger_nobatching";
             userInputs.put("user_logger_name", loggerName);
             TestUtil.resetJavaLoggingConfiguration("logging_template.properties", "logging.properties", userInputs);
             java.util.logging.Logger LOGGER = java.util.logging.Logger.getLogger(loggerName);
@@ -188,10 +189,10 @@ public class HttpEventCollector_Test {
         System.out.printf("Done\n");
         // Wait for indexing to complete
         Thread.sleep(10000);
-        waitForIndexingToComplete(startTime);
+        String searchQuery = String.format("search %s earliest=%d| stats count", loggerType, startTime);
+        waitForIndexingToComplete(searchQuery, expectedCounter);
         Boolean testPassed = true;
-        String arguments = String.format("search %s earliest=%d| stats count", loggerType, startTime);
-        int eventCount = getEventsCount(arguments);
+        int eventCount = getEventsCount(searchQuery);
         System.out.printf("\tLogger: '%s', expected %d events, actually %d, %s\r\n", loggerType, expectedCounter, eventCount, (eventCount == expectedCounter) ? "Passed." : "Failed.");
         return (eventCount == expectedCounter);
     }
@@ -217,19 +218,19 @@ public class HttpEventCollector_Test {
         System.out.printf("PASSED.\n\n");
     }
 
-    private void waitForIndexingToComplete(long startTime) throws IOException, InterruptedException {
-        int eventCount = getEventsCount(String.format("search earliest=%d| stats count", startTime));
-        for (int i = 0; i < 10; i++) {
-            do {
-                System.out.printf("\tWaiting for indexing to complete, %d events so far\r\n", eventCount);
-                Thread.sleep(5000);
-                int updatedEventCount = getEventsCount(String.format("search earliest=%d| stats count", startTime));
-                if (updatedEventCount == eventCount)
-                    break;
-                eventCount = updatedEventCount;
-            } while (true);
-            System.out.printf("\tCompleted wait for iteration %d\r\n", i);
+    private void waitForIndexingToComplete(String query, int expectedCounter) throws IOException, InterruptedException {
+        int eventCount = getEventsCount(query);
+        System.out.printf("\tStarting wait on index. %d events expected with query '%s'.\r\n", expectedCounter, query);
+        for (int i = 0; i < 12; i++) {
+            if (eventCount == expectedCounter) {
+                System.out.printf("\tDone waiting for indexing with %d events. All events were found.\r\n", eventCount);
+                return;
+            }
+            System.out.printf("\tWaiting for indexing, %d events so far\r\n", eventCount);
+            Thread.sleep(5000);
+            eventCount = getEventsCount(query);
         }
+        System.out.printf("\tFailed to wait to find %d events, %d were found instead.\r\n", expectedCounter, eventCount);
     }
 
     private static class DataSender implements Runnable {
@@ -279,7 +280,7 @@ public class HttpEventCollector_Test {
         userInputs.put("user_httpEventCollector_token", token);
         userInputs.put("user_retries_on_error", "1000");
 
-        String loggerName = "splunkLogger";
+        String loggerName = "splunkLogger_resend";
         userInputs.put("user_logger_name", loggerName);
         TestUtil.resetJavaLoggingConfiguration("logging_template.properties", "logging.properties", userInputs);
         java.util.logging.Logger LOGGER = java.util.logging.Logger.getLogger(loggerName);
@@ -295,10 +296,10 @@ public class HttpEventCollector_Test {
         tSend.join();
         TestUtil.resetConnection();
         int expectedCounter = ds.eventsGenerated;
-        String arguments = String.format("search %s earliest=%d| stats count", "javautil", startTime);
-        System.out.printf("\tWill search data using this query '%s'. Expected counter is %d\r\n", arguments, expectedCounter);
-        waitForIndexingToComplete(startTime);
-        int eventCount = getEventsCount(arguments);
+        String searchQuery = String.format("search %s earliest=%d| stats count", "javautil", startTime);
+        System.out.printf("\tWill search data using this query '%s'. Expected counter is %d\r\n", searchQuery, expectedCounter);
+        waitForIndexingToComplete(searchQuery, expectedCounter);
+        int eventCount = getEventsCount(searchQuery);
         System.out.printf("\tLogger: '%s', expected %d events, actually %d, %s\r\n", "javautil", expectedCounter, eventCount, (eventCount == expectedCounter) ? "Passed." : "Failed.");
         Assert.assertEquals(eventCount, expectedCounter);
         System.out.printf("PASSED.\n\n");

@@ -64,7 +64,7 @@ events through `java.util.logging`, `log4j` and `logback` standard loggers.
 In order to use HTTP Event Collector it has to be enabled on the server and an 
 application token should be created.
 
-Splunk logging library for Java includes several examples of configuration files in 
+Splunk Logging for Java includes several examples of configuration files in 
 `src/test/resources` folder.  For instance `java.util.logging` configuration looks like:
 
 ```
@@ -390,7 +390,7 @@ events through `java.util.logging`, `log4j` and `logback` standard loggers.
 In order to use HTTP Event Collector it has to be enabled on the server and an 
 application token should be created.
 
-Splunk logging library for Java includes several examples of configuration files in 
+Splunk Logging for Java includes several examples of configuration files in 
 `src/test/resources` folder.  For instance `java.util.logging` configuration looks like:
 
 ```
@@ -410,7 +410,7 @@ For more information, see http://dev.splunk.com/view/SP-CAAAE2K.
 
 # License
 
-The Splunk logging for Java is licensed under the Apache License 2.0.
+The Splunk Logging for Java is licensed under the Apache License 2.0.
 
 Details can be found in the LICENSE file.
 

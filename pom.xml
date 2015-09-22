@@ -179,7 +179,7 @@
       <dependency>
           <groupId>com.splunk</groupId>
           <artifactId>splunk</artifactId>
-          <version>1.3.2.0</version>
+          <version>1.5.0.0</version>
       </dependency>
 
       <dependency>

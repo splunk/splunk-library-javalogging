@@ -14,6 +14,7 @@
               batch_size_count="%user_batch_size_count%"
               disableCertificateValidation="true"
               send_mode="%user_send_mode%"
+              middleware="%user_middleware%"
                 >
 
             <PatternLayout pattern="%m"/>

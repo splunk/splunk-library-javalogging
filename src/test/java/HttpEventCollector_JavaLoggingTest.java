@@ -38,7 +38,7 @@ public final class HttpEventCollector_JavaLoggingTest {
 
         String token = TestUtil.createHttpEventCollectorToken(httpEventCollectorName);
 
-        String loggerName = "splunkLogger";
+        String loggerName = "splunkLoggerNoOptions";
         HashMap<String, String> userInputs = new HashMap<String, String>();
         userInputs.put("user_httpEventCollector_token", token);
         userInputs.put("user_logger_name", loggerName);
@@ -62,7 +62,7 @@ public final class HttpEventCollector_JavaLoggingTest {
     public void canSendEventUsingJavaLoggingWithOptions() throws Exception {
         String token = TestUtil.createHttpEventCollectorToken(httpEventCollectorName);
 
-        String loggerName = "splunkLogger";
+        String loggerName = "splunkLoggerWithOptions";
         HashMap<String, String> userInputs = new HashMap<String, String>();
         userInputs.put("user_httpEventCollector_token", token);
         userInputs.put("user_logger_name", loggerName);
@@ -129,7 +129,7 @@ public final class HttpEventCollector_JavaLoggingTest {
         loggerName = "splunkBatchLoggerCount";
         userInputs.clear();
         userInputs.put("user_httpEventCollector_token", token);
-        //userInputs.put("user_batch_interval","0");
+        userInputs.put("user_batch_interval","0");
         userInputs.put("user_batch_size_count", "5");
         userInputs.put("user_logger_name", loggerName);
         userInputs.put("user_source", "splunktest_BatchCount");
@@ -184,7 +184,7 @@ public final class HttpEventCollector_JavaLoggingTest {
         String loggerName = "splunkBatchLoggerSize";
         HashMap<String, String> userInputs = new HashMap<String, String>();
         userInputs.put("user_httpEventCollector_token", token);
-        //userInputs.put("user_batch_interval","0");
+        userInputs.put("user_batch_interval","0");
         userInputs.put("user_batch_size_bytes", "500");
         userInputs.put("user_logger_name", loggerName);
         userInputs.put("user_source", "splunktest_BatchSize");
@@ -240,7 +240,7 @@ public final class HttpEventCollector_JavaLoggingTest {
 
         //create a token used for httpEventCollector logging, then make it becomes invalid
         String token = TestUtil.createHttpEventCollectorToken(httpEventCollectorName);
-        String loggerName = "wrongToken";
+        String loggerName = "errorHandlingInvalidToken";
         HashMap<String, String> userInputs = new HashMap<String, String>();
         userInputs.put("user_logger_name", loggerName);
         userInputs.put("user_httpEventCollector_token", token);
@@ -249,11 +249,14 @@ public final class HttpEventCollector_JavaLoggingTest {
 
         //disable the token so that it becomes invalid
         TestUtil.disableHttpEventCollector(httpEventCollectorName);
+        Thread.sleep(5000);
         String jsonMsg = String.format("{EventDate:%s, EventMsg:'test event disabled token }", new Date().toString());
         logger.info(jsonMsg);
+        Thread.sleep(2000);
 
         //delete the token so that it becomes invalid
         TestUtil.deleteHttpEventCollectorToken(httpEventCollectorName);
+        Thread.sleep(5000);
         jsonMsg = String.format("{EventDate:%s, EventMsg:'test event deleted token}", new Date().toString());
         logger.info(jsonMsg);
 
@@ -271,7 +274,7 @@ public final class HttpEventCollector_JavaLoggingTest {
 
         System.out.println("======print logEx");
         System.out.println(logEx.toString());
-        System.out.println("======finsih print logEx");
+        System.out.println("======finish print logEx");
         Assert.assertEquals("Invalid token", logEx.get(1).getErrorText());
         Assert.assertEquals(4, logEx.get(1).getErrorCode());
 
@@ -327,18 +330,11 @@ public final class HttpEventCollector_JavaLoggingTest {
 
         if (logEx == null)
             Assert.fail("didn't catch errors");
+        Assert.assertEquals(1, errors.size());
 
         System.out.println(logEx.toString());
-        Assert.assertEquals(1, logEx.get(0).getErrorCode());
-        Assert.assertTrue(logEx.get(0).getErrorText().contains("Token disabled"));
-
-        for (List<HttpEventCollectorEventInfo> infos : errors) {
-            for (HttpEventCollectorEventInfo info : infos) {
-                System.out.println(info.getMessage());
-            }
-        }
-
-        Assert.assertEquals(1, errors.size());
+        if(!logEx.toString().contains("Connection refused"))
+            Assert.fail(String.format("Unexpected error message '%s'", logEx.toString()));
     }
 
 
@@ -357,7 +353,7 @@ public final class HttpEventCollector_JavaLoggingTest {
         String token = TestUtil.createHttpEventCollectorToken(httpEventCollectorName);
 
         //clean out the events cache by setting send events immediately
-        String loggerName = "splunkLoggerCountCleanCache";
+        String loggerName = "splunkLoggerqueueEventsCleanCache";
         HashMap<String, String> userInputs = new HashMap<String, String>();
         userInputs.put("user_httpEventCollector_token", token);
         userInputs.put("user_logger_name", loggerName);

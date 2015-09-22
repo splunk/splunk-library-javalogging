@@ -22,7 +22,7 @@ public class HttpLoggerStressTest {
         public DataSender(String threadName, int testDurationInSecs) {
             this.threadName = threadName;
             this.testDurationInSecs = testDurationInSecs;
-            this.logger = LogManager.getLogger("splunkHttpLogger");
+            this.logger = LogManager.getLogger("splunkStressHttpLogger");
         }
 
         public void run() {
@@ -55,13 +55,7 @@ public class HttpLoggerStressTest {
 
     private static int getEventsCount(String searchQuery) throws IOException, InterruptedException {
         //connect to localhost
-        serviceArgs = new ServiceArgs();
-        serviceArgs.setUsername("admin");
-        serviceArgs.setPassword("changeme");
-        serviceArgs.setHost("127.0.0.1");
-        serviceArgs.setPort(8089);
-        serviceArgs.setScheme("https");
-        Service service = Service.connect(serviceArgs);
+        Service service = TestUtil.connectToSplunk();
         service.login();
 
         // Check the syntax of the query.
@@ -102,81 +96,13 @@ public class HttpLoggerStressTest {
     private static String httpEventCollectorName = "stressHttpEventCollector";
 
     private static void setupHttpEventCollector() throws Exception {
-        //connect to localhost
-        serviceArgs = new ServiceArgs();
-        serviceArgs.setUsername("admin");
-        serviceArgs.setPassword("changeme");
-        serviceArgs.setHost("127.0.0.1");
-        serviceArgs.setPort(8089);
-        serviceArgs.setScheme("https");
-        Service service = Service.connect(serviceArgs);
-        service.login();
-
-        //enable logging endpoint
-        Map args = new HashMap();
-        args.put("disabled", 0);
-        service.post("/servicesNS/admin/search/data/inputs/http/http", args);
-
-        //create an httpEventCollector
-        args = new HashMap();
-        args.put("name", httpEventCollectorName);
-        args.put("description", "test http event collector");
-
-        try {
-            service.delete("/services/data/inputs/http/" + httpEventCollectorName);
-        } catch (Exception e) {
-        }
-
-        service.post("/services/data/inputs/http", args);
-
-        args = new HashMap();
-        ResponseMessage response = service.get("/services/data/inputs/http/" + httpEventCollectorName, args);
-        BufferedReader reader = new BufferedReader(new InputStreamReader(response.getContent(), "UTF-8"));
-        String token = "";
-        while (true) {
-            String line = reader.readLine();
-            if (line == null) break;
-
-            if (line.contains("name=\"token\"")) {
-                token = line.split(">")[1];
-                token = token.split("<")[0];
-                break;
-            }
-        }
-        reader.close();
-
-        //modify the config file with the generated token
-        String configFileDir = HttpLoggerStressTest.class.getProtectionDomain().getCodeSource().getLocation().getPath();
-        String configFilePath = new File(configFileDir, "log4j2.xml").getPath();
-
-        FileWriter fw = new FileWriter(configFilePath);
-        fw.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n");
-        fw.write("<Configuration status=\"info\" name=\"example\" packages=\"com.splunk.logging\">\r\n");
-        fw.write("    <!--need the \"token=...\" line to be a single line for parsing purpose-->\r\n");
-        fw.write("    <Appenders>\r\n");
-        fw.write("        <Http name=\"Http\"\r\n");
-        fw.write("              url=\"https://127.0.0.1:8088/services/collector\"\r\n");
-        fw.write("              index=\"\"\r\n");
-        fw.write(String.format("              token=\"%s\"\r\n", token));
-        fw.write("              disableCertificateValidation=\"true\"\r\n");
-        //fw.write("              batch_interval=\"250\"\r\n");
-        //fw.write("              batch_size_count=\"500\"\r\n");
-        //fw.write("              batch_size_bytes=\"512\"\r\n");
-        fw.write("              source=\"splunktest\" sourcetype=\"battlecat\">\r\n");
-        fw.write("            <PatternLayout pattern=\"%m\"/>\r\n");
-        fw.write("        </Http>\r\n");
-        fw.write("    </Appenders>\r\n");
-        fw.write("    <loggers>\r\n");
-        fw.write("        <root level=\"debug\"/>\r\n");
-        fw.write("        <logger name =\"splunkHttpLogger\" level=\"INFO\">\r\n");
-        fw.write("            <appender-ref ref=\"Http\" />\r\n");
-        fw.write("        </logger>\r\n");
-        fw.write("    </loggers>\r\n");
-        fw.write("</Configuration>");
-
-        fw.flush();
-        fw.close();
-        addPath(configFilePath);
+        String token = TestUtil.createHttpEventCollectorToken(httpEventCollectorName);
+        String loggerName = "splunkStressHttpLogger";
+        HashMap<String, String> userInputs = new HashMap<String, String>();
+        userInputs.put("user_logger_name", loggerName);
+        userInputs.put("user_httpEventCollector_token", token);
+        userInputs.put("user_batch_size_count", "1");
+        TestUtil.resetLog4j2Configuration("log4j2_template.xml", "log4j2.xml", userInputs);
     }
 
     @Test
@@ -184,7 +110,7 @@ public class HttpLoggerStressTest {
         long startTime = System.currentTimeMillis()/1000;
         Thread.sleep(2000);
         int numberOfThreads = 1;
-        int testDurationInSecs = 300;
+        int testDurationInSecs = 60;
 
         System.out.printf("\tSetting up http event collector ... ");
         setupHttpEventCollector();
@@ -199,19 +125,29 @@ public class HttpLoggerStressTest {
             t.start();
         for (Thread t : tList)
             t.join();
-        System.out.printf("Done.\r\n");
+        int eventsGenerated = 0;
+        for(int i=0;i<numberOfThreads;i++)
+            eventsGenerated += dsList[i].eventsGenerated;
+        System.out.printf("Done. %d Events were generated\r\n", eventsGenerated);
         // Wait for indexing to complete
-        int eventCount = getEventsCount(String.format("search earliest=%d| stats count", startTime));
-        for(int i=0; i<4; i++) {
-            do {
-                System.out.printf("\tWaiting for indexing to complete, %d events so far\r\n", eventCount);
-                Thread.sleep(10000);
-                int updatedEventCount = getEventsCount(String.format("search earliest=%d| stats count", startTime));
-                if (updatedEventCount == eventCount)
-                    break;
-                eventCount = updatedEventCount;
-            } while (true);
-            System.out.printf("\tCompleted wait for iteration %d\r\n", i);
+        String query = String.format("search earliest=%d| stats count", startTime);
+        int eventCount = getEventsCount(query);
+        if(eventCount == eventsGenerated) {
+            System.out.printf("Looks like all events were indexed.\r\n");
+        }
+        else {
+            System.out.printf("Waiting for events indexing using query '%s'\r\n", query);
+            for (int i = 0; i < 18 && eventCount != eventsGenerated; i++) {
+                do {
+                    System.out.printf("\tWaiting for indexing to complete, %d events so far\r\n", eventCount);
+                    Thread.sleep(10000);
+                    int updatedEventCount = getEventsCount(query);
+                    if (updatedEventCount == eventCount)
+                        break;
+                    eventCount = updatedEventCount;
+                } while (true);
+                System.out.printf("\tCompleted wait for iteration %d\r\n", i);
+            }
         }
         Boolean testPassed = true;
         for (int i = 0; i < numberOfThreads; i++) {

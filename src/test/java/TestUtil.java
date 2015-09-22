@@ -69,6 +69,8 @@ public class TestUtil {
                 }
             }
         }
+        // Use TLSv1 intead of SSLv3
+        serviceArgs.setSSLSecurityProtocol(SSLSecurityProtocol.TLSv1);
     }
 
     public static void resetConnection() {
@@ -124,6 +126,7 @@ public class TestUtil {
         args.put("description", "test http event collector");
 
         deleteHttpEventCollectorToken(httpEventCollectorName);
+        Thread.sleep(500);
 
         ResponseMessage msg = service.post(httpEventCollectorTokenEndpointPath, args);
         assert msg.getStatus() == 201;

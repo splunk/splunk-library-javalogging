@@ -310,19 +310,11 @@ public final class HttpEventCollector_LogbackTest {
 
         if (logEx == null)
             Assert.fail("didn't catch errors");
-
-        System.out.println(logEx.toString());
-        Assert.assertEquals(1, logEx.get(0).getErrorCode());
-        Assert.assertTrue(logEx.get(0).getErrorText().contains("Token disabled"));
-
-        for (List<HttpEventCollectorEventInfo> infos : errors) {
-            for (HttpEventCollectorEventInfo info : infos) {
-                System.out.println(info.getMessage());
-            }
-        }
-
         Assert.assertEquals(1, errors.size());
 
+        System.out.println(logEx.toString());
+        if(!logEx.toString().contains("Connection refused"))
+            Assert.fail(String.format("Unexpected error message '%s'", logEx.toString()));
     }
 
     /**

@@ -74,10 +74,20 @@ entries.
 
     ```
     <dependency>
-        <groupId>com.splunk.dev</groupId>
+        <groupId>com.splunk.logging</groupId>
         <artifactId>splunk-library-javalogging</artifactId>
-        <version>1.0.0</version>
+        <version>1.0.1</version>
     </dependency>
+    ```
+
+    You might also want to add the following repository to your repositories section:
+
+    ```
+    <repository>
+        <id>splunk</id>
+        <name>splunk-releases</name>
+        <url>http://splunk.artifactoryonline.com/splunk/ext-releases-local</url>
+    </repository>
     ```
 
    If you are using Ant, download the corresponding JAR file from 

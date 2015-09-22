@@ -126,6 +126,7 @@ public class TestUtil {
         args.put("description", "test http event collector");
 
         deleteHttpEventCollectorToken(httpEventCollectorName);
+        Thread.sleep(500);
 
         ResponseMessage msg = service.post(httpEventCollectorTokenEndpointPath, args);
         assert msg.getStatus() == 201;

@@ -252,7 +252,7 @@ public final class HttpEventCollector_LogbackTest {
 
         System.out.println("======print logEx");
         System.out.println(logEx.toString());
-        System.out.println("======finsih print logEx");
+        System.out.println("======finish print logEx");
         Assert.assertEquals("Invalid token", logEx.get(1).getErrorText());
         Assert.assertEquals(4, logEx.get(1).getErrorCode());
 

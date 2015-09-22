@@ -6,38 +6,119 @@
 
   <groupId>com.splunk.logging</groupId>
   <artifactId>splunk-library-javalogging</artifactId>
-  <version>1.0.1</version>
+  <version>1.5.0</version>
   <packaging>jar</packaging>
 
   <name>Splunk Logging for Java</name>
   <url>http://dev.splunk.com/goto/sdk-slj</url>
 
-  <description>Library for structured, semantic logging of Common Information Model compliant events, meant for use with SLF4J.</description>
+    <description>Library for structured, semantic logging of Common Information Model compliant events, meant for use with SLF4J.</description>
 
-  <build>
-    <plugins>
-        <plugin>
-            <artifactId>maven-compiler-plugin</artifactId>
-            <version>3.1</version>
-            <configuration>
-                <source>1.6</source>
-                <target>1.6</target>
-            </configuration>
-        </plugin>
-        <plugin>
-            <artifactId>maven-surefire-plugin</artifactId>
-            <configuration>
-                <systemProperties>
-                    <property>
-                        <name>java.util.logging.config.file</name>
-                        <value>${project.build.directory}/test-classes/jdklogging.properties</value>
-                    </property>
-                </systemProperties>
-            </configuration>
-        </plugin>
-    </plugins>
-  </build>
+    <properties>
+        <maven.resources.overwrite>true</maven.resources.overwrite>
+    </properties>
+    <profiles>
+        <profile>
+            <id>Default</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-compiler-plugin</artifactId>
+                        <version>3.1</version>
+                        <configuration>
+                            <source>1.6</source>
+                            <target>1.6</target>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <version>2.18.1</version>
+                        <configuration>
+                            <includes>
+                                <include>**/*.class</include>
+                            </includes>
+                            <excludes>
+                                <exclude>**/**Test.class</exclude>
+                            </excludes>
+                        </configuration>
+                    </plugin>
 
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>AcceptanceTest</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <version>2.18.1</version>
+                        <configuration>
+                            <includes>
+                                <include>**/HttpEventCollector_*.class</include>
+                            </includes>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>Unittest</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <version>2.18.1</version>
+                        <configuration>
+                            <includes>
+                                <include>**/HttpEventCollectorUnitTest.class</include>
+                            </includes>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>StressTest</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-compiler-plugin</artifactId>
+                        <version>3.1</version>
+                        <configuration>
+                            <source>1.6</source>
+                            <target>1.6</target>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <version>2.18.1</version>
+                        <configuration>
+                            <includes>
+                                <include>**/HttpLoggerStressTest.class</include>
+                            </includes>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
+
+  <repositories>
+      <repository>
+          <id>splunk-artifactory</id>
+          <name>Splunk Releases</name>
+          <url>http://splunk.artifactoryonline.com/splunk/ext-releases-local</url>
+      </repository>
+  </repositories>
 
   <dependencies>
       <dependency>
@@ -64,13 +145,57 @@
           <version>1.0.13</version>
           <scope>provided</scope>
       </dependency>
+
       <dependency>
-          <groupId>org.apache.logging.log4j</groupId>
-          <artifactId>log4j-core</artifactId>
-          <version>2.0-beta9</version>
+        <groupId>org.apache.httpcomponents</groupId>
+        <artifactId>httpclient</artifactId>
+        <version>4.3.6</version>
+       </dependency>
+       
+       <dependency>
+         <groupId>org.apache.httpcomponents</groupId>
+         <artifactId>httpasyncclient</artifactId>
+         <version>4.0</version>
+        </dependency>
+
+     <dependency>
+       <groupId>org.apache.logging.log4j</groupId>
+         <artifactId>log4j-api</artifactId>
+         <version>2.1</version>
+     </dependency>
+
+     <dependency>
+       <groupId>org.apache.logging.log4j</groupId>
+       <artifactId>log4j-core</artifactId>
+       <version>2.1</version>
+     </dependency>
+
+    <dependency>
+	    <groupId>com.googlecode.json-simple</groupId>
+	    <artifactId>json-simple</artifactId>
+	    <version>1.1.1</version>
+    </dependency>
+
+      <dependency>
+          <groupId>com.splunk</groupId>
+          <artifactId>splunk</artifactId>
+          <version>1.5.0.0</version>
+      </dependency>
+
+      <dependency>
+          <groupId>com.google.code.gson</groupId>
+          <artifactId>gson</artifactId>
+          <version>2.2.4</version>
+      </dependency>
+
+      <dependency>
+          <groupId>org.apache.commons</groupId>
+          <artifactId>commons-lang3</artifactId>
+          <version>3.0</version>
           <scope>test</scope>
       </dependency>
-  </dependencies>
+
+</dependencies>
 
   <licenses>
     <license>
@@ -107,5 +232,5 @@
     <url>https://github.com/splunk/splunk-library-javalogging</url>
   </scm>
 
-  
+
 </project>

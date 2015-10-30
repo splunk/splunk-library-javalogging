@@ -190,7 +190,7 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
         String index = metadata.get(MetadataIndexTag);
         String source = metadata.get(MetadataSourceTag);
         String sourceType = metadata.get(MetadataSourceTypeTag);
-        event.put(MetadataTimeTag, String.format("%.3f", eventInfo.getTime()));
+        event.put(MetadataTimeTag, String.format(Locale.US, "%.3f", eventInfo.getTime()));
         if (index != null && index.length() > 0)
             event.put(MetadataIndexTag, index);
         if (source  != null && source.length() > 0)

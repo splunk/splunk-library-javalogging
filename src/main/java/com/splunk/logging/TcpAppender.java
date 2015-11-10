@@ -25,6 +25,8 @@ import ch.qos.logback.core.util.CloseUtil;
 import javax.net.SocketFactory;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.net.*;
 import java.util.concurrent.*;
 
@@ -84,7 +86,7 @@ public class TcpAppender extends AppenderBase<ILoggingEvent> implements Runnable
     public void run() {
         try {
             while (!Thread.currentThread().isInterrupted()) {
-                SocketConnector connector = new DefaultSocketConnector(address, port, 0, reconnectionDelay);
+                SocketConnector connector = initSocketConnector();
                 connector.setExceptionHandler(this);
                 connector.setSocketFactory(SocketFactory.getDefault());
 
@@ -144,6 +146,57 @@ public class TcpAppender extends AppenderBase<ILoggingEvent> implements Runnable
         if (service instanceof ThreadPoolExecutor) {
             ((ThreadPoolExecutor) service).setCorePoolSize(0);
         }
+    }
+
+    private SocketConnector initSocketConnector() {
+
+        DefaultSocketConnector connector = null;
+
+        try {
+            connector = getDefaultSocketConnectorConstr().newInstance(address, port, 0, reconnectionDelay);
+        }
+
+        catch (InvocationTargetException e) {
+            throwRuntimeException(e);
+        }
+        catch (InstantiationException e) {
+            throwRuntimeException(e);
+        }
+        catch (IllegalAccessException e) {
+            throwRuntimeException(e);
+        }
+
+        return connector;
+    }
+
+    private void throwRuntimeException(Exception e) throws RuntimeException {
+        throw new RuntimeException("Could not invoke DefaultSocketConnector constructor, check your Logback version.", e);
+    }
+
+    private Constructor<DefaultSocketConnector> getDefaultSocketConnectorConstr() {
+
+        try {
+            return getLogback_1_1_version();
+        }
+        catch (NoSuchMethodException ex) {
+            // do nothing - just go on
+        }
+
+        try {
+            return getLogback_1_0_version();
+        }
+        catch (NoSuchMethodException e) {
+            throw new RuntimeException("No known DefaultSocketConnector implementation available. Check your Logback version.", e);
+        }
+
+    }
+
+    private Constructor<DefaultSocketConnector> getLogback_1_0_version() throws NoSuchMethodException {
+        return DefaultSocketConnector.class.getConstructor(InetAddress.class, Integer.TYPE, Integer.TYPE, Integer.TYPE);
+    }
+
+    private Constructor<DefaultSocketConnector> getLogback_1_1_version() throws NoSuchMethodException {
+        return DefaultSocketConnector.class.getConstructor(InetAddress.class, Integer.TYPE, Long.TYPE, Long.TYPE);
     }
 
     @Override

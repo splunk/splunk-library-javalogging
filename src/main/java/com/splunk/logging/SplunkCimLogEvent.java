@@ -18,6 +18,7 @@ package com.splunk.logging;
 
 
 import java.util.LinkedHashMap;
+import java.util.regex.Pattern;
 
 /**
  * <tt>SplunkCimLogEvent</tt> encapsulates the best practice logging semantics recommended by Splunk.
@@ -116,6 +117,7 @@ public class SplunkCimLogEvent {
         addField(THROWABLE_STACKTRACE_ELEMENTS, sb.toString());
     }
 
+    private static final Pattern DOUBLE_QUOTE = Pattern.compile("\"");
     @Override
     public String toString() {
         StringBuilder output = new StringBuilder();
@@ -130,8 +132,8 @@ public class SplunkCimLogEvent {
             String value = entries.get(key).toString();
 
             // Escape any " that appear in the key or value.
-            key = key.replaceAll("\"", "\\\\\"");
-            value = value.replaceAll("\"", "\\\\\"");
+            key = DOUBLE_QUOTE.matcher(key).replaceAll("\\\\\"");
+            value = DOUBLE_QUOTE.matcher(value).replaceAll("\\\\\"");
 
             output.append(QUOTE).append(key).append(KVDELIM).append(value).append(QUOTE);
         }

@@ -133,7 +133,7 @@ public class SplunkCimLogEvent {
             key = key.replaceAll("\"", "\\\\\"");
             value = value.replaceAll("\"", "\\\\\"");
 
-            output.append(QUOTE + key + KVDELIM + value + QUOTE);
+            output.append(QUOTE).append(key).append(KVDELIM).append(value).append(QUOTE);
         }
 
         return output.toString();

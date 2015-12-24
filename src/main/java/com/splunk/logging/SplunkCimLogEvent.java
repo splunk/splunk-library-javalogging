@@ -106,7 +106,7 @@ public class SplunkCimLogEvent {
         addField(THROWABLE_MESSAGE, throwable.getMessage());
 
         StackTraceElement[] elements = throwable.getStackTrace();
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         for (int depth = 0; depth < elements.length && depth < stacktraceDepth; depth++) {
             if (depth > 0)
                 sb.append(",");

@@ -1,6 +1,6 @@
 # Splunk Logging for Java
 
-#### Version 1.5.0
+#### Version 1.5.1
 
 This project provides utilities to easily log data using Splunk's recommended 
 best practices to any supported logger, using any of the three major Java 
@@ -104,7 +104,7 @@ entries.
     <dependency>
         <groupId>com.splunk.logging</groupId>
         <artifactId>splunk-library-javalogging</artifactId>
-        <version>1.5.0</version>
+        <version>1.5.1</version>
     </dependency>
     ```
 
@@ -440,7 +440,7 @@ entries.
     <dependency>
         <groupId>com.splunk.dev</groupId>
         <artifactId>splunk-library-javalogging</artifactId>
-        <version>1.5.0</version>
+        <version>1.5.1</version>
     </dependency>
     ```
 

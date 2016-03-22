@@ -105,6 +105,9 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
     public HttpEventCollectorLoggingHandler() {
         // read configuration settings
         Dictionary<String, String> metadata = new Hashtable<String, String>();
+        metadata.put(HttpEventCollectorSender.MetadataHostTag,
+                getConfigurationProperty(HttpEventCollectorSender.MetadataHostTag, ""));
+
         metadata.put(HttpEventCollectorSender.MetadataIndexTag,
                 getConfigurationProperty(HttpEventCollectorSender.MetadataIndexTag, ""));
 

@@ -66,6 +66,7 @@ public final class HttpEventCollector_JavaLoggingTest {
         HashMap<String, String> userInputs = new HashMap<String, String>();
         userInputs.put("user_httpEventCollector_token", token);
         userInputs.put("user_logger_name", loggerName);
+        userInputs.put("user_host", "host.example.com");
         userInputs.put("user_index", "main");
         userInputs.put("user_source", "splunktest");
         userInputs.put("user_sourcetype", "battlecat");
@@ -132,6 +133,7 @@ public final class HttpEventCollector_JavaLoggingTest {
         userInputs.put("user_batch_interval","0");
         userInputs.put("user_batch_size_count", "5");
         userInputs.put("user_logger_name", loggerName);
+        userInputs.put("user_host", "host.example.com");
         userInputs.put("user_source", "splunktest_BatchCount");
         userInputs.put("user_sourcetype", "battlecat_BatchCount");
 
@@ -187,6 +189,7 @@ public final class HttpEventCollector_JavaLoggingTest {
         userInputs.put("user_batch_interval","0");
         userInputs.put("user_batch_size_bytes", "500");
         userInputs.put("user_logger_name", loggerName);
+        userInputs.put("user_host", "host.example.com");
         userInputs.put("user_source", "splunktest_BatchSize");
         userInputs.put("user_sourcetype", "battlecat_BatchSize");
 
@@ -368,6 +371,7 @@ public final class HttpEventCollector_JavaLoggingTest {
         //userInputs.put("user_batch_interval","0");
         userInputs.put("user_batch_size_count", "5");
         userInputs.put("user_logger_name", loggerName);
+        userInputs.put("user_host", "host.example.com");
         userInputs.put("user_source", "splunktest_BatchCount");
         userInputs.put("user_sourcetype", "battlecat_BatchCount");
 

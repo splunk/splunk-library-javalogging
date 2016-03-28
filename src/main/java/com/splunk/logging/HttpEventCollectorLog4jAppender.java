@@ -42,6 +42,7 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
                          final String token,
                          final String source,
                          final String sourcetype,
+                         final String host,
                          final String index,
                          final Filter filter,
                          final Layout<? extends Serializable> layout,
@@ -56,6 +57,7 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
     {
         super(name, filter, layout, ignoreExceptions);
         Dictionary<String, String> metadata = new Hashtable<String, String>();
+        metadata.put(HttpEventCollectorSender.MetadataHostTag, host != null ? host : "");
         metadata.put(HttpEventCollectorSender.MetadataIndexTag, index != null ? index : "");
         metadata.put(HttpEventCollectorSender.MetadataSourceTag, source != null ? source : "");
         metadata.put(HttpEventCollectorSender.MetadataSourceTypeTag, sourcetype != null ? sourcetype : "");
@@ -91,6 +93,7 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
             @PluginAttribute("name") final String name,
             @PluginAttribute("source") final String source,
             @PluginAttribute("sourcetype") final String sourcetype,
+            @PluginAttribute("host") final String host,
             @PluginAttribute("index") final String index,
             @PluginAttribute("ignoreExceptions") final String ignore,
             @PluginAttribute("batch_size_bytes") final String batchSize,
@@ -131,7 +134,7 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
 
         return new HttpEventCollectorLog4jAppender(
                 name, url, token,
-                source, sourcetype, index,
+                source, sourcetype, host, index,
                 filter, layout, ignoreExceptions,
                 parseInt(batchInterval, HttpEventCollectorSender.DefaultBatchInterval),
                 parseInt(batchCount, HttpEventCollectorSender.DefaultBatchCount),

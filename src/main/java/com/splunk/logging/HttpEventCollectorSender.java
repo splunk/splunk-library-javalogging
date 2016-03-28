@@ -40,6 +40,7 @@ import java.util.*;
  */
 final class HttpEventCollectorSender extends TimerTask implements HttpEventCollectorMiddleware.IHttpSender {
     public static final String MetadataTimeTag = "time";
+    public static final String MetadataHostTag = "host";
     public static final String MetadataIndexTag = "index";
     public static final String MetadataSourceTag = "source";
     public static final String MetadataSourceTypeTag = "sourcetype";
@@ -187,10 +188,13 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
         // create event json content
         JSONObject event = new JSONObject();
         // event timestamp and metadata
+        String host = metadata.get(MetadataHostTag);
         String index = metadata.get(MetadataIndexTag);
         String source = metadata.get(MetadataSourceTag);
         String sourceType = metadata.get(MetadataSourceTypeTag);
         event.put(MetadataTimeTag, String.format(Locale.US, "%.3f", eventInfo.getTime()));
+        if (host != null && host.length() > 0)
+            event.put(MetadataHostTag, host);
         if (index != null && index.length() > 0)
             event.put(MetadataIndexTag, index);
         if (source  != null && source.length() > 0)

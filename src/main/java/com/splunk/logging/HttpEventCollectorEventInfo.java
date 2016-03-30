@@ -18,23 +18,31 @@ package com.splunk.logging;
  * under the License.
  */
 
+import java.util.Map;
+
 /**
  * Container for Splunk http event collector event data
  */
 public class HttpEventCollectorEventInfo {
-    private double time; // time in "epoch" format
+    private double time; // time in fractional seconds since "unix epoch" format
     private final String severity;
     private final String message;
+    private final String logger_name;
+    private final String thread_name;
+    private final Map<String, String> properties;
 
     /**
      * Create a new HttpEventCollectorEventInfo container
      * @param severity of event
      * @param message is an event content
      */
-    public HttpEventCollectorEventInfo(final String severity, final String message) {
+    public HttpEventCollectorEventInfo(final String severity, final String message, final String logger_name, final String thread_name, final Map<String, String> properties) {
         this.time = System.currentTimeMillis() / 1000.0;
         this.severity = severity;
         this.message = message;
+        this.logger_name = logger_name;
+        this.thread_name = thread_name;
+        this.properties = properties;
     }
 
     /**
@@ -57,4 +65,20 @@ public class HttpEventCollectorEventInfo {
     public final String getMessage() {
         return message;
     }
+
+    /**
+     * @return event logger name
+     */
+    public final String getLoggerName() { return logger_name; }
+
+    /**
+     * @return event thread name
+     */
+    public final String getThreadName() { return thread_name; }
+
+    /**
+     * @return event MDC properties
+     */
+    public Map<String,String> getProperties() { return properties; }
+
 }

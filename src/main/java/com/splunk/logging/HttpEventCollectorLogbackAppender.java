@@ -30,6 +30,7 @@ public class HttpEventCollectorLogbackAppender extends AppenderBase<ILoggingEven
     private Layout<ILoggingEvent> _layout;
     private String _source;
     private String _sourcetype;
+    private String _host;
     private String _index;
     private String _url;
     private String _token;
@@ -48,6 +49,9 @@ public class HttpEventCollectorLogbackAppender extends AppenderBase<ILoggingEven
 
         // init events sender
         Dictionary<String, String> metadata = new Hashtable<String, String>();
+        if (_host != null)
+            metadata.put(HttpEventCollectorSender.MetadataHostTag, _host);
+
         if (_index != null)
             metadata.put(HttpEventCollectorSender.MetadataIndexTag, _index);
 
@@ -92,7 +96,13 @@ public class HttpEventCollectorLogbackAppender extends AppenderBase<ILoggingEven
         event.prepareForDeferredProcessing();
         event.getCallerData();
         if (event != null && started) {
-            this.sender.send(event.getLevel().toString(), _layout.doLayout(event));
+            this.sender.send(
+                    event.getLevel().toString(),
+                    _layout.doLayout(event),
+                    event.getLoggerName(),
+                    event.getThreadName(),
+                    event.getMDCPropertyMap()
+                    );
         }
     }
 
@@ -134,6 +144,14 @@ public class HttpEventCollectorLogbackAppender extends AppenderBase<ILoggingEven
 
     public String getSourcetype() {
         return this._sourcetype;
+    }
+
+    public void setHost(String host) {
+        this._host = host;
+    }
+
+    public String getHost() {
+        return this._host;
     }
 
     public void setIndex(String index) {

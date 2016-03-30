@@ -33,6 +33,7 @@ import org.apache.logging.log4j.core.config.plugins.PluginFactory;
  * Splunk Http Appender.
  */
 @Plugin(name = "Http", category = "Core", elementType = "appender", printObject = true)
+@SuppressWarnings("serial")
 public final class HttpEventCollectorLog4jAppender extends AbstractAppender
 {
     private HttpEventCollectorSender sender = null;
@@ -155,7 +156,10 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
     {
         this.sender.send(
                 event.getLevel().toString(),
-                event.getMessage().getFormattedMessage()
+                event.getMessage().getFormattedMessage(),
+                event.getLoggerName(),
+                event.getThreadName(),
+                event.getContextMap()
         );
     }
 

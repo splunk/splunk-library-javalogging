@@ -82,6 +82,7 @@ package com.splunk.logging;
 
 import java.util.Dictionary;
 import java.util.Hashtable;
+import java.util.Locale;
 import java.util.logging.Handler;
 import java.util.logging.LogManager;
 import java.util.logging.LogRecord;
@@ -158,7 +159,13 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
      */
     @Override
     public void publish(LogRecord record) {
-        this.sender.send(record.getLevel().toString(), record.getMessage());
+        this.sender.send(
+                record.getLevel().toString(),
+                record.getMessage(),
+                record.getLoggerName(),
+                String.format(Locale.US, "%d", record.getThreadID()),
+                null // no property map available
+        );
     }
 
     /**

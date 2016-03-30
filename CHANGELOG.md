@@ -3,6 +3,7 @@
 ## Version 1.5.2 (develop)
 
 * Add support for setting the `host` splunk tag.  [#24](https://github.com/splunk/splunk-library-javalogging/issues/24).
+* Send additional logger attributes (logger name, thread name, context/property maps) to the event. [](#)
 
 ## Version 1.5.1
 

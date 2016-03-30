@@ -67,7 +67,7 @@ public class HttpEventCollectorUnitTest {
     @Test
     public void logback_simple() throws Exception {
         HashMap<String, String> userInputs = new HashMap<String, String>();
-        String loggerName = "splunk.logback";
+        final String loggerName = "splunk.logback";
         userInputs.put("user_logger_name", loggerName);
         userInputs.put("user_httpEventCollector_token", "11111111-2222-3333-4444-555555555555");
         userInputs.put("user_middleware", "HttpEventCollectorUnitTestMiddleware");
@@ -82,6 +82,7 @@ public class HttpEventCollectorUnitTest {
                 Assert.assertTrue(events.size() == 1);
                 Assert.assertTrue(events.get(0).getMessage().compareTo("hello logback") == 0);
                 Assert.assertTrue(events.get(0).getSeverity().compareTo("ERROR") == 0);
+                Assert.assertTrue(events.get(0).getLoggerName().compareTo(loggerName) == 0);
             }
         };
         LOGBACK.error("hello logback");

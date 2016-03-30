@@ -96,7 +96,13 @@ public class HttpEventCollectorLogbackAppender extends AppenderBase<ILoggingEven
         event.prepareForDeferredProcessing();
         event.getCallerData();
         if (event != null && started) {
-            this.sender.send(event.getLevel().toString(), _layout.doLayout(event));
+            this.sender.send(
+                    event.getLevel().toString(),
+                    _layout.doLayout(event),
+                    event.getLoggerName(),
+                    event.getThreadName(),
+                    event.getMDCPropertyMap()
+                    );
         }
     }
 

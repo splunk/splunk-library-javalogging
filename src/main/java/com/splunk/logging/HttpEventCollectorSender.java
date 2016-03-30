@@ -32,7 +32,14 @@ import org.json.simple.JSONObject;
 import javax.net.ssl.SSLContext;
 import java.io.IOException;
 import java.security.cert.X509Certificate;
-import java.util.*;
+import java.util.Dictionary;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.List;
+import java.util.LinkedList;
+import java.util.Map;
+import java.util.Locale;
+
 
 
 /**
@@ -134,10 +141,10 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
      * @param severity event severity level (info, warning, etc.)
      * @param message event text
      */
-    public synchronized void send(final String severity, final String message) {
+    public synchronized void send(final String severity, final String message, final String logger_name, final String thread_name, Map<String, String> properties) {
         // create event info container and add it to the batch
         HttpEventCollectorEventInfo eventInfo =
-                new HttpEventCollectorEventInfo(severity, message);
+                new HttpEventCollectorEventInfo(severity, message, logger_name, thread_name, properties);
         eventsBatch.add(eventInfo);
         eventsBatchSize += severity.length() + message.length();
         if (eventsBatch.size() >= maxEventsBatchCount || eventsBatchSize > maxEventsBatchSize) {
@@ -184,27 +191,35 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
         disableCertificateValidation = true;
     }
 
+    @SuppressWarnings("unchecked")
+    private static void putIfPresent(JSONObject collection, String tag, String value) {
+        if (value != null && value.length() > 0) {
+            collection.put(tag, value);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
     private String serializeEventInfo(HttpEventCollectorEventInfo eventInfo) {
         // create event json content
+        //
+        // cf: http://dev.splunk.com/view/event-collector/SP-CAAAE6P
+        //
         JSONObject event = new JSONObject();
         // event timestamp and metadata
-        String host = metadata.get(MetadataHostTag);
-        String index = metadata.get(MetadataIndexTag);
-        String source = metadata.get(MetadataSourceTag);
-        String sourceType = metadata.get(MetadataSourceTypeTag);
-        event.put(MetadataTimeTag, String.format(Locale.US, "%.3f", eventInfo.getTime()));
-        if (host != null && host.length() > 0)
-            event.put(MetadataHostTag, host);
-        if (index != null && index.length() > 0)
-            event.put(MetadataIndexTag, index);
-        if (source  != null && source.length() > 0)
-            event.put(MetadataSourceTag, source);
-        if (sourceType  != null && sourceType.length() > 0)
-            event.put(MetadataSourceTypeTag, sourceType);
+        putIfPresent(event, MetadataTimeTag, String.format(Locale.US, "%.3f", eventInfo.getTime()));
+        putIfPresent(event, MetadataHostTag, metadata.get(MetadataHostTag));
+        putIfPresent(event, MetadataIndexTag, metadata.get(MetadataIndexTag));
+        putIfPresent(event, MetadataSourceTag, metadata.get(MetadataSourceTag));
+        putIfPresent(event, MetadataSourceTypeTag, metadata.get(MetadataSourceTypeTag));
         // event body
         JSONObject body = new JSONObject();
-        body.put("severity", eventInfo.getSeverity());
-        body.put("message", eventInfo.getMessage());
+        putIfPresent(body, "severity", eventInfo.getSeverity());
+        putIfPresent(body, "message", eventInfo.getMessage());
+        putIfPresent(body, "logger", eventInfo.getLoggerName());
+        putIfPresent(body, "thread", eventInfo.getThreadName());
+        if (eventInfo.getProperties() != null) {
+            body.put("properties", eventInfo.getProperties());
+        }
         // join event and body
         event.put("event", body);
         return event.toString();

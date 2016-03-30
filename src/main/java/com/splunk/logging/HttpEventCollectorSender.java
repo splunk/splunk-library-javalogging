@@ -217,9 +217,13 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
         putIfPresent(body, "message", eventInfo.getMessage());
         putIfPresent(body, "logger", eventInfo.getLoggerName());
         putIfPresent(body, "thread", eventInfo.getThreadName());
-        if (eventInfo.getProperties() != null) {
-            body.put("properties", eventInfo.getProperties());
+
+        // add properties if and only if there are any
+        final Map<String,String> props = eventInfo.getProperties();
+        if (props != null && !props.isEmpty()) {
+            body.put("properties", props);
         }
+
         // join event and body
         event.put("event", body);
         return event.toString();

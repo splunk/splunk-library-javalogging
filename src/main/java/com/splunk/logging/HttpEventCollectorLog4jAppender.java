@@ -19,6 +19,8 @@ import java.io.Serializable;
 import java.nio.charset.Charset;
 import java.util.Dictionary;
 import java.util.Hashtable;
+
+import ch.qos.logback.classic.spi.ThrowableProxy;
 import org.apache.logging.log4j.core.appender.AbstractAppender;
 import org.apache.logging.log4j.core.Filter;
 import org.apache.logging.log4j.core.Layout;
@@ -154,12 +156,14 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
     @Override
     public void append(final LogEvent event)
     {
+        // if an exception was thrown
         this.sender.send(
                 event.getLevel().toString(),
                 event.getMessage().getFormattedMessage(),
                 event.getLoggerName(),
                 event.getThreadName(),
-                event.getContextMap()
+                event.getContextMap(),
+                event.getThrown() == null ? null : new ThrowableProxy(event.getThrown())
         );
     }
 

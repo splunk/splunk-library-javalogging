@@ -18,6 +18,8 @@ package com.splunk.logging;
  * under the License.
  */
 
+import ch.qos.logback.classic.spi.IThrowableProxy;
+import ch.qos.logback.classic.spi.ThrowableProxy;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.concurrent.FutureCallback;
@@ -28,6 +30,7 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
 import org.apache.http.impl.nio.client.HttpAsyncClients;
 import org.apache.http.util.EntityUtils;
+import org.apache.logging.log4j.core.appender.db.jpa.converter.ThrowableAttributeConverter;
 import org.json.simple.JSONObject;
 import javax.net.ssl.SSLContext;
 import java.io.IOException;
@@ -141,10 +144,10 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
      * @param severity event severity level (info, warning, etc.)
      * @param message event text
      */
-    public synchronized void send(final String severity, final String message, final String logger_name, final String thread_name, Map<String, String> properties) {
+    public synchronized void send(final String severity, final String message, final String logger_name, final String thread_name, Map<String, String> properties, IThrowableProxy thrown) {
         // create event info container and add it to the batch
         HttpEventCollectorEventInfo eventInfo =
-                new HttpEventCollectorEventInfo(severity, message, logger_name, thread_name, properties);
+                new HttpEventCollectorEventInfo(severity, message, logger_name, thread_name, properties, thrown);
         eventsBatch.add(eventInfo);
         eventsBatchSize += severity.length() + message.length();
         if (eventsBatch.size() >= maxEventsBatchCount || eventsBatchSize > maxEventsBatchSize) {
@@ -217,7 +220,11 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
         putIfPresent(body, "message", eventInfo.getMessage());
         putIfPresent(body, "logger", eventInfo.getLoggerName());
         putIfPresent(body, "thread", eventInfo.getThreadName());
-
+        // add an exception record if and only if there is one
+        // in practice, the message also has the exception information attached
+        if (eventInfo.getThrown() != null) {
+            putIfPresent(body, "exception", eventInfo.getThrown().getMessage());
+        }
         // add properties if and only if there are any
         final Map<String,String> props = eventInfo.getProperties();
         if (props != null && !props.isEmpty()) {

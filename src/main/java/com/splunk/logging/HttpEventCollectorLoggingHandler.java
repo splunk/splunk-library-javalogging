@@ -167,7 +167,8 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
                 record.getLoggerName(),
                 String.format(Locale.US, "%d", record.getThreadID()),
                 null, // no property map available
-                record.getThrown() == null ? null : new ThrowableProxy(record.getThrown())
+                record.getThrown() == null ? null : new ThrowableProxy(record.getThrown()),
+                null // no marker available
         );
     }
 

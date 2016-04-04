@@ -19,7 +19,6 @@ package com.splunk.logging;
  */
 
 import ch.qos.logback.classic.spi.IThrowableProxy;
-import ch.qos.logback.classic.spi.ThrowableProxy;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.concurrent.FutureCallback;
@@ -30,10 +29,11 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
 import org.apache.http.impl.nio.client.HttpAsyncClients;
 import org.apache.http.util.EntityUtils;
-import org.apache.logging.log4j.core.appender.db.jpa.converter.ThrowableAttributeConverter;
+
 import org.json.simple.JSONObject;
 import javax.net.ssl.SSLContext;
 import java.io.IOException;
+import java.io.Serializable;
 import java.security.cert.X509Certificate;
 import java.util.Dictionary;
 import java.util.Timer;
@@ -144,10 +144,18 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
      * @param severity event severity level (info, warning, etc.)
      * @param message event text
      */
-    public synchronized void send(final String severity, final String message, final String logger_name, final String thread_name, Map<String, String> properties, IThrowableProxy thrown) {
+    public synchronized void send(
+            final String severity,
+            final String message,
+            final String logger_name,
+            final String thread_name,
+            Map<String, String> properties,
+            IThrowableProxy thrown,
+            Serializable marker
+    ) {
         // create event info container and add it to the batch
         HttpEventCollectorEventInfo eventInfo =
-                new HttpEventCollectorEventInfo(severity, message, logger_name, thread_name, properties, thrown);
+                new HttpEventCollectorEventInfo(severity, message, logger_name, thread_name, properties, thrown, marker);
         eventsBatch.add(eventInfo);
         eventsBatchSize += severity.length() + message.length();
         if (eventsBatch.size() >= maxEventsBatchCount || eventsBatchSize > maxEventsBatchSize) {
@@ -225,12 +233,17 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
         if (eventInfo.getThrown() != null) {
             putIfPresent(body, "exception", eventInfo.getThrown().getMessage());
         }
+
         // add properties if and only if there are any
         final Map<String,String> props = eventInfo.getProperties();
         if (props != null && !props.isEmpty()) {
             body.put("properties", props);
         }
-
+        // add marker if and only if there is one
+        final Serializable marker = eventInfo.getMarker();
+        if (marker != null) {
+            putIfPresent(body, "marker", marker.toString());
+        }
         // join event and body
         event.put("event", body);
         return event.toString();

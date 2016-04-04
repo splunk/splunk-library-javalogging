@@ -15,6 +15,7 @@ package com.splunk.logging;
  * under the License.
  */
 
+import ch.qos.logback.classic.pattern.MarkerConverter;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.AppenderBase;
 import ch.qos.logback.core.Layout;
@@ -95,6 +96,7 @@ public class HttpEventCollectorLogbackAppender extends AppenderBase<ILoggingEven
     protected void append(ILoggingEvent event) {
         event.prepareForDeferredProcessing();
         event.getCallerData();
+        MarkerConverter c = new MarkerConverter();
         if (event != null && started) {
             this.sender.send(
                     event.getLevel().toString(),
@@ -102,7 +104,8 @@ public class HttpEventCollectorLogbackAppender extends AppenderBase<ILoggingEven
                     event.getLoggerName(),
                     event.getThreadName(),
                     event.getMDCPropertyMap(),
-                    event.getThrowableProxy()
+                    event.getThrowableProxy(),
+                    c.convert(event)
                     );
         }
     }

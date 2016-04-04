@@ -163,7 +163,8 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
                 event.getLoggerName(),
                 event.getThreadName(),
                 event.getContextMap(),
-                event.getThrown() == null ? null : new ThrowableProxy(event.getThrown())
+                event.getThrown() == null ? null : new ThrowableProxy(event.getThrown()),
+                event.getMarker()
         );
     }
 

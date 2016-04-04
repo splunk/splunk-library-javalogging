@@ -19,8 +19,8 @@ package com.splunk.logging;
  */
 
 import ch.qos.logback.classic.spi.IThrowableProxy;
-import ch.qos.logback.classic.spi.ThrowableProxy;
 
+import java.io.Serializable;
 import java.util.Map;
 
 /**
@@ -34,13 +34,22 @@ public class HttpEventCollectorEventInfo {
     private final String thread_name;
     private final Map<String, String> properties;
     private final IThrowableProxy thrown;
+    private final Serializable marker;
 
     /**
      * Create a new HttpEventCollectorEventInfo container
      * @param severity of event
      * @param message is an event content
      */
-    public HttpEventCollectorEventInfo(final String severity, final String message, final String logger_name, final String thread_name, final Map<String, String> properties, final IThrowableProxy thrown) {
+    public HttpEventCollectorEventInfo(
+            final String severity,
+            final String message,
+            final String logger_name,
+            final String thread_name,
+            final Map<String, String> properties,
+            final IThrowableProxy thrown,
+            final Serializable marker
+    ) {
         this.time = System.currentTimeMillis() / 1000.0;
         this.severity = severity;
         this.message = message;
@@ -48,6 +57,7 @@ public class HttpEventCollectorEventInfo {
         this.thread_name = thread_name;
         this.properties = properties;
         this.thrown = thrown;
+        this.marker = marker;
     }
 
     /**
@@ -90,4 +100,9 @@ public class HttpEventCollectorEventInfo {
      * @return event thrown exception
      */
     public IThrowableProxy getThrown() { return thrown; }
+
+    /**
+     * @return event marker
+     */
+    public Serializable getMarker() { return marker; }
 }

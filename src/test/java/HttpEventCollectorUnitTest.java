@@ -24,7 +24,6 @@ import com.splunk.logging.HttpEventCollectorErrorHandler;
 import com.splunk.logging.HttpEventCollectorEventInfo;
 import org.junit.Assert;
 import org.junit.Test;
-import sun.rmi.runtime.Log;
 
 import java.io.ByteArrayInputStream;
 import java.util.Date;
@@ -52,8 +51,8 @@ public class HttpEventCollectorUnitTest {
             @Override
             public void input(List<HttpEventCollectorEventInfo> events) {
                 Assert.assertTrue(events.size() == 1);
-                Assert.assertTrue(events.get(0).getMessage().compareTo("hello log4j") == 0);
-                Assert.assertTrue(events.get(0).getSeverity().compareTo("INFO") == 0);
+                Assert.assertEquals("hello log4j", events.get(0).getMessage());
+                Assert.assertEquals("INFO",events.get(0).getSeverity());
             }
         };
         LOG4J.info("hello log4j");
@@ -80,8 +79,8 @@ public class HttpEventCollectorUnitTest {
             @Override
             public void input(List<HttpEventCollectorEventInfo> events) {
                 Assert.assertTrue(events.size() == 1);
-                Assert.assertTrue(events.get(0).getMessage().compareTo("hello logback") == 0);
-                Assert.assertTrue(events.get(0).getSeverity().compareTo("ERROR") == 0);
+                Assert.assertEquals("hello logback", events.get(0).getMessage());
+                Assert.assertEquals("ERROR", events.get(0).getSeverity());
             }
         };
         LOGBACK.error("hello logback");
@@ -109,8 +108,8 @@ public class HttpEventCollectorUnitTest {
             @Override
             public void input(List<HttpEventCollectorEventInfo> events) {
                 Assert.assertTrue(events.size() == 1);
-                Assert.assertTrue(events.get(0).getMessage().compareTo("hello java logger") == 0);
-                Assert.assertTrue(events.get(0).getSeverity().compareTo("WARNING") == 0);
+                Assert.assertEquals("hello java logger", events.get(0).getMessage());
+                Assert.assertEquals("WARNING", events.get(0).getSeverity());
             }
         };
         LOGGER.warning("hello java logger");
@@ -173,8 +172,8 @@ public class HttpEventCollectorUnitTest {
             int retries = 0;
             @Override
             public void input(List<HttpEventCollectorEventInfo> events) {
-                Assert.assertTrue(events.get(0).getMessage().compareTo("hello") == 0);
-                Assert.assertTrue(events.get(0).getSeverity().compareTo("INFO") == 0);
+                Assert.assertEquals("hello",events.get(0).getMessage());
+                Assert.assertEquals("INFO", events.get(0).getSeverity());
             }
             @Override
             public HttpEventCollectorUnitTestMiddleware.HttpResponse output() {
@@ -212,8 +211,8 @@ public class HttpEventCollectorUnitTest {
         HttpEventCollectorUnitTestMiddleware.io = new HttpEventCollectorUnitTestMiddleware.IO() {
             @Override
             public void input(List<HttpEventCollectorEventInfo> events) {
-                Assert.assertTrue(events.get(0).getMessage().compareTo("hello") == 0);
-                Assert.assertTrue(events.get(0).getSeverity().compareTo("INFO") == 0);
+                Assert.assertEquals("hello", events.get(0).getMessage());
+                Assert.assertEquals("INFO", events.get(0).getSeverity());
             }
             @Override
             public HttpEventCollectorUnitTestMiddleware.HttpResponse output() {
@@ -248,9 +247,9 @@ public class HttpEventCollectorUnitTest {
             @Override
             public void input(List<HttpEventCollectorEventInfo> events) {
                 Assert.assertTrue(events.size() == 3);
-                Assert.assertTrue(events.get(0).getMessage().compareTo("one") == 0);
-                Assert.assertTrue(events.get(1).getMessage().compareTo("two") == 0);
-                Assert.assertTrue(events.get(2).getMessage().compareTo("three") == 0);
+                Assert.assertEquals("one",events.get(0).getMessage());
+                Assert.assertEquals("two",events.get(1).getMessage());
+                Assert.assertEquals("three",events.get(2).getMessage());
             }
         };
         LOGGER.info("one");

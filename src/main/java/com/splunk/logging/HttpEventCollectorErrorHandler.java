@@ -31,7 +31,7 @@ import java.util.List;
  *
  * Usage example:
  * HttpEventCollectorErrorHandler.onError(new HttpEventErrorHandler.ErrorCallback() {
- *     public void error(final String data, final Exception ex) {  handle exception  }
+ *     public void error(final List<HttpEventCollectorEventInfo> data, final Exception ex) {  handle exception  }
  * });
  */
 public class HttpEventCollectorErrorHandler {

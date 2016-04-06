@@ -38,7 +38,7 @@ import java.util.*;
 /**
  * This is an internal helper class that sends logging events to Splunk http event collector.
  */
-final class HttpEventCollectorSender extends TimerTask implements HttpEventCollectorMiddleware.IHttpSender {
+public final class HttpEventCollectorSender<E> extends TimerTask implements HttpEventCollectorMiddleware.IHttpSender {
     public static final String MetadataTimeTag = "time";
     public static final String MetadataIndexTag = "index";
     public static final String MetadataSourceTag = "source";
@@ -133,12 +133,12 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
      * @param severity event severity level (info, warning, etc.)
      * @param message event text
      */
-    public synchronized void send(final String severity, final String message) {
+    public synchronized void send(final String severity, final E message) {
         // create event info container and add it to the batch
         HttpEventCollectorEventInfo eventInfo =
-                new HttpEventCollectorEventInfo(severity, message);
+                new HttpEventCollectorEventInfo<E>(severity, message);
         eventsBatch.add(eventInfo);
-        eventsBatchSize += severity.length() + message.length();
+        eventsBatchSize += severity.length() + message.toString().length();
         if (eventsBatch.size() >= maxEventsBatchCount || eventsBatchSize > maxEventsBatchSize) {
             flush();
         }

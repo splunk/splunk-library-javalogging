@@ -88,5 +88,9 @@ public class HttpEventCollectorResendMiddleware
                 prevCallback.failed(ex);
             }
         }
+
+        public void setRetries(long retries) {
+            this.retries = retries;
+        }
     }
 }

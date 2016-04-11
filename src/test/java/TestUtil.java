@@ -302,7 +302,7 @@ public class TestUtil {
         configFileStream.close();
     }
 
-    public static void verifyOneAndOnlyOneEventSentToSplunk(String msg) throws IOException {
+    public static void verifyOneAndOnlyOneEventSentToSplunk(String msg) throws IOException, InterruptedException {
         connectToSplunk();
 
         long startTime = System.currentTimeMillis();
@@ -322,15 +322,16 @@ public class TestUtil {
 
             if (eventCount > 0)
                 break;
+            Thread.sleep(100);
         }
 
         resultsReader.close();
         resultsStream.close();
 
-        Assert.assertTrue(eventCount == 1);
+        Assert.assertEquals(1, eventCount);
     }
 
-    public static void verifyNoEventSentToSplunk(List<String> msgs) throws IOException {
+    public static void verifyNoEventSentToSplunk(List<String> msgs) throws IOException, InterruptedException {
         connectToSplunk();
         String searchstr = org.apache.commons.lang3.StringUtils.join(msgs, "\" OR \"");
         searchstr = "\"" + searchstr + "\"";
@@ -339,7 +340,7 @@ public class TestUtil {
         int eventCount = 0;
         InputStream resultsStream = null;
         ResultsReaderXml resultsReader = null;
-        while (System.currentTimeMillis() - startTime < 10 * 1000)/*wait for up to 30s*/ {
+        while (System.currentTimeMillis() - startTime < 10 * 1000)/*wait for up to 10s*/ {
             resultsStream = service.oneshotSearch("search " + searchstr);
             resultsReader = new ResultsReaderXml(resultsStream);
 
@@ -352,18 +353,19 @@ public class TestUtil {
 
             if (eventCount > 0)
                 break;
+            Thread.sleep(100);
         }
 
         resultsReader.close();
         resultsStream.close();
 
-        Assert.assertTrue(eventCount == 0);
+        Assert.assertEquals(0, eventCount);
     }
 
     /*
     verify each of the message in msgs appeared and appeared only once in splunk
      */
-    public static void verifyEventsSentToSplunk(List<String> msgs) throws IOException {
+    public static void verifyEventsSentToSplunk(List<String> msgs) throws IOException, InterruptedException {
         connectToSplunk();
 
         for (String msg : msgs) {
@@ -384,23 +386,24 @@ public class TestUtil {
 
                 if (eventCount > 0)
                     break;
+                Thread.sleep(100);
             }
 
             resultsReader.close();
             resultsStream.close();
 
-            Assert.assertTrue(eventCount == 1);
+            Assert.assertEquals(1, eventCount);
         }
     }
 
-    public static void verifyEventsSentInOrder(String prefix, int totalEventsCount, String index) throws IOException {
+    public static void verifyEventsSentInOrder(String prefix, int totalEventsCount, String index) throws IOException, InterruptedException {
         connectToSplunk();
 
         long startTime = System.currentTimeMillis();
         InputStream resultsStream = null;
         ResultsReaderXml resultsReader = null;
         List<String> results = new ArrayList<String>();
-        while (System.currentTimeMillis() - startTime < 100 * 1000)/*wait for up to 30s*/ {
+        while (System.currentTimeMillis() - startTime < 100 * 1000)/*wait for up to 100s*/ {
             results.clear();
             String searchstr = "search index=" + index;
             resultsStream = service.oneshotSearch(searchstr, new Args("count", 0));
@@ -412,6 +415,7 @@ public class TestUtil {
 
             if (results.size() == totalEventsCount)
                 break;
+            Thread.sleep(100);
         }
 
         resultsReader.close();

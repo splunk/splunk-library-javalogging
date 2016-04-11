@@ -41,8 +41,8 @@
                             <includes>
                                 <include>**/*.class</include>
                             </includes>
-                            <excludes>
-                                <exclude>**/**Test.class</exclude>
+                            <excludes> <!--excludes top level tests which defined in profiles-->
+                                <exclude>**Test.class</exclude>
                             </excludes>
                         </configuration>
                     </plugin>

@@ -22,19 +22,30 @@ package com.splunk.logging;
  * Container for Splunk http event collector event data
  */
 public class HttpEventCollectorEventInfo {
+    private LoggerEvent event;
+    //metadata
+    private MetaData metaData;
     private double time; // time in "epoch" format
-    private final String severity;
-    private final String message;
 
     /**
      * Create a new HttpEventCollectorEventInfo container
+     *
      * @param severity of event
-     * @param message is an event content
+     * @param message  is an event content
      */
     public HttpEventCollectorEventInfo(final String severity, final String message) {
+        this(new MetaData(null, null, null, null), new LoggerEvent(severity, message, null));
+    }
+
+    /**
+     * @param metaData which contains
+     * @param event
+     */
+    public HttpEventCollectorEventInfo(MetaData metaData,
+                                       LoggerEvent event) {
         this.time = System.currentTimeMillis() / 1000.0;
-        this.severity = severity;
-        this.message = message;
+        this.metaData = metaData;
+        this.event = event;
     }
 
     /**
@@ -48,13 +59,103 @@ public class HttpEventCollectorEventInfo {
      * @return event severity
      */
     public final String getSeverity() {
-        return severity;
+        return event.getSeverity();
     }
 
     /**
      * @return event message
      */
     public final String getMessage() {
-        return message;
+        return event.getMessage();
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder stringBuilder = new StringBuilder();
+        return stringBuilder.append("time=").append(time).append(" severity=").append(event.severity).append(" message=")
+                .append(event.message).append(" data=").append(event.data).toString();
+    }
+
+    public long getSize() {
+        long messageLength = getMessage() == null ? 0 : getMessage().length();
+        long dataLength = event.data == null ? 0 : event.data.toString().length();
+        long logLevelLength = getSeverity() == null ? 0 : getSeverity().length();
+        return logLevelLength + messageLength + dataLength;
+    }
+
+    public LoggerEvent getEvent() {
+        return event;
+    }
+
+    public MetaData getMetaData() {
+        return metaData;
+    }
+
+    /**
+     * Meta information for sending to Splunk
+     */
+    public static class MetaData {
+        private String index;
+        private String source;
+        private String sourcetype;
+        private String host;
+
+        public MetaData(String index, String source, String sourcetype, String host) {
+            this.index = emptyToNull(index);
+            this.source = emptyToNull(source);
+            this.sourcetype = emptyToNull(sourcetype);
+            this.host = emptyToNull(host);
+        }
+    }
+
+    /**
+     * Message and Auxiliary event data
+     */
+    public static class LoggerEvent {
+        private String severity;
+        private String message;
+        private Object data;
+
+        public LoggerEvent(String message) {
+            this("INFO", message, null);
+        }
+
+        public LoggerEvent(String severity, String message) {
+            this(severity, message, null);
+        }
+
+        public LoggerEvent(String severity, String message, Object data) {
+            this.severity = severity;
+            this.message = message;
+            this.data = data;
+        }
+
+        public String getSeverity() {
+            return severity;
+        }
+
+        public void setSeverity(String severity) {
+            this.severity = severity;
+        }
+
+        public String getMessage() {
+            return message;
+        }
+
+        public void setMessage(String message) {
+            this.message = message;
+        }
+
+        public Object getData() {
+            return data;
+        }
+
+        public void setData(Object data) {
+            this.data = data;
+        }
+    }
+
+    public static String emptyToNull(String string) {
+        return (string == "") ? null : string;
     }
 }

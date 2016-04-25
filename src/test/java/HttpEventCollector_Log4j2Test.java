@@ -40,24 +40,26 @@ public final class HttpEventCollector_Log4j2Test {
         HashMap<String, String> userInputs = new HashMap<String, String>();
         userInputs.put("user_logger_name", loggerName);
         userInputs.put("user_httpEventCollector_token", token);
+        //userInputs.put("scheme", "http"); //uncomment this line if local splunk uses http vs https
+        userInputs.put("user_middleware", "HttpEventCollectorMiddleware");
+        
         org.apache.logging.log4j.core.LoggerContext context = TestUtil.resetLog4j2Configuration("log4j2_template.xml", "log4j2.xml", userInputs);
+        
         //use httplogger
         List<String> msgs = new ArrayList<String>();
-
-        Date date = new Date();
-        String jsonMsg = String.format("{EventDate:%s, EventMsg:'this is a test event for log4j2}", date.toString());
-
+        msgs.add(String.format("{EventDate:%s, EventMsg:'this is a test msg for log4j2'}", new Date().toString()));
+        msgs.add(String.format("{EventDate:%s, EventMsg:'this is a test error for log4j2'}", new Date().toString()));
+        TestUtil.deleteMessages(msgs);
+        TestUtil.verifyNoEventSentToSplunk(msgs);
+        
         Logger logger = context.getLogger(loggerName);
-        logger.info(jsonMsg);
-        msgs.add(jsonMsg);
-
-        jsonMsg = String.format("{EventDate:%s, EventMsg:'this is a test error for log4j2}", date.toString());
-        logger.error(jsonMsg);
-        msgs.add(jsonMsg);
+        logger.info(msgs.get(0));
+        logger.error(msgs.get(1));
 
         TestUtil.verifyEventsSentToSplunk(msgs);
 
         TestUtil.deleteHttpEventCollectorToken(httpEventCollectorName);
+        TestUtil.deleteMessages(msgs);
         System.out.println("====================== Test pass=========================");
     }
 
@@ -73,28 +75,33 @@ public final class HttpEventCollector_Log4j2Test {
         HashMap<String, String> userInputs = new HashMap<String, String>();
         userInputs.put("user_logger_name", loggerName);
         userInputs.put("user_httpEventCollector_token", token);
-        userInputs.put("user_index", "main");
+        userInputs.put("user_index", "default");
         userInputs.put("user_source", "splunktest");
-        userInputs.put("user_sourcetype", "battlecat");
+        userInputs.put("user_sourcetype", "json_no_timestamp");
+        //userInputs.put("scheme", "http"); //uncomment this line if local splunk uses http vs https
+        userInputs.put("user_middleware", "HttpEventCollectorMiddleware");
+        userInputs.put("user_batch_size_count", "1");
+        userInputs.put("user_batch_size_bytes", "0");
+        userInputs.put("user_patternLayout", "{EventDate:&quot;%d&quot;, Event:{EventSource:&quot;%C&quot;, EventMsg:&quot;%m&quot;}}");
+
+        List<String> msgs = new ArrayList<String>();
+        msgs.add("this is a test msg for log4j2");
+        msgs.add("this is a test error for log4j2");
+        TestUtil.deleteMessages(msgs);
+        TestUtil.verifyNoEventSentToSplunk(msgs);
 
         org.apache.logging.log4j.core.LoggerContext context = TestUtil.resetLog4j2Configuration("log4j2_template.xml", "log4j2.xml", userInputs);
         //use httplogger
-        List<String> msgs = new ArrayList<String>();
-
-        Date date = new Date();
-        String jsonMsg = String.format("{EventDate:%s, EventMsg:'this is a test event for log4j2}", date.toString());
 
         Logger logger = context.getLogger(loggerName);
-        logger.info(jsonMsg);
-        msgs.add(jsonMsg);
+        logger.info(msgs.get(0));
+        logger.error(msgs.get(1));
 
-        jsonMsg = String.format("{EventDate:%s, EventMsg:'this is a test error for log4j2}", date.toString());
-        logger.error(jsonMsg);
-        msgs.add(jsonMsg);
-
-        TestUtil.verifyEventsSentToSplunk(msgs);
+        TestUtil.verifyEventsSentToSplunkMatchingMsgPattern(msgs, ".+\\{EventDate:.+, Event:\\{EventSource:.+"+this.getClass().getSimpleName()+".+, EventMsg:.+this is a test (msg|error) for log4j2.+\\}\\}.+");
+        
 
         TestUtil.deleteHttpEventCollectorToken(httpEventCollectorName);
+        TestUtil.deleteMessages(msgs);
         System.out.println("====================== Test pass=========================");
     }
 
@@ -111,56 +118,44 @@ public final class HttpEventCollector_Log4j2Test {
         userInputs.put("user_logger_name", loggerName);
         userInputs.put("user_httpEventCollector_token", token);
         LoggerContext context = TestUtil.resetLog4j2Configuration("log4j2_template.xml", "log4j2.xml", userInputs);
-        String jsonMsg = String.format("{EventDate:%s, EventMsg:'this is a test event for java logging}", new Date().toString());
+        String jsonMsg = String.format("{EventDate:%s, EventMsg:'this is a test error for log4j2'}", new Date().toString());
         Logger logger = context.getLogger(loggerName);
         logger.info(jsonMsg);
 
         loggerName = "splunkBatchLoggerCount";
         userInputs = new HashMap<String, String>();
         userInputs.put("user_logger_name", loggerName);
+        //userInputs.put("scheme", "http"); //uncomment this line if local splunk uses http vs https
         userInputs.put("user_httpEventCollector_token", token);
         userInputs.put("user_batch_interval","0");
         userInputs.put("user_batch_size_count", "5");
-        userInputs.put("user_logger_name", loggerName);
-        userInputs.put("user_source", "splunktest_BatchCount");
-        userInputs.put("user_sourcetype", "battlecat_BatchCount");
+        userInputs.put("user_middleware", "HttpEventCollectorMiddleware");
+        userInputs.put("user_patternLayout", "%m");
+
 
         context = TestUtil.resetLog4j2Configuration("log4j2_template.xml", "log4j2.xml", userInputs);
         logger = context.getLogger(loggerName);
 
         List<String> msgs = new ArrayList<String>();
-
-        jsonMsg = String.format("{EventDate:%s, EventMsg:'this is a test event for java logging1}", new Date().toString());
-        logger.info(jsonMsg);
-        msgs.add(jsonMsg);
-        System.out.println("event 1");
-        TestUtil.verifyNoEventSentToSplunk(msgs);
-        jsonMsg = String.format("{EventDate:%s, EventMsg:'this is a test event for java logging2}", new Date().toString());
-        logger.info(jsonMsg);
-        msgs.add(jsonMsg);
-        System.out.println("event 2");
-        TestUtil.verifyNoEventSentToSplunk(msgs);
-        jsonMsg = String.format("{EventDate:%s, EventMsg:'this is a test event for java logging3}", new Date().toString());
-        logger.info(jsonMsg);
-        msgs.add(jsonMsg);
-        System.out.println("event 3");
-        TestUtil.verifyNoEventSentToSplunk(msgs);
-        jsonMsg = String.format("{EventDate:%s, EventMsg:'this is a test event for java logging4}", new Date().toString());
-        logger.info(jsonMsg);
-        msgs.add(jsonMsg);
-        System.out.println("event 4");
-        TestUtil.verifyNoEventSentToSplunk(msgs);
-
+        for (int i=0; i < 4; i++){
+        	jsonMsg = String.format("{EventDate:%s, EventMsg:'this is a test error for log4j2'}", new Date().toString());
+            logger.info(jsonMsg);
+            msgs.add(jsonMsg);
+            System.out.println("event "+(i+1));
+            TestUtil.verifyNoEventSentToSplunk(msgs);
+        }
+        
         Thread.sleep(6000);
         TestUtil.verifyNoEventSentToSplunk(msgs);
 
-        jsonMsg = String.format("{EventDate:%s, EventMsg:'this is a test event for java logging5}", new Date().toString());
+        jsonMsg = String.format("{EventDate:%s, EventMsg:'this is a test error for log4j2'}", new Date().toString());
         logger.info(jsonMsg);
         msgs.add(jsonMsg);
 
         TestUtil.verifyEventsSentToSplunk(msgs);
 
         TestUtil.deleteHttpEventCollectorToken(httpEventCollectorName);
+        TestUtil.deleteMessages(msgs);
     }
 
     /**
@@ -174,20 +169,23 @@ public final class HttpEventCollector_Log4j2Test {
         userInputs.put("user_logger_name", loggerName);
         userInputs.put("user_httpEventCollector_token", token);
         userInputs.put("user_batch_size_bytes", "500");
+        //userInputs.put("scheme", "http"); //uncomment this line if local splunk uses http vs https
         userInputs.put("user_batch_interval", "20000");
         userInputs.put("user_source", "splunktest_BatchSize");
         userInputs.put("user_sourcetype", "battlecat_BatchSize");
+        userInputs.put("user_middleware", "HttpEventCollectorMiddleware");
+        userInputs.put("user_patternLayout", "%m");
 
         LoggerContext context = TestUtil.resetLog4j2Configuration("log4j2_template.xml", "log4j2.xml", userInputs);
         Logger logger = context.getLogger(loggerName);
 
         List<String> msgs = new ArrayList<String>();
         int size = 0;
-        String jsonMsg = String.format("{EventDate:%s, EventMsg:'test event for log4j size 1}", new Date().toString());
+        String jsonMsg = String.format("{EventDate:%s, EventMsg:'test event for log4j size 1'}", new Date().toString());
         logger.info(jsonMsg);
         size += jsonMsg.length();
         msgs.add(jsonMsg);
-        jsonMsg = String.format("{EventDate:%s, EventMsg:'test event for log4j size 2}", new Date().toString());
+        jsonMsg = String.format("{EventDate:%s, EventMsg:'test event for log4j size 2'}", new Date().toString());
         size += jsonMsg.length();
         logger.info(jsonMsg);
         msgs.add(jsonMsg);
@@ -195,7 +193,7 @@ public final class HttpEventCollector_Log4j2Test {
         Thread.sleep(6000);
         TestUtil.verifyNoEventSentToSplunk(msgs);
 
-        jsonMsg = String.format("{EventDate:%s, EventMsg:'test event for log4j size 3, adding more msg to exceed the maxsize}", new Date().toString());
+        jsonMsg = String.format("{EventDate:%s, EventMsg:'test event for log4j size 3, adding more msg to exceed the maxsize'}", new Date().toString());
         while (size + jsonMsg.length() < 550) {
             jsonMsg = String.format("%saaaaa", jsonMsg);
         }
@@ -205,6 +203,7 @@ public final class HttpEventCollector_Log4j2Test {
 
         TestUtil.verifyEventsSentToSplunk(msgs);
         TestUtil.deleteHttpEventCollectorToken(httpEventCollectorName);
+        TestUtil.deleteMessages(msgs);
     }
 
     /**
@@ -231,13 +230,20 @@ public final class HttpEventCollector_Log4j2Test {
         HashMap<String, String> userInputs = new HashMap<String, String>();
         userInputs.put("user_logger_name", loggerName);
         userInputs.put("user_httpEventCollector_token", token);
+        //userInputs.put("scheme", "http"); //uncomment this line if local splunk uses http vs https
+        userInputs.put("user_middleware", "HttpEventCollectorMiddleware");
+        userInputs.put("user_batch_size_count", "1");
+        userInputs.put("user_batch_size_bytes", "0");
+        userInputs.put("user_patternLayout", "%m");
+        
         LoggerContext context = TestUtil.resetLog4j2Configuration("log4j2_template.xml", "log4j2.xml", userInputs);
         Logger logger = context.getLogger(loggerName);
 
         //disable the token so that it becomes invalid
         TestUtil.disableHttpEventCollector(httpEventCollectorName);
         Thread.sleep(5000);
-        String jsonMsg = String.format("{EventDate:%s, EventMsg:'test event disabled token }", new Date().toString());
+        String jsonMsg = String.format("{EventDate:%s, EventMsg:'test event disabled token'}", new Date().toString());
+         
         logger.info(jsonMsg);
         Thread.sleep(5000);
 
@@ -328,10 +334,10 @@ public final class HttpEventCollector_Log4j2Test {
     }
 
     /**
-     * verify events are index in correct order of the events were sent
+     * verify events are indexed in correct order of the events were sent
      */
     @Test
-    public void eventsIsIndexedInOrderOfSent() throws Exception {
+    public void eventsIndexedInOrderOfSent() throws Exception {
         TestUtil.enableHttpEventCollector();
 
         String indexName="httpevents_in_order";
@@ -341,6 +347,7 @@ public final class HttpEventCollector_Log4j2Test {
         HashMap<String, String> userInputs = new HashMap<String, String>();
         userInputs.put("user_logger_name", loggerName);
         userInputs.put("user_httpEventCollector_token", token);
+        
         userInputs.put("user_index", indexName);
         userInputs.put("user_send_mode", "sequential");
 
@@ -348,8 +355,7 @@ public final class HttpEventCollector_Log4j2Test {
 
         //send multiple events and verify they are indexed in the order of sending
         List<String> msgs = new ArrayList<String>();
-        Date date = new Date();
-        int totalEventsCount = 1000;
+        int totalEventsCount = 100;
         Logger logger = context.getLogger(loggerName);
         String prefix="log4j2 multiple events";
         for (int i = 0; i < totalEventsCount; i++) {

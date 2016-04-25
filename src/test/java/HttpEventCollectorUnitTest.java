@@ -16,22 +16,18 @@
  * under the License.
  */
 
-import java.io.IOException;
-import java.io.OutputStream;
-import java.net.InetSocketAddress;
-
-import com.splunk.logging.HttpEventCollectorErrorHandler;
-import com.splunk.logging.HttpEventCollectorEventInfo;
-import org.junit.Assert;
-import org.junit.Test;
-import sun.rmi.runtime.Log;
-
 import java.io.ByteArrayInputStream;
-import java.util.Date;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.logging.LogManager;
-import java.util.logging.Logger;
+
+import org.apache.logging.log4j.core.LoggerContext;
+import org.junit.Assert;
+import org.junit.Test;
+
+import com.splunk.logging.HttpEventCollectorErrorHandler;
+import com.splunk.logging.HttpEventCollectorEventInfo;
 
 public class HttpEventCollectorUnitTest {
     @Test
@@ -43,6 +39,7 @@ public class HttpEventCollectorUnitTest {
         userInputs.put("user_middleware", "HttpEventCollectorUnitTestMiddleware");
         userInputs.put("user_batch_size_count", "1");
         userInputs.put("user_batch_size_bytes", "0");
+        userInputs.put("user_patternLayout", "%m");
         TestUtil.resetLog4j2Configuration("log4j2_template.xml", "log4j2.xml", userInputs);
         org.apache.logging.log4j.Logger LOG4J = org.apache.logging.log4j.LogManager.getLogger(loggerName);
 
@@ -53,6 +50,37 @@ public class HttpEventCollectorUnitTest {
             public void input(List<HttpEventCollectorEventInfo> events) {
                 Assert.assertTrue(events.size() == 1);
                 Assert.assertTrue(events.get(0).getMessage().compareTo("hello log4j") == 0);
+                Assert.assertTrue(events.get(0).getSeverity().compareTo("INFO") == 0);
+            }
+        };
+        LOG4J.info("hello log4j");
+        LOG4J.info("hello log4j");
+        LOG4J.info("hello log4j");
+        if (HttpEventCollectorUnitTestMiddleware.eventsReceived == 0)
+            sleep(15000);
+        Assert.assertTrue(HttpEventCollectorUnitTestMiddleware.eventsReceived == 3);
+    }
+    
+    @Test
+    public void log4j_verifyPatternIsHonored() throws Exception {
+        HashMap<String, String> userInputs = new HashMap<String, String>();
+        String loggerName = "splunk.log4jPattern";
+        userInputs.put("user_logger_name", loggerName);
+        userInputs.put("user_httpEventCollector_token", "11111111-2222-3333-4444-555555555555");
+        userInputs.put("user_middleware", "HttpEventCollectorUnitTestMiddleware");
+        userInputs.put("user_batch_size_count", "1");
+        userInputs.put("user_batch_size_bytes", "0");
+        userInputs.put("user_patternLayout", "%l: %m");
+        LoggerContext resetLog4j2Configuration = TestUtil.resetLog4j2Configuration("log4j2_template.xml", "log4j2.xml", userInputs);
+        org.apache.logging.log4j.Logger LOG4J = resetLog4j2Configuration.getLogger(loggerName);
+        
+        // send 3 events
+        HttpEventCollectorUnitTestMiddleware.eventsReceived = 0;
+        HttpEventCollectorUnitTestMiddleware.io = new HttpEventCollectorUnitTestMiddleware.IO() {
+            @Override
+            public void input(List<HttpEventCollectorEventInfo> events) {
+                Assert.assertTrue(events.size() == 1);
+                Assert.assertTrue(events.get(0).getMessage().matches("HttpEventCollectorUnitTest\\.log4j_verifyPatternIsHonored\\(HttpEventCollectorUnitTest\\.java:[0-9]+\\): hello log4j"));
                 Assert.assertTrue(events.get(0).getSeverity().compareTo("INFO") == 0);
             }
         };

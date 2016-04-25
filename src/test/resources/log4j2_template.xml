@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Configuration status="info" name="example" packages="">
+<Configuration status="info" name="example" packages="com.splunk.logging">
     <Appenders>
+	   <Console name="STDOUT" target="SYSTEM_OUT">
+	       <PatternLayout pattern="%d %-5p [%t] %C %M() %m%n"/>
+	   </Console>
         <Http
               name="httpconf"
               url="%scheme%://%host%:8088"
               token="%user_httpEventCollector_token%"
-
               index="%user_index%"
               source="%user_source%"
               sourcetype="%user_sourcetype%"
@@ -17,14 +19,13 @@
               middleware="%user_middleware%"
                 >
 
-            <PatternLayout pattern="%m"/>
+            <PatternLayout pattern="%user_patternLayout%"/>
         </Http>
 
     </Appenders>
 
-    <!-- Define a logger named 'testSplunkLog4j' which writes to the socket appender we defined above. -->
     <Loggers>
-        <Root level="INFO"/>
+        <Root level="INFO"><AppenderRef ref="STDOUT" /></Root>
         <Logger name="%user_logger_name%" level="info">
             <AppenderRef ref="httpconf"/>
         </Logger>

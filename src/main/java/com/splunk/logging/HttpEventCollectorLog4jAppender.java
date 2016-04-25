@@ -16,18 +16,20 @@ package com.splunk.logging;
  */
 
 import java.io.Serializable;
+import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
 import java.util.Dictionary;
 import java.util.Hashtable;
-import org.apache.logging.log4j.core.appender.AbstractAppender;
+
 import org.apache.logging.log4j.core.Filter;
 import org.apache.logging.log4j.core.Layout;
-import org.apache.logging.log4j.core.layout.PatternLayout;
 import org.apache.logging.log4j.core.LogEvent;
+import org.apache.logging.log4j.core.appender.AbstractAppender;
 import org.apache.logging.log4j.core.config.plugins.Plugin;
 import org.apache.logging.log4j.core.config.plugins.PluginAttribute;
 import org.apache.logging.log4j.core.config.plugins.PluginElement;
 import org.apache.logging.log4j.core.config.plugins.PluginFactory;
+import org.apache.logging.log4j.core.layout.PatternLayout;
 
 /**
  * Splunk Http Appender.
@@ -150,10 +152,18 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
     @Override
     public void append(final LogEvent event)
     {
-        this.sender.send(
-                event.getLevel().toString(),
-                event.getMessage().getFormattedMessage()
-        );
+    	String message;
+        try {
+			message = new String(getLayout().toByteArray(event), "UTF-8");
+		} catch (UnsupportedEncodingException e) {
+			LOGGER.error("UTF-8 encoding unsupported for log message", e);
+			message = event.getMessage().getFormattedMessage();
+		}
+
+		this.sender.send(
+		        event.getLevel().toString(),
+		        message
+		);
     }
 
     @Override

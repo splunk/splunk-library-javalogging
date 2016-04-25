@@ -43,30 +43,33 @@ public class TestUtil {
         if (serviceArgs.isEmpty()) {
             //set default value
             serviceArgs.setUsername("admin");
-            serviceArgs.setPassword("changeme");
+            serviceArgs.setPassword("admin");
             serviceArgs.setHost("localhost");
             serviceArgs.setPort(8089);
             serviceArgs.setScheme("https");
 
             //update serviceArgs with customer splunk host info
             String splunkhostfile = System.getProperty("user.home") + File.separator + ".splunkrc";
-            List<String> lines = Files.readAllLines(new File(splunkhostfile).toPath(), Charset.defaultCharset());
-            for (String line : lines) {
-                if (line.toLowerCase().contains("host=")) {
-                    serviceArgs.setHost(line.split("=")[1]);
-                }
-                if (line.toLowerCase().contains("admin=")) {
-                    serviceArgs.setUsername(line.split("=")[1]);
-                }
-                if (line.toLowerCase().contains("password=")) {
-                    serviceArgs.setPassword(line.split("=")[1]);
-                }
-                if (line.toLowerCase().contains("scheme=")) {
-                    serviceArgs.setScheme(line.split("=")[1]);
-                }
-                if (line.toLowerCase().contains("port=")) {
-                    serviceArgs.setPort(Integer.parseInt(line.split("=")[1]));
-                }
+            File splunkUserHostFile = new File(splunkhostfile);
+            if (splunkUserHostFile.exists()){
+            	List<String> lines = Files.readAllLines(splunkUserHostFile.toPath(), Charset.defaultCharset());
+                for (String line : lines) {
+                    if (line.toLowerCase().contains("host=")) {
+                        serviceArgs.setHost(line.split("=")[1]);
+                    }
+                    if (line.toLowerCase().contains("admin=")) {
+                        serviceArgs.setUsername(line.split("=")[1]);
+                    }
+                    if (line.toLowerCase().contains("password=")) {
+                        serviceArgs.setPassword(line.split("=")[1]);
+                    }
+                    if (line.toLowerCase().contains("scheme=")) {
+                        serviceArgs.setScheme(line.split("=")[1]);
+                    }
+                    if (line.toLowerCase().contains("port=")) {
+                        serviceArgs.setPort(Integer.parseInt(line.split("=")[1]));
+                    }
+                }	
             }
         }
         // Use TLSv1 intead of SSLv3
@@ -223,14 +226,14 @@ public class TestUtil {
         List<String> lines = Files.readAllLines(new File(configFileDir, configFileTemplate).toPath(), Charset.defaultCharset());
         for (int i = 0; i < lines.size(); i++) {
             if (lines.get(i).contains("%host%")) {
-                lines.set(i, lines.get(i).replace("%host%", serviceArgs.host));
+                lines.set(i, lines.get(i).replace("%host%", serviceArgs.get("host").toString()));
             }
             if (lines.get(i).contains("%port%")) {
-                lines.set(i, lines.get(i).replace("%port%", serviceArgs.port.toString()));
+                lines.set(i, lines.get(i).replace("%port%", serviceArgs.get("port").toString()));
             }
 
-            if (lines.get(i).contains("%scheme%")) {
-                lines.set(i, lines.get(i).replace("%scheme%", serviceArgs.scheme));
+            if (lines.get(i).contains("%scheme%") && !userInputs.containsKey("scheme")) {
+                lines.set(i, lines.get(i).replace("%scheme%", serviceArgs.get("scheme").toString()));
             }
 
             String match = FindUserInputConfiguration(lines.get(i));
@@ -329,6 +332,48 @@ public class TestUtil {
 
         Assert.assertTrue(eventCount == 1);
     }
+    
+    public static void verifyDeletePermissions() throws IOException {
+        connectToSplunk();
+        
+        User user = service.getUsers().get("admin");
+        List<String> roleList = new ArrayList<String>(Arrays.asList(user.getRoles()));
+        
+        if (!roleList.contains("can_delete")){
+        	roleList.add("can_delete");
+        	String[] roles = new String[roleList.size()];
+        	roleList.toArray(roles);
+            
+            user.setRoles(roles);
+            user.update();	
+        }
+        
+    }
+    
+    
+    public static void deleteMessages(List<String> msgs) throws IOException {
+        connectToSplunk();
+        verifyDeletePermissions();
+
+        long startTime = System.currentTimeMillis();
+        InputStream resultsStream = null;
+        ResultsReaderXml resultsReader = null;
+
+        String searchstr = org.apache.commons.lang3.StringUtils.join(msgs, "\" OR \"");
+        searchstr = "\"" + searchstr + "\"";
+
+        InputStream stream = service.oneshotSearch("search "+searchstr+" | delete");
+        stream.close();
+        while (System.currentTimeMillis() - startTime < 20 * 1000){
+            resultsStream = service.oneshotSearch("search " + searchstr);
+            resultsReader = new ResultsReaderXml(resultsStream);
+        	if (resultsReader.getNextEvent() == null)
+        		break;
+        }
+        resultsReader.close();
+        resultsStream.close();
+        Assert.assertFalse(resultsReader.iterator().hasNext());
+    }
 
     public static void verifyNoEventSentToSplunk(List<String> msgs) throws IOException {
         connectToSplunk();
@@ -361,9 +406,16 @@ public class TestUtil {
     }
 
     /*
-    verify each of the message in msgs appeared and appeared only once in splunk
+    verify each of the message in msgs appeared in splunk
      */
     public static void verifyEventsSentToSplunk(List<String> msgs) throws IOException {
+    	verifyEventsSentToSplunkMatchingMsgPattern(msgs, null);
+    }
+    
+    /*
+    verify each of the message in msgs appeared in splunk with matching layout pattern
+     */
+    public static void verifyEventsSentToSplunkMatchingMsgPattern(List<String> msgs, String patternRegEx) throws IOException {
         connectToSplunk();
 
         for (String msg : msgs) {
@@ -375,11 +427,13 @@ public class TestUtil {
                 resultsStream = service.oneshotSearch("search " + msg);
                 resultsReader = new ResultsReaderXml(resultsStream);
 
-                //verify has one and only one record return
                 for (Event event : resultsReader) {
                     eventCount++;
-                    System.out.println("------verify has events---------");
-                    System.out.println(event.getSegmentedRaw());
+                    System.out.println("------verify has events for msg ["+msg+"] ---------");
+                    System.out.println(event.get("_raw"));
+                    if (patternRegEx != null){
+                    	Assert.assertTrue(Pattern.matches(patternRegEx,event.get("_raw")));	
+                    }
                 }
 
                 if (eventCount > 0)

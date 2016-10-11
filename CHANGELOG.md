@@ -1,4 +1,3 @@
-
 # Splunk Logging for Java Changelog
 
 ## Version 1.5.2

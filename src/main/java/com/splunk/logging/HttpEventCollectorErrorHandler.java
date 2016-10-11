@@ -39,6 +39,7 @@ public class HttpEventCollectorErrorHandler {
     /**
      * This exception is passed to error callback when Splunk server replies an error
      */
+    @SuppressWarnings("serial")
     public static class ServerErrorException extends Exception {
         private String reply;
         private long errorCode = -1;

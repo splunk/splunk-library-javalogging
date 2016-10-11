@@ -6,7 +6,7 @@
 
   <groupId>com.splunk.logging</groupId>
   <artifactId>splunk-library-javalogging</artifactId>
-  <version>1.5.1</version>
+  <version>1.5.2</version>
   <packaging>jar</packaging>
 
   <name>Splunk Logging for Java</name>
@@ -222,6 +222,10 @@
     <contributor>
       <name>Fred Ross</name>
       <email>fross@splunk.com</email>
+    </contributor>
+    <contributor>
+      <name>Shakeel Mohamed</name>
+      <email>shakeel@splunk.com</email>
     </contributor>
   </contributors>
 

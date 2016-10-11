@@ -5,6 +5,7 @@
     <Appender name="%user_logger_name%" class="com.splunk.logging.HttpEventCollectorLogbackAppender">
         <url>%scheme%://%host%:8088</url>
         <token>%user_httpEventCollector_token%</token>
+        <host>%user_host%</host>
         <index>%user_index%</index>
         <source>splunktest_accept</source>
         <sourcetype>battlecat_test</sourcetype>

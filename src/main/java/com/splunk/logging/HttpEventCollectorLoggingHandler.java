@@ -80,8 +80,6 @@ package com.splunk.logging;
  * com.splunk.logging.HttpEventCollectorLoggingHandler.send_mode=sequential
  */
 
-import ch.qos.logback.classic.spi.ThrowableProxy;
-
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.Locale;
@@ -167,7 +165,7 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
                 record.getLoggerName(),
                 String.format(Locale.US, "%d", record.getThreadID()),
                 null, // no property map available
-                record.getThrown() == null ? null : new ThrowableProxy(record.getThrown()),
+                record.getThrown() == null ? null : record.getThrown().getMessage(),
                 null // no marker available
         );
     }

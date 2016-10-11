@@ -18,8 +18,6 @@ package com.splunk.logging;
  * under the License.
  */
 
-import ch.qos.logback.classic.spi.IThrowableProxy;
-
 import java.io.Serializable;
 import java.util.Map;
 
@@ -33,7 +31,7 @@ public class HttpEventCollectorEventInfo {
     private final String logger_name;
     private final String thread_name;
     private final Map<String, String> properties;
-    private final IThrowableProxy thrown;
+    private final String exception_message;
     private final Serializable marker;
 
     /**
@@ -47,7 +45,7 @@ public class HttpEventCollectorEventInfo {
             final String logger_name,
             final String thread_name,
             final Map<String, String> properties,
-            final IThrowableProxy thrown,
+            final String exception_message,
             final Serializable marker
     ) {
         this.time = System.currentTimeMillis() / 1000.0;
@@ -56,7 +54,7 @@ public class HttpEventCollectorEventInfo {
         this.logger_name = logger_name;
         this.thread_name = thread_name;
         this.properties = properties;
-        this.thrown = thrown;
+        this.exception_message = exception_message;
         this.marker = marker;
     }
 
@@ -97,9 +95,9 @@ public class HttpEventCollectorEventInfo {
     public Map<String,String> getProperties() { return properties; }
 
     /**
-     * @return event thrown exception
+     * @return event's exception message
      */
-    public IThrowableProxy getThrown() { return thrown; }
+    public final String getExceptionMessage() { return exception_message; }
 
     /**
      * @return event marker

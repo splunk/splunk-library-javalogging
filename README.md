@@ -4,7 +4,7 @@
 
 This project provides utilities to easily log data using Splunk's recommended 
 best practices to any supported logger, using any of the three major Java 
-logging frameworks (Logback, Log4J 2, and java.util.logging), to the [HTTP Event Collector] (http://dev.splunk.com/view/event-collector/SP-CAAAE6M) and to Splunk TCP 
+logging frameworks (Logback, Log4J 2, and java.util.logging), to the [HTTP Event Collector](http://dev.splunk.com/view/event-collector/SP-CAAAE6M) and to Splunk TCP 
 inputs.
 
 In particular, it provides:

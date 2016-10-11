@@ -18,8 +18,6 @@ package com.splunk.logging;
  * under the License.
  */
 
-import ch.qos.logback.classic.spi.IThrowableProxy;
-
 import java.io.Serializable;
 import java.util.Map;
 

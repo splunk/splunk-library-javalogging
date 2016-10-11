@@ -18,7 +18,6 @@ package com.splunk.logging;
  * under the License.
  */
 
-import ch.qos.logback.classic.spi.IThrowableProxy;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.concurrent.FutureCallback;

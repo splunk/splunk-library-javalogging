@@ -150,12 +150,12 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
             final String logger_name,
             final String thread_name,
             Map<String, String> properties,
-            IThrowableProxy thrown,
+            final String exception_message,
             Serializable marker
     ) {
         // create event info container and add it to the batch
         HttpEventCollectorEventInfo eventInfo =
-                new HttpEventCollectorEventInfo(severity, message, logger_name, thread_name, properties, thrown, marker);
+                new HttpEventCollectorEventInfo(severity, message, logger_name, thread_name, properties, exception_message, marker);
         eventsBatch.add(eventInfo);
         eventsBatchSize += severity.length() + message.length();
         if (eventsBatch.size() >= maxEventsBatchCount || eventsBatchSize > maxEventsBatchSize) {
@@ -230,8 +230,8 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
         putIfPresent(body, "thread", eventInfo.getThreadName());
         // add an exception record if and only if there is one
         // in practice, the message also has the exception information attached
-        if (eventInfo.getThrown() != null) {
-            putIfPresent(body, "exception", eventInfo.getThrown().getMessage());
+        if (eventInfo.getExceptionMessage() != null) {
+            putIfPresent(body, "exception", eventInfo.getExceptionMessage());
         }
 
         // add properties if and only if there are any

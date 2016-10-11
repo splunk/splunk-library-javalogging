@@ -104,7 +104,7 @@ public class HttpEventCollectorLogbackAppender extends AppenderBase<ILoggingEven
                     event.getLoggerName(),
                     event.getThreadName(),
                     event.getMDCPropertyMap(),
-                    event.getThrowableProxy(),
+                    event.getThrowableProxy() == null ? null : event.getThrowableProxy().getMessage(),
                     c.convert(event)
                     );
         }

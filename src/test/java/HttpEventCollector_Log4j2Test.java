@@ -17,9 +17,12 @@
 import java.io.*;
 import java.util.*;
 
+import com.splunk.Event;
 import com.splunk.logging.HttpEventCollectorErrorHandler;
 import com.splunk.logging.HttpEventCollectorEventInfo;
 import org.apache.logging.log4j.core.LoggerContext;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
 import org.junit.Assert;
 import org.junit.Test;
 import org.apache.logging.log4j.Logger;
@@ -61,6 +64,40 @@ public final class HttpEventCollector_Log4j2Test {
         System.out.println("====================== Test pass=========================");
     }
 
+    @Test
+    public void canSendEventWithThrowableUsingLog4j2() throws Exception, IOException, InterruptedException {
+        TestUtil.enableHttpEventCollector();
+        String token = TestUtil.createHttpEventCollectorToken(httpEventCollectorName);
+        String loggerName = "splunkLogger4j2";
+        HashMap<String, String> userInputs = new HashMap<String, String>();
+        userInputs.put("user_logger_name", loggerName);
+        userInputs.put("user_httpEventCollector_token", token);
+        userInputs.put("user_send_full_throwable", "true");
+        org.apache.logging.log4j.core.LoggerContext context = TestUtil.resetLog4j2Configuration("log4j2_template.xml", "log4j2.xml", userInputs);
+
+        Logger logger = context.getLogger(loggerName);
+        Throwable exception = new RuntimeException("fail whale");
+        String msg = "this is an error message " + UUID.randomUUID().toString();
+		logger.error(msg, exception);
+
+        List<Event> eventsSentToSplunk = TestUtil.fetchEventsSentToSplunk(msg);
+        Assert.assertEquals(1, eventsSentToSplunk.size());
+        
+        Event event = eventsSentToSplunk.get(0);
+        String raw = event.get("_raw");
+        JSONObject eventJson = (JSONObject) new JSONParser().parse(raw);
+        
+        Assert.assertEquals("ERROR", eventJson.get("severity"));
+        Assert.assertEquals(msg, eventJson.get("message"));
+        Assert.assertNotNull(eventJson.get("throwable"));
+        
+        JSONObject throwableJson = (JSONObject) eventJson.get("throwable");
+        Assert.assertEquals("fail whale", throwableJson.get("throwable_message"));
+        Assert.assertNotNull(throwableJson.get("stack_trace"));
+
+        TestUtil.deleteHttpEventCollectorToken(httpEventCollectorName);
+        System.out.println("====================== Test pass=========================");
+    }
 
     /**
      * sending a message via httplogging using log4j2 to splunk and set index, source and sourcetype

@@ -327,7 +327,7 @@ public class TestUtil {
         resultsReader.close();
         resultsStream.close();
 
-        Assert.assertTrue(eventCount == 1);
+        Assert.assertEquals(1, eventCount);
     }
 
     public static void verifyNoEventSentToSplunk(List<String> msgs) throws IOException {
@@ -392,6 +392,55 @@ public class TestUtil {
             Assert.assertTrue(eventCount == 1);
         }
     }
+    
+    /**
+     * Fetches events sent to splunk that match the specified messages. Queries each msg and verifies that only one matching
+     * event has been found. Waits up to 30 seconds for the event matching the msg to appear.
+     * 
+     * Will throw an exception if there is more than one event per msg.
+     * 
+     * @param msgs the messages whose matching events should be found.
+     * @return the events for the messages.
+     * @throws IOException
+     */
+    public static List<Event> fetchEventsSentToSplunk(String... msgs) throws IOException {
+        connectToSplunk();
+
+        List<Event> results = new ArrayList<Event>();
+        
+        for (String msg : msgs) {
+            long startTime = System.currentTimeMillis();
+            int eventCount = 0;
+            InputStream resultsStream = null;
+            ResultsReaderXml resultsReader = null;
+            while (System.currentTimeMillis() - startTime < 30 * 1000)/*wait for up to 30s*/ {
+                resultsStream = service.oneshotSearch("search " + msg);
+                try {
+	                resultsReader = new ResultsReaderXml(resultsStream);
+	
+	                try {
+	                //verify has one and only one record return
+	                for (Event event : resultsReader) {
+	                    eventCount++;
+	                    results.add(event);
+	                }
+
+	                if (eventCount > 0) {
+	                    Assert.assertEquals(1, eventCount);
+	                    break;
+	                }
+	                } finally {
+	                	resultsReader.close();
+	                }
+                } finally {
+                	resultsStream.close();
+                }
+                    
+            }
+        }
+        return results;
+    }
+    
 
     public static void verifyEventsSentInOrder(String prefix, int totalEventsCount, String index) throws IOException {
         connectToSplunk();

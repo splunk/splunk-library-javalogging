@@ -29,6 +29,7 @@ import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
 import org.apache.http.impl.nio.client.HttpAsyncClients;
 import org.apache.http.util.EntityUtils;
 
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import javax.net.ssl.SSLContext;
 import java.io.IOException;
@@ -41,6 +42,7 @@ import java.util.List;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Locale;
+
 
 
 
@@ -161,6 +163,41 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
             flush();
         }
     }
+    
+    /**
+     * Send a single logging event
+     * @note in case of batching the event isn't sent immediately
+     * @param severity event severity level (info, warning, etc.)
+     * @param message event text
+     */
+    public synchronized void send(
+            final String severity,
+            final String message,
+            final String logger_name,
+            final String thread_name,
+            Map<String, String> properties,
+            final Throwable throwable,
+            Serializable marker
+    ) {
+        // create event info container and add it to the batch
+    	
+    
+        HttpEventCollectorEventInfo eventInfo =
+                new HttpEventCollectorEventInfo(
+                		severity, 
+                		message, 
+                		logger_name, 
+                		thread_name, 
+                		properties, 
+                		HttpEventCollectorThrowableInfo.buildFromThrowable(throwable), 
+                		marker
+                );
+        eventsBatch.add(eventInfo);
+        eventsBatchSize += severity.length() + message.length();
+        if (eventsBatch.size() >= maxEventsBatchCount || eventsBatchSize > maxEventsBatchSize) {
+            flush();
+        }
+    }
 
     /**
      * Flush all pending events
@@ -232,6 +269,11 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
         if (eventInfo.getExceptionMessage() != null) {
             putIfPresent(body, "exception", eventInfo.getExceptionMessage());
         }
+        
+        final JSONObject throwableJson = writeThrowableInfoToJson(eventInfo.getThrowableInfo());
+        if (throwableJson != null) {
+        	body.put("throwable", throwableJson);
+        }
 
         // add properties if and only if there are any
         final Map<String,String> props = eventInfo.getProperties();
@@ -246,6 +288,32 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
         // join event and body
         event.put("event", body);
         return event.toString();
+    }
+    
+    @SuppressWarnings("unchecked")
+	private JSONObject writeThrowableInfoToJson(HttpEventCollectorThrowableInfo throwableInfo) {
+    	if (throwableInfo == null) {
+    		return null;
+    	}
+    	
+    	final JSONObject json = new JSONObject();
+    	putIfPresent(json, "throwable_message", throwableInfo.getMessage());
+    	putIfPresent(json, "throwable_class", throwableInfo.getClassName());
+    	
+    	final JSONArray stackTrace = new JSONArray();
+    	json.put("stack_trace", stackTrace);
+    	if (throwableInfo.getStackTraceElements() != null) {
+    		for (final String strackTraceElement : throwableInfo.getStackTraceElements()) {
+    			stackTrace.add(strackTraceElement);
+			}
+    	}
+    	
+    	final JSONObject cause = writeThrowableInfoToJson(throwableInfo.getCause());
+    	if (cause != null) {
+    		json.put("cause", cause);
+    	}
+    	
+    	return json;
     }
 
     private void startHttpClient() {
@@ -285,7 +353,8 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
 
     // Currently we never close http client. This method is added for symmetry
     // with startHttpClient.
-    private void stopHttpClient() throws SecurityException {
+    @SuppressWarnings("unused")
+	private void stopHttpClient() throws SecurityException {
         if (httpClient != null) {
             try {
                 httpClient.close();

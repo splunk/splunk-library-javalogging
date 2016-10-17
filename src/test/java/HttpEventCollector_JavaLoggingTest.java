@@ -256,6 +256,18 @@ public final class HttpEventCollector_JavaLoggingTest {
         String jsonMsg = String.format("{EventDate:%s, EventMsg:'test event disabled token }", new Date().toString());
         logger.info(jsonMsg);
         Thread.sleep(2000);
+        
+        {
+            long startTime = System.currentTimeMillis();
+            while (System.currentTimeMillis() - startTime < 60 * 1000)/*wait for up to 60s*/ {
+                if (logEx.size() >= 1)
+                    break;
+                Thread.sleep(1000);
+            }
+
+            Assert.assertNotNull(logEx);
+            Assert.assertEquals(1, logEx.size());
+        }
 
         //delete the token so that it becomes invalid
         TestUtil.deleteHttpEventCollectorToken(httpEventCollectorName);
@@ -271,9 +283,8 @@ public final class HttpEventCollector_JavaLoggingTest {
             Thread.sleep(1000);
         }
 
-        if (logEx == null)
-            Assert.fail("didn't catch errors");
-
+        Assert.assertNotNull(logEx);
+        Assert.assertEquals(1, logEx.size());
 
         System.out.println("======print logEx");
         System.out.println(logEx.toString());
@@ -336,7 +347,7 @@ public final class HttpEventCollector_JavaLoggingTest {
         Assert.assertEquals(1, errors.size());
 
         System.out.println(logEx.toString());
-        if(!logEx.toString().contains("Connection refused"))
+        if(!logEx.toString().contains("Connection refused") && !logEx.toString().contains("Connection closed"))
             Assert.fail(String.format("Unexpected error message '%s'", logEx.toString()));
     }
 

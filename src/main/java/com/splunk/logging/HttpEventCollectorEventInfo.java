@@ -61,9 +61,8 @@ public class HttpEventCollectorEventInfo {
     }
     
     /**
-     * Create a new HttpEventCollectorEventInfo container
-     * @param severity of event
-     * @param message is an event content
+     * Creates a new HttpEventCollectorEventInfo container. Unlike the alternate constructor, retains the
+     * the full, sanitised throwable info (if provided).
      */
     public HttpEventCollectorEventInfo(
             final String severity,

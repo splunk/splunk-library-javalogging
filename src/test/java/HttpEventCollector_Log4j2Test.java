@@ -78,19 +78,19 @@ public final class HttpEventCollector_Log4j2Test {
         Logger logger = context.getLogger(loggerName);
         Throwable exception = new RuntimeException("fail whale");
         String msg = "this is an error message " + UUID.randomUUID().toString();
-		logger.error(msg, exception);
+        logger.error(msg, exception);
 
         List<Event> eventsSentToSplunk = TestUtil.fetchEventsSentToSplunk(msg);
         Assert.assertEquals(1, eventsSentToSplunk.size());
-        
+
         Event event = eventsSentToSplunk.get(0);
         String raw = event.get("_raw");
         JSONObject eventJson = (JSONObject) new JSONParser().parse(raw);
-        
+
         Assert.assertEquals("ERROR", eventJson.get("severity"));
         Assert.assertEquals(msg, eventJson.get("message"));
         Assert.assertNotNull(eventJson.get("throwable"));
-        
+
         JSONObject throwableJson = (JSONObject) eventJson.get("throwable");
         Assert.assertEquals("fail whale", throwableJson.get("throwable_message"));
         Assert.assertNotNull(throwableJson.get("stack_trace"));

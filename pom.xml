@@ -79,7 +79,7 @@
                             <includes>
                                 <include>**/HttpEventCollectorUnitTest.class</include>
                                 <include>com/splunk/logging//HttpEventCollectorThrowableInfoUnitTest.class</include>
-								<include>com/splunk/logging//HttpEventCollectorSenderUnitTest.class</include>
+                                <include>com/splunk/logging//HttpEventCollectorSenderUnitTest.class</include>
                             </includes>
                         </configuration>
                     </plugin>

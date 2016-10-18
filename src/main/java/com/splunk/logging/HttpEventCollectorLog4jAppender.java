@@ -38,7 +38,7 @@ import org.apache.logging.log4j.core.config.plugins.PluginFactory;
 public final class HttpEventCollectorLog4jAppender extends AbstractAppender
 {
     private HttpEventCollectorSender sender = null;
-	private boolean sendFullThrowable = false;
+    private boolean sendFullThrowable = false;
 
     private HttpEventCollectorLog4jAppender(final String name,
                          final String url,
@@ -162,28 +162,28 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
     public void append(final LogEvent event)
     {
         // if an exception was thrown
-    	if (this.sendFullThrowable) {
-    		this.sender.send(
-    				event.getLevel().toString(),
-    				event.getMessage().getFormattedMessage(),
-    				event.getLoggerName(),
-    				event.getThreadName(),
-    				event.getContextMap(),
-    				event.getThrown() == null ? null : event.getThrown(),
-					event.getMarker()
-    				);
-    	}
-    	else {
-    		this.sender.send(
-    				event.getLevel().toString(),
-    				event.getMessage().getFormattedMessage(),
-    				event.getLoggerName(),
-    				event.getThreadName(),
-    				event.getContextMap(),
-    				event.getThrown() == null ? null : event.getThrown().getMessage(),
-    				event.getMarker()
-    				);
-    	}
+        if (this.sendFullThrowable) {
+            this.sender.send(
+                event.getLevel().toString(),
+                event.getMessage().getFormattedMessage(),
+                event.getLoggerName(),
+                event.getThreadName(),
+                event.getContextMap(),
+                event.getThrown() == null ? null : event.getThrown(),
+                event.getMarker()
+            );
+        }
+        else {
+            this.sender.send(
+                event.getLevel().toString(),
+                event.getMessage().getFormattedMessage(),
+                event.getLoggerName(),
+                event.getThreadName(),
+                event.getContextMap(),
+                event.getThrown() == null ? null : event.getThrown().getMessage(),
+                event.getMarker()
+            );
+        }
     }
 
     @Override

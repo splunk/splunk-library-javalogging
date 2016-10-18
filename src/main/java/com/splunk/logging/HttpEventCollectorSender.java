@@ -157,18 +157,13 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
         // create event info container and add it to the batch
         HttpEventCollectorEventInfo eventInfo =
                 new HttpEventCollectorEventInfo(severity, message, logger_name, thread_name, properties, exception_message, marker);
-        eventsBatch.add(eventInfo);
-        eventsBatchSize += severity.length() + message.length();
-        if (eventsBatch.size() >= maxEventsBatchCount || eventsBatchSize > maxEventsBatchSize) {
-            flush();
-        }
+        queueEventInfo(eventInfo);
     }
-    
+
     /**
-     * Send a single logging event
-     * @note in case of batching the event isn't sent immediately
-     * @param severity event severity level (info, warning, etc.)
-     * @param message event text
+     * Send a single logging event including the full information from the throwable.
+     *
+     * Contrast with the alternate send method that only sends the throwable's message.
      */
     public synchronized void send(
             final String severity,
@@ -180,20 +175,30 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
             Serializable marker
     ) {
         // create event info container and add it to the batch
-    	
-    
+
+
         HttpEventCollectorEventInfo eventInfo =
                 new HttpEventCollectorEventInfo(
-                		severity, 
-                		message, 
-                		logger_name, 
-                		thread_name, 
-                		properties, 
-                		HttpEventCollectorThrowableInfo.buildFromThrowable(throwable), 
-                		marker
+                severity, 
+                message, 
+                logger_name, 
+                thread_name, 
+                properties, 
+                HttpEventCollectorThrowableInfo.buildFromThrowable(throwable), 
+                marker
                 );
+        queueEventInfo(eventInfo);
+    }
+
+    /**
+     * Queues an event info for sending. If the number and size (measured roughly by message and severity length)
+     * exceed the max batch size, then queued events will be flushed immediately.
+     *
+     * @param eventInfo the info that should be queued for sending.
+     */
+    private void queueEventInfo(final HttpEventCollectorEventInfo eventInfo) {
         eventsBatch.add(eventInfo);
-        eventsBatchSize += severity.length() + message.length();
+        eventsBatchSize += eventInfo.getSeverity().length() + eventInfo.getMessage().length();
         if (eventsBatch.size() >= maxEventsBatchCount || eventsBatchSize > maxEventsBatchSize) {
             flush();
         }
@@ -269,10 +274,10 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
         if (eventInfo.getExceptionMessage() != null) {
             putIfPresent(body, "exception", eventInfo.getExceptionMessage());
         }
-        
+
         final JSONObject throwableJson = writeThrowableInfoToJson(eventInfo.getThrowableInfo());
         if (throwableJson != null) {
-        	body.put("throwable", throwableJson);
+            body.put("throwable", throwableJson);
         }
 
         // add properties if and only if there are any
@@ -289,31 +294,31 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
         event.put("event", body);
         return event.toString();
     }
-    
+
     @SuppressWarnings("unchecked")
-	private JSONObject writeThrowableInfoToJson(HttpEventCollectorThrowableInfo throwableInfo) {
-    	if (throwableInfo == null) {
-    		return null;
-    	}
-    	
-    	final JSONObject json = new JSONObject();
-    	putIfPresent(json, "throwable_message", throwableInfo.getMessage());
-    	putIfPresent(json, "throwable_class", throwableInfo.getClassName());
-    	
-    	final JSONArray stackTrace = new JSONArray();
-    	json.put("stack_trace", stackTrace);
-    	if (throwableInfo.getStackTraceElements() != null) {
-    		for (final String strackTraceElement : throwableInfo.getStackTraceElements()) {
-    			stackTrace.add(strackTraceElement);
-			}
-    	}
-    	
-    	final JSONObject cause = writeThrowableInfoToJson(throwableInfo.getCause());
-    	if (cause != null) {
-    		json.put("cause", cause);
-    	}
-    	
-    	return json;
+    private JSONObject writeThrowableInfoToJson(HttpEventCollectorThrowableInfo throwableInfo) {
+        if (throwableInfo == null) {
+            return null;
+        }
+        
+        final JSONObject json = new JSONObject();
+        putIfPresent(json, "throwable_message", throwableInfo.getMessage());
+        putIfPresent(json, "throwable_class", throwableInfo.getClassName());
+        
+        final JSONArray stackTrace = new JSONArray();
+        json.put("stack_trace", stackTrace);
+        if (throwableInfo.getStackTraceElements() != null) {
+            for (final String strackTraceElement : throwableInfo.getStackTraceElements()) {
+                stackTrace.add(strackTraceElement);
+            }
+        }
+
+        final JSONObject cause = writeThrowableInfoToJson(throwableInfo.getCause());
+        if (cause != null) {
+            json.put("cause", cause);
+        }
+
+        return json;
     }
 
     private void startHttpClient() {
@@ -354,7 +359,7 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
     // Currently we never close http client. This method is added for symmetry
     // with startHttpClient.
     @SuppressWarnings("unused")
-	private void stopHttpClient() throws SecurityException {
+    private void stopHttpClient() throws SecurityException {
         if (httpClient != null) {
             try {
                 httpClient.close();

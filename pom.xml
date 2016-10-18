@@ -78,8 +78,6 @@
                         <configuration>
                             <includes>
                                 <include>**/HttpEventCollectorUnitTest.class</include>
-                                <include>com/splunk/logging//HttpEventCollectorThrowableInfoUnitTest.class</include>
-                                <include>com/splunk/logging//HttpEventCollectorSenderUnitTest.class</include>
                             </includes>
                         </configuration>
                     </plugin>
@@ -133,13 +131,6 @@
           <groupId>org.slf4j</groupId>
           <artifactId>slf4j-api</artifactId>
           <version>1.7.5</version>
-          <scope>test</scope>
-      </dependency>
-      <dependency>
-          <groupId>org.apache.httpcomponents</groupId>
-          <artifactId>httpclient</artifactId>
-          <version>4.3.6</version>
-          <classifier>tests</classifier>
           <scope>test</scope>
       </dependency>
       <dependency>
@@ -240,10 +231,6 @@
     <contributor>
       <name>Fred Ross</name>
       <email>fross@splunk.com</email>
-    </contributor>
-    <contributor>
-      <name>Shakeel Mohamed</name>
-      <email>shakeel@splunk.com</email>
     </contributor>
   </contributors>
 

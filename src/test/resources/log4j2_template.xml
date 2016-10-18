@@ -5,7 +5,6 @@
               name="httpconf"
               url="%scheme%://%host%:8088"
               token="%user_httpEventCollector_token%"
-
               host="%user_host%"
               index="%user_index%"
               source="%user_source%"

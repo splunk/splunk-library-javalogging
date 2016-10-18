@@ -278,6 +278,15 @@ public class TestUtil {
         return context;
     }
 
+    /**
+     * Regenerates the log4j 1.2 properties file and resets the LogManager.
+     */
+    public static void resetLog4j1Configuration(String configFileTemplate, String configFile, HashMap<String, String> userInputs) throws IOException, JoranException {
+        String configFilePath = updateConfigFile(configFileTemplate, configFile, userInputs);
+        org.apache.log4j.LogManager.resetConfiguration();
+        org.apache.log4j.PropertyConfigurator.configure(configFilePath);
+    }
+
     /*
     create logback.xml and force logback manager to reload the configurations
      */

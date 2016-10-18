@@ -6,7 +6,7 @@
 
   <groupId>com.splunk.logging</groupId>
   <artifactId>splunk-library-javalogging</artifactId>
-  <version>1.5.0</version>
+  <version>1.5.3-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <name>Splunk Logging for Java</name>
@@ -78,6 +78,8 @@
                         <configuration>
                             <includes>
                                 <include>**/HttpEventCollectorUnitTest.class</include>
+                                <include>com/splunk/logging//HttpEventCollectorThrowableInfoUnitTest.class</include>
+                                <include>com/splunk/logging//HttpEventCollectorSenderUnitTest.class</include>
                             </includes>
                         </configuration>
                     </plugin>
@@ -134,6 +136,13 @@
           <scope>test</scope>
       </dependency>
       <dependency>
+          <groupId>org.apache.httpcomponents</groupId>
+          <artifactId>httpclient</artifactId>
+          <version>4.3.6</version>
+          <classifier>tests</classifier>
+          <scope>test</scope>
+      </dependency>
+      <dependency>
           <groupId>ch.qos.logback</groupId>
           <artifactId>logback-classic</artifactId>
           <version>1.0.13</version>
@@ -150,25 +159,34 @@
         <groupId>org.apache.httpcomponents</groupId>
         <artifactId>httpclient</artifactId>
         <version>4.3.6</version>
-       </dependency>
+      </dependency>
        
-       <dependency>
-         <groupId>org.apache.httpcomponents</groupId>
-         <artifactId>httpasyncclient</artifactId>
-         <version>4.0</version>
-        </dependency>
+      <dependency>
+        <groupId>org.apache.httpcomponents</groupId>
+        <artifactId>httpasyncclient</artifactId>
+        <version>4.0</version>
+      </dependency>
 
-     <dependency>
-       <groupId>org.apache.logging.log4j</groupId>
-         <artifactId>log4j-api</artifactId>
-         <version>2.1</version>
-     </dependency>
+      <dependency>
+        <groupId>org.apache.logging.log4j</groupId>
+        <artifactId>log4j-api</artifactId>
+        <version>2.1</version>
+        <scope>provided</scope>
+      </dependency>
 
-     <dependency>
+      <dependency>
        <groupId>org.apache.logging.log4j</groupId>
        <artifactId>log4j-core</artifactId>
        <version>2.1</version>
-     </dependency>
+       <scope>provided</scope>
+      </dependency>
+     
+      <dependency>
+       <groupId>log4j</groupId>
+       <artifactId>log4j</artifactId>
+       <version>1.2.16</version>
+       <scope>provided</scope>
+      </dependency>
 
     <dependency>
 	    <groupId>com.googlecode.json-simple</groupId>
@@ -222,6 +240,10 @@
     <contributor>
       <name>Fred Ross</name>
       <email>fross@splunk.com</email>
+    </contributor>
+    <contributor>
+      <name>Shakeel Mohamed</name>
+      <email>shakeel@splunk.com</email>
     </contributor>
   </contributors>
 

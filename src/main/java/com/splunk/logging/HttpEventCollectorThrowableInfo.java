@@ -11,11 +11,8 @@ import java.util.List;
 public class HttpEventCollectorThrowableInfo {
 
     private final String message;
-
     private final String className;
-
     private final HttpEventCollectorThrowableInfo cause;
-
     private final List<String> stackTraceElements;
 
     public HttpEventCollectorThrowableInfo(

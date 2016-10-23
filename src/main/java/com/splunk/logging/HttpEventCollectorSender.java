@@ -45,7 +45,6 @@ import java.util.Locale;
 
 
 
-
 /**
  * This is an internal helper class that sends logging events to Splunk http event collector.
  */
@@ -175,10 +174,7 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
             Serializable marker
     ) {
         // create event info container and add it to the batch
-
-
-        HttpEventCollectorEventInfo eventInfo =
-                new HttpEventCollectorEventInfo(
+        HttpEventCollectorEventInfo eventInfo = new HttpEventCollectorEventInfo(
                 severity, 
                 message, 
                 logger_name, 
@@ -295,7 +291,7 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
         return event.toString();
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("unchecked") // JSONObject does not understand that Map should be parameterised.
     private JSONObject writeThrowableInfoToJson(HttpEventCollectorThrowableInfo throwableInfo) {
         if (throwableInfo == null) {
             return null;
@@ -358,7 +354,7 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
 
     // Currently we never close http client. This method is added for symmetry
     // with startHttpClient.
-    @SuppressWarnings("unused")
+    @SuppressWarnings("unused") // Private method not used but is wanted.
     private void stopHttpClient() throws SecurityException {
         if (httpClient != null) {
             try {

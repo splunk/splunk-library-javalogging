@@ -6,7 +6,7 @@
 
   <groupId>com.splunk.logging</groupId>
   <artifactId>splunk-library-javalogging</artifactId>
-  <version>1.5.2</version>
+  <version>1.5.3-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <name>Splunk Logging for Java</name>
@@ -78,6 +78,8 @@
                         <configuration>
                             <includes>
                                 <include>**/HttpEventCollectorUnitTest.class</include>
+                                <include>com/splunk/logging/HttpEventCollectorThrowableInfoUnitTest.class</include>
+                                <include>com/splunk/logging/HttpEventCollectorSenderUnitTest.class</include>
                             </includes>
                         </configuration>
                     </plugin>
@@ -131,6 +133,13 @@
           <groupId>org.slf4j</groupId>
           <artifactId>slf4j-api</artifactId>
           <version>1.7.5</version>
+          <scope>test</scope>
+      </dependency>
+      <dependency>
+          <groupId>org.apache.httpcomponents</groupId>
+          <artifactId>httpclient</artifactId>
+          <version>4.3.6</version>
+          <classifier>tests</classifier>
           <scope>test</scope>
       </dependency>
       <dependency>

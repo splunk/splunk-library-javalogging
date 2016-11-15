@@ -38,6 +38,7 @@ import org.apache.logging.log4j.core.config.plugins.PluginFactory;
 public final class HttpEventCollectorLog4jAppender extends AbstractAppender
 {
     private HttpEventCollectorSender sender = null;
+    private boolean sendFullThrowable = false;
 
     private HttpEventCollectorLog4jAppender(final String name,
                          final String url,
@@ -55,7 +56,8 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
                          long retriesOnError,
                          String sendMode,
                          String middleware,
-                         final String disableCertificateValidation)
+                         final String disableCertificateValidation,
+                         final boolean sendFullThrowable)
     {
         super(name, filter, layout, ignoreExceptions);
         Dictionary<String, String> metadata = new Hashtable<String, String>();
@@ -64,6 +66,8 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
         metadata.put(HttpEventCollectorSender.MetadataSourceTag, source != null ? source : "");
         metadata.put(HttpEventCollectorSender.MetadataSourceTypeTag, sourcetype != null ? sourcetype : "");
 
+        this.sendFullThrowable = sendFullThrowable;
+        
         this.sender = new HttpEventCollectorSender(url, token, batchInterval, batchCount, batchSize, sendMode, metadata);
 
         // plug a user middleware
@@ -105,6 +109,7 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
             @PluginAttribute("send_mode") final String sendMode,
             @PluginAttribute("middleware") final String middleware,
             @PluginAttribute("disableCertificateValidation") final String disableCertificateValidation,
+            @PluginAttribute("send_full_throwable") final boolean sendFullThrowable,
             @PluginElement("Layout") Layout<? extends Serializable> layout,
             @PluginElement("Filter") final Filter filter
     )
@@ -144,7 +149,8 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
                 parseInt(retriesOnError, 0),
                 sendMode,
                 middleware,
-                disableCertificateValidation);
+                disableCertificateValidation,
+                sendFullThrowable);
     }
 
 
@@ -156,7 +162,19 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
     public void append(final LogEvent event)
     {
         // if an exception was thrown
-        this.sender.send(
+        if (this.sendFullThrowable) {
+            this.sender.send(
+                event.getLevel().toString(),
+                event.getMessage().getFormattedMessage(),
+                event.getLoggerName(),
+                event.getThreadName(),
+                event.getContextMap(),
+                event.getThrown() == null ? null : event.getThrown(),
+                event.getMarker()
+            );
+        }
+        else {
+            this.sender.send(
                 event.getLevel().toString(),
                 event.getMessage().getFormattedMessage(),
                 event.getLoggerName(),
@@ -164,7 +182,8 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
                 event.getContextMap(),
                 event.getThrown() == null ? null : event.getThrown().getMessage(),
                 event.getMarker()
-        );
+            );
+        }
     }
 
     @Override

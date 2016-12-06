@@ -13,6 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+import com.splunk.logging.TcpAppender;
 import org.junit.Assert;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -26,6 +27,12 @@ public class LogbackFunctionalTest {
     @Test
     public void logbackSocketAppenderTest() throws InterruptedException {
         final Util.StringContainer container = Util.readLineFromPort(Util.port, Util.timeoutInMs);
+
+        Assert.assertNotEquals(TcpAppender.getSocketBufferSize(), 16*1024);
+
+        TcpAppender.setSocketBufferSize(16*1024);
+        Assert.assertEquals(TcpAppender.getSocketBufferSize(), 16*1024);
+
 
         String helloChina = "Hello, \u4E2D\u570B!";
 

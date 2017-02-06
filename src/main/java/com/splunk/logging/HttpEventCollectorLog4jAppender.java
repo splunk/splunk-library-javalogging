@@ -38,6 +38,11 @@ import org.apache.logging.log4j.core.config.plugins.PluginFactory;
 public final class HttpEventCollectorLog4jAppender extends AbstractAppender
 {
     private HttpEventCollectorSender sender = null;
+    private final boolean includeLoggerName;
+    private final boolean includeThreadName;
+    private final boolean includeMDC;
+    private final boolean includeException;
+    private final boolean includeMarker;
 
     private HttpEventCollectorLog4jAppender(final String name,
                          final String url,
@@ -48,6 +53,11 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
                          final String index,
                          final Filter filter,
                          final Layout<? extends Serializable> layout,
+                         final boolean includeLoggerName,
+                         final boolean includeThreadName,
+                         final boolean includeMDC,
+                         final boolean includeException,
+                         final boolean includeMarker,
                          final boolean ignoreExceptions,
                          long batchInterval,
                          long batchCount,
@@ -81,6 +91,12 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
         if (disableCertificateValidation != null && disableCertificateValidation.equalsIgnoreCase("true")) {
             this.sender.disableCertificateValidation();
         }
+
+        this.includeLoggerName = includeLoggerName;
+        this.includeThreadName = includeThreadName;
+        this.includeMDC = includeMDC;
+        this.includeException = includeException;
+        this.includeMarker = includeMarker;
     }
 
     /**
@@ -105,6 +121,11 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
             @PluginAttribute("send_mode") final String sendMode,
             @PluginAttribute("middleware") final String middleware,
             @PluginAttribute("disableCertificateValidation") final String disableCertificateValidation,
+            @PluginAttribute(value = "includeLoggerName", defaultBoolean = true) final boolean includeLoggerName,
+            @PluginAttribute(value = "includeThreadName", defaultBoolean = true) final boolean includeThreadName,
+            @PluginAttribute(value = "includeMDC", defaultBoolean = true) final boolean includeMDC,
+            @PluginAttribute(value = "includeException", defaultBoolean = true) final boolean includeException,
+            @PluginAttribute(value = "includeMarker", defaultBoolean = true) final boolean includeMarker,
             @PluginElement("Layout") Layout<? extends Serializable> layout,
             @PluginElement("Filter") final Filter filter
     )
@@ -137,7 +158,9 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
         return new HttpEventCollectorLog4jAppender(
                 name, url, token,
                 source, sourcetype, host, index,
-                filter, layout, ignoreExceptions,
+                filter, layout, 
+                includeLoggerName, includeThreadName, includeMDC, includeException, includeMarker,  
+                ignoreExceptions,
                 parseInt(batchInterval, HttpEventCollectorSender.DefaultBatchInterval),
                 parseInt(batchCount, HttpEventCollectorSender.DefaultBatchCount),
                 parseInt(batchSize, HttpEventCollectorSender.DefaultBatchSize),
@@ -159,11 +182,11 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
         this.sender.send(
                 event.getLevel().toString(),
                 event.getMessage().getFormattedMessage(),
-                event.getLoggerName(),
-                event.getThreadName(),
-                event.getContextMap(),
-                event.getThrown() == null ? null : event.getThrown().getMessage(),
-                event.getMarker()
+                includeLoggerName ? event.getLoggerName() : null,
+                includeThreadName ? event.getThreadName() : null,
+                includeMDC ? event.getContextMap() : null,
+                (!includeException || event.getThrown() == null) ? null : event.getThrown().getMessage(),
+                includeMarker ? event.getMarker() : null
         );
     }
 

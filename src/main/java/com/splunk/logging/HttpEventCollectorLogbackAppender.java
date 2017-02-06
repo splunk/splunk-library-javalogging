@@ -29,6 +29,10 @@ import java.util.Hashtable;
 public class HttpEventCollectorLogbackAppender extends AppenderBase<ILoggingEvent> {
     private HttpEventCollectorSender sender = null;
     private Layout<ILoggingEvent> _layout;
+    private boolean _includeLoggerName = true;
+    private boolean _includeThreadName = true;
+    private boolean _includeMDC = true;
+    private boolean _includeException = true;
     private String _source;
     private String _sourcetype;
     private String _host;
@@ -101,10 +105,10 @@ public class HttpEventCollectorLogbackAppender extends AppenderBase<ILoggingEven
             this.sender.send(
                     event.getLevel().toString(),
                     _layout.doLayout(event),
-                    event.getLoggerName(),
-                    event.getThreadName(),
-                    event.getMDCPropertyMap(),
-                    event.getThrowableProxy() == null ? null : event.getThrowableProxy().getMessage(),
+                    _includeLoggerName ? event.getLoggerName() : null,
+                    _includeThreadName ? event.getThreadName() : null,
+                    _includeMDC ? event.getMDCPropertyMap() : null,
+                    (!_includeException || event.getThrowableProxy() == null) ? null : event.getThrowableProxy().getMessage(),
                     c.convert(event)
                     );
         }
@@ -132,6 +136,38 @@ public class HttpEventCollectorLogbackAppender extends AppenderBase<ILoggingEven
 
     public Layout<ILoggingEvent> getLayout() {
         return this._layout;
+    }
+
+    public boolean getIncludeLoggerName() {
+        return _includeLoggerName;
+    }
+
+    public void setIncludeLoggerName(boolean includeLoggerName) {
+        this._includeLoggerName = includeLoggerName;
+    }
+
+    public boolean getIncludeThreadName() {
+        return _includeThreadName;
+    }
+
+    public void setIncludeThreadName(boolean includeThreadName) {
+        this._includeThreadName = includeThreadName;
+    }
+
+    public boolean getIncludeMDC() {
+        return _includeMDC;
+    }
+
+    public void setIncludeMDC(boolean includeMDC) {
+        this._includeMDC = includeMDC;
+    }
+
+    public boolean getIncludeException() {
+        return _includeException;
+    }
+
+    public void setIncludeException(boolean includeException) {
+        this._includeException = includeException;
     }
 
     public void setSource(String source) {

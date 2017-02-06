@@ -94,6 +94,14 @@ import java.util.logging.LogRecord;
  */
 public final class HttpEventCollectorLoggingHandler extends Handler {
     private HttpEventCollectorSender sender = null;
+    private final String IncludeLoggerNameConfTag = "include_logger_name";
+    private final boolean includeLoggerName;
+    private final String IncludeThreadNameConfTag = "include_thread_name";
+    private final boolean includeThreadName;
+    private final String IncludeExceptionConfTag = "include_exception";
+    private final boolean includeException;
+
+
     private final String BatchDelayConfTag = "batch_interval";
     private final String BatchCountConfTag = "batch_size_count";
     private final String BatchSizeConfTag = "batch_size_bytes";
@@ -132,6 +140,10 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
         String sendMode = getConfigurationProperty(SendModeTag, "sequential");
         String middleware = getConfigurationProperty(MiddlewareTag, "");
 
+        includeLoggerName = getConfigurationBooleanProperty(IncludeLoggerNameConfTag, true);
+        includeThreadName = getConfigurationBooleanProperty(IncludeThreadNameConfTag, true);
+        includeException = getConfigurationBooleanProperty(IncludeExceptionConfTag, true);
+
         // delegate all configuration params to event sender
         this.sender = new HttpEventCollectorSender(
                 url, token, delay, batchCount, batchSize, sendMode, metadata);
@@ -162,10 +174,10 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
         this.sender.send(
                 record.getLevel().toString(),
                 record.getMessage(),
-                record.getLoggerName(),
-                String.format(Locale.US, "%d", record.getThreadID()),
+                includeLoggerName ? record.getLoggerName() : null,
+                includeThreadName ? String.format(Locale.US, "%d", record.getThreadID()) : null,
                 null, // no property map available
-                record.getThrown() == null ? null : record.getThrown().getMessage(),
+                (!includeException || record.getThrown() == null) ? null : record.getThrown().getMessage(),
                 null // no marker available
         );
     }
@@ -209,5 +221,11 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
             final String property, long defaultValue) {
         return Integer.parseInt(
                 getConfigurationProperty(property, String.format("%d", defaultValue)));
+    }
+
+    private boolean getConfigurationBooleanProperty(
+            final String property, boolean defaultValue) {
+        return Boolean.valueOf(
+                getConfigurationProperty(property, String.valueOf(defaultValue)));
     }
 }

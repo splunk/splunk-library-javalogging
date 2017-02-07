@@ -181,7 +181,7 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
         // if an exception was thrown
         this.sender.send(
                 event.getLevel().toString(),
-                event.getMessage().getFormattedMessage(),
+                getLayout().toSerializable(event).toString(),
                 includeLoggerName ? event.getLoggerName() : null,
                 includeThreadName ? event.getThreadName() : null,
                 includeMDC ? event.getContextMap() : null,

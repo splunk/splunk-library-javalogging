@@ -114,7 +114,7 @@ entries.
     <repository>
         <id>splunk</id>
         <name>splunk-releases</name>
-        <url>http://splunk.artifactoryonline.com/splunk/ext-releases-local</url>
+        <url>http://splunk.jfrog.io/splunk/ext-releases-local</url>
     </repository>
     ```
 

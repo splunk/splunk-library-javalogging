@@ -301,20 +301,12 @@ entries.
     }});
    ```
 
-## Splunk
+## Splunk Enterprise
 
-If you haven't already installed Splunk, download it here: 
+If you haven't already installed Splunk Enterprise, download it here: 
 [http://www.splunk.com/download](http://www.splunk.com/download). 
-For more about installing and running Splunk and system requirements, 
-see [Installing & Running Splunk](http://dev.splunk.com/view/SP-CAAADRV).
-
-## Contribute
-
-[Get the Splunk Java Logging Framework from GitHub](https://github.com/splunk/splunk-library-javalogging) 
-and clone the resources to your computer. For example, use the following 
-command: 
-
-    git clone https://github.com/splunk/splunk-library-javalogging.git
+For more about installing and running Splunk Enterprise and system requirements, 
+see [Splunk Enterprise Installation Manual](http://docs.splunk.com/Documentation/Splunk/latest/Installation/).
 
 ## Resources
 
@@ -334,6 +326,23 @@ Introduction to the Splunk product and some of its capabilities
 
 * [http://docs.splunk.com/Documentation/Splunk/latest/User/SplunkOverview](http://docs.splunk.com/Documentation/Splunk/latest/User/SplunkOverview)
 
-## Contact
+## Contributions
+
+[Get the Splunk Java Logging Framework from GitHub](https://github.com/splunk/splunk-library-javalogging) 
+and clone the resources to your computer. For example, use the following 
+command: 
+
+    git clone https://github.com/splunk/splunk-library-javalogging.git
+    
+If you want to make a code contribution, go to the [Open Source](http://dev.splunk.com/view/opensource/SP-CAAAEDM) page for more information.
+
+## Support
+
+The Splunk logging library for Java is community-supported.
+
+1. You can find help through our community on [Splunk Answers](http://answers.splunk.com/) (use the `logging-library-java` tag to identify your questions).
+2. File issues on [GitHub](https://github.com/splunk/splunk-library-javalogging/issues).
+
+## Contact us
 
 You can reach the Dev Platform team at [devinfo@splunk.com](mailto:devinfo@splunk.com).

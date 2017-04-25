@@ -126,9 +126,9 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
         metadata.put(HttpEventCollectorSender.MetadataSourceTypeTag,
                 getConfigurationProperty(HttpEventCollectorSender.MetadataSourceTypeTag, ""));
         
-        // Extract message mime-type value
-        metadata.put(HttpEventCollectorSender.MetadataMessageMimeTypeTag,
-            getConfigurationProperty(HttpEventCollectorSender.MetadataMessageMimeTypeTag, ""));
+        // Extract message format value
+        metadata.put(HttpEventCollectorSender.MetadataMessageFormatTag,
+            getConfigurationProperty(HttpEventCollectorSender.MetadataMessageFormatTag, ""));
 
         // http event collector endpoint properties
         String url = getConfigurationProperty(UrlConfTag, null);

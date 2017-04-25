@@ -49,7 +49,7 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
                          final String token,
                          final String source,
                          final String sourcetype,
-                         final String messageMimeType,
+                         final String messageFormat,
                          final String host,
                          final String index,
                          final Filter filter,
@@ -74,7 +74,7 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
         metadata.put(HttpEventCollectorSender.MetadataIndexTag, index != null ? index : "");
         metadata.put(HttpEventCollectorSender.MetadataSourceTag, source != null ? source : "");
         metadata.put(HttpEventCollectorSender.MetadataSourceTypeTag, sourcetype != null ? sourcetype : "");
-        metadata.put(HttpEventCollectorSender.MetadataMessageMimeTypeTag, messageMimeType != null ? messageMimeType : "");
+        metadata.put(HttpEventCollectorSender.MetadataMessageFormatTag, messageFormat != null ? messageFormat : "");
 
         this.sender = new HttpEventCollectorSender(url, token, batchInterval, batchCount, batchSize, sendMode, metadata);
 
@@ -113,7 +113,7 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
             @PluginAttribute("name") final String name,
             @PluginAttribute("source") final String source,
             @PluginAttribute("sourcetype") final String sourcetype,
-            @PluginAttribute(HttpEventCollectorSender.MetadataMessageMimeTypeTag) final String messageMimeType,
+            @PluginAttribute(HttpEventCollectorSender.MetadataMessageFormatTag) final String messageFormat,
             @PluginAttribute("host") final String host,
             @PluginAttribute("index") final String index,
             @PluginAttribute("ignoreExceptions") final String ignore,
@@ -160,7 +160,7 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
 
         return new HttpEventCollectorLog4jAppender(
                 name, url, token,
-                source, sourcetype, messageMimeType, host, index,
+                source, sourcetype, messageFormat, host, index,
                 filter, layout, 
                 includeLoggerName, includeThreadName, includeMDC, includeException, includeMarker,  
                 ignoreExceptions,

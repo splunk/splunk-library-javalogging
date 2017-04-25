@@ -35,6 +35,7 @@ public class HttpEventCollectorLogbackAppender extends AppenderBase<ILoggingEven
     private boolean _includeException = true;
     private String _source;
     private String _sourcetype;
+    private String _messageMimeType;
     private String _host;
     private String _index;
     private String _url;
@@ -65,6 +66,9 @@ public class HttpEventCollectorLogbackAppender extends AppenderBase<ILoggingEven
 
         if (_sourcetype != null)
             metadata.put(HttpEventCollectorSender.MetadataSourceTypeTag, _sourcetype);
+        
+        if (_messageMimeType != null)
+            metadata.put(HttpEventCollectorSender.MetadataMessageMimeTypeTag, _messageMimeType);
 
         this.sender = new HttpEventCollectorSender(
                 _url, _token, _batchInterval, _batchCount, _batchSize, _sendMode, metadata);
@@ -184,6 +188,14 @@ public class HttpEventCollectorLogbackAppender extends AppenderBase<ILoggingEven
 
     public String getSourcetype() {
         return this._sourcetype;
+    }
+    
+    public void setMessageMimeType(String messageMimeType) {
+        this._messageMimeType = messageMimeType;
+    }
+
+    public String getMessageMimeType() {
+        return this._messageMimeType;
     }
 
     public void setHost(String host) {

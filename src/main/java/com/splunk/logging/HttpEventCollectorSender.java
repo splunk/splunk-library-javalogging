@@ -30,6 +30,8 @@ import org.apache.http.impl.nio.client.HttpAsyncClients;
 import org.apache.http.util.EntityUtils;
 
 import org.json.simple.JSONObject;
+import org.json.simple.JSONValue;
+
 import javax.net.ssl.SSLContext;
 import java.io.IOException;
 import java.io.Serializable;
@@ -53,6 +55,7 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
     public static final String MetadataIndexTag = "index";
     public static final String MetadataSourceTag = "source";
     public static final String MetadataSourceTypeTag = "sourcetype";
+    public static final String MetadataMessageMimeTypeTag = "messageMimeType";
     private static final String AuthorizationHeaderTag = "Authorization";
     private static final String AuthorizationHeaderScheme = "Splunk %s";
     private static final String HttpEventCollectorUriPath = "/services/collector/event/1.0";
@@ -69,6 +72,44 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
     {
         Sequential,
         Parallel
+    };
+    
+    /**
+     * 
+     * Mime type of the event message. It is used to apply necessary parsing and formatting to the message, if required for the
+     * message mime-type.
+     * <p>
+     * If mime-type is not set, then it is assumed to be "text"
+     * </p>
+     *
+     */
+    public enum MessageMimeType {
+        
+        TEXT("text"),
+        JSON("json");
+
+        private final String mimeType;
+
+        MessageMimeType(final String mimeType) {
+            this.mimeType = mimeType;
+        }
+
+        /**
+         * Gets MessageMimeType instance from string mime-type.
+         *
+         * @param mimeType the message mime-type
+         * @return the message mime-type
+         */
+        public static MessageMimeType fromMimeType(final String mimeType) {
+            if (mimeType != null && mimeType.trim().length() > 0) {
+                for (final MessageMimeType mimeEnum : values()) {
+                    if (mimeEnum.mimeType.equals(mimeType)) {
+                        return mimeEnum;
+                    }
+                }
+            }
+            return TEXT;
+        }
     };
 
     /**
@@ -202,8 +243,12 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
     }
 
     @SuppressWarnings("unchecked")
-    private static void putIfPresent(JSONObject collection, String tag, String value) {
-        if (value != null && value.length() > 0) {
+    private static void putIfPresent(JSONObject collection, String tag, Object value) {
+        if (value != null) {
+            if (value instanceof String && ((String) value).length() == 0) {
+                // Do not add blank string
+                return;
+            }
             collection.put(tag, value);
         }
     }
@@ -221,10 +266,15 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
         putIfPresent(event, MetadataIndexTag, metadata.get(MetadataIndexTag));
         putIfPresent(event, MetadataSourceTag, metadata.get(MetadataSourceTag));
         putIfPresent(event, MetadataSourceTypeTag, metadata.get(MetadataSourceTypeTag));
+        
+        final String messageMimeType = metadata.get(MetadataMessageMimeTypeTag);
+        // Parse message on the basis of mime-type
+        final Object parsedMessage = parseEventMessage(eventInfo.getMessage(), messageMimeType);
+        
         // event body
         JSONObject body = new JSONObject();
         putIfPresent(body, "severity", eventInfo.getSeverity());
-        putIfPresent(body, "message", eventInfo.getMessage());
+        putIfPresent(body, "message", parsedMessage);
         putIfPresent(body, "logger", eventInfo.getLoggerName());
         putIfPresent(body, "thread", eventInfo.getThreadName());
         // add an exception record if and only if there is one
@@ -246,6 +296,51 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
         // join event and body
         event.put("event", body);
         return event.toString();
+    }
+
+    /**
+     * Parses the event message on the basis of message mime-type.
+     * 
+     * @param message the event message string
+     * @param messageMimeType the event message mime-type
+     * 
+     * @return parsed event message based on mime-type
+     */
+    private Object parseEventMessage(final String message, final String messageMimeType) {
+        // if message is null or blank then return without parsing
+        if (message == null || message.trim().length() == 0) {
+            return message;
+        }
+
+        // Get mime-type enum from mime-type string
+        final MessageMimeType mimeType = MessageMimeType.fromMimeType(messageMimeType);
+
+        switch (mimeType) {
+            case JSON:
+                return parseJsonEventMessage(message);
+
+            case TEXT:
+            default:
+                // Treat message type as text if mime-type is not defined or defined as text
+                return message;
+        }
+    }
+
+    /**
+     * Parses the event message JSON string into JSON object. If parsing fails then the input message is returned as is.
+     *
+     * @param message the event message string
+     * @return the parsed event message JSON object or input message if parsing fails
+     */
+    private Object parseJsonEventMessage(final String message) {
+        final Object jsonObject = JSONValue.parse(message);
+        if (jsonObject == null) {
+            // If JSON parsing failed then it was likely a text message or a malformed JSON message. Return message string in
+            // such an event.
+            return message;
+        } else {
+            return jsonObject;
+        }
     }
 
     private void startHttpClient() {

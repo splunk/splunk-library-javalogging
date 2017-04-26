@@ -131,6 +131,7 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
     private boolean disableCertificateValidation = false;
     private SendMode sendMode = SendMode.Sequential;
     private HttpEventCollectorMiddleware middleware = new HttpEventCollectorMiddleware();
+    private final MessageFormat messageFormat;
 
     /**
      * Initialize HttpEventCollectorSender
@@ -158,6 +159,12 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
         this.maxEventsBatchCount = maxEventsBatchCount;
         this.maxEventsBatchSize = maxEventsBatchSize;
         this.metadata = metadata;
+        
+        final String format = metadata.get(MetadataMessageFormatTag);
+        // Get MessageFormat enum from format string. Do this once per instance in constructor to avoid expensive operation in
+        // each event sender call
+        this.messageFormat = MessageFormat.fromFormat(format);
+        
         if (sendModeStr != null) {
             if (sendModeStr.equals(SendModeSequential))
                 this.sendMode = SendMode.Sequential;
@@ -267,9 +274,8 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
         putIfPresent(event, MetadataSourceTag, metadata.get(MetadataSourceTag));
         putIfPresent(event, MetadataSourceTypeTag, metadata.get(MetadataSourceTypeTag));
         
-        final String messageFormat = metadata.get(MetadataMessageFormatTag);
         // Parse message on the basis of format
-        final Object parsedMessage = parseEventMessage(eventInfo.getMessage(), messageFormat);
+        final Object parsedMessage = parseEventMessage(eventInfo.getMessage(), this.messageFormat);
         
         // event body
         JSONObject body = new JSONObject();
@@ -306,14 +312,11 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
      * 
      * @return parsed event message based on format
      */
-    private Object parseEventMessage(final String message, final String format) {
+    private Object parseEventMessage(final String message, final MessageFormat messageFormat) {
         // if message is null or blank then return without parsing
         if (message == null || message.trim().length() == 0) {
             return message;
         }
-
-        // Get MessageFormat enum from format string
-        final MessageFormat messageFormat = MessageFormat.fromFormat(format);
 
         switch (messageFormat) {
             case JSON:
@@ -335,7 +338,7 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
     private Object parseJsonEventMessage(final String message) {
         final Object jsonObject = JSONValue.parse(message);
         if (jsonObject == null) {
-            // If JSON parsing failed then it was likely a text message or a malformed JSON message. Return message string in
+            // If JSON parsing failed then it is likely a text message or a malformed JSON message. Return input message string in
             // such an event.
             return message;
         } else {

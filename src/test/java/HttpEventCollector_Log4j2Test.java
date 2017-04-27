@@ -19,7 +19,9 @@ import java.util.*;
 
 import com.splunk.logging.HttpEventCollectorErrorHandler;
 import com.splunk.logging.HttpEventCollectorEventInfo;
+
 import org.apache.logging.log4j.core.LoggerContext;
+import org.json.simple.JSONObject;
 import org.junit.Assert;
 import org.junit.Test;
 import org.apache.logging.log4j.Logger;
@@ -365,5 +367,59 @@ public final class HttpEventCollector_Log4j2Test {
 
         TestUtil.deleteHttpEventCollectorToken(httpEventCollectorName);
         System.out.println("====================== Test pass=========================");
+    }
+    
+    /**
+     * Test sending a JSON and text message with "_json" source type via http logging appender using log4j 2.x logger
+     */
+    @Test
+    public void canSendJsonEventUsingUtilLoggerWithJsonSourceType() throws Exception {
+        canSendJsonEventUsingUtilLoggerWithSourceType("_json");
+    }
+    
+    /**
+     * Test sending a JSON and text message with "battlecat_test" source type via http logging appender using log4j 2.x logger
+     */
+    @Test
+    public void canSendJsonEventUsingUtilLoggerWithDefaultSourceType() throws Exception {
+        canSendJsonEventUsingUtilLoggerWithSourceType("battlecat_test");
+    }
+    
+    @SuppressWarnings("unchecked")
+    private void canSendJsonEventUsingUtilLoggerWithSourceType(final String sourceType) throws Exception {
+        final String token = TestUtil.createHttpEventCollectorToken(httpEventCollectorName);
+
+        final String loggerName = "splunkLog4j2";
+        
+        // Build User input map
+        final HashMap<String, String> userInputs = TestUtil.buildUserInputMap(loggerName, token, sourceType, "json");
+        
+        final LoggerContext context = TestUtil.resetLog4j2Configuration("log4j2_template.xml", "log4j2.xml", userInputs);
+        
+        final Logger logger = context.getLogger(loggerName);
+
+        final List<String> msgs = new ArrayList<String>();
+
+        final long timeMillsec = new Date().getTime();
+
+        final JSONObject jsonObject = new JSONObject();
+        jsonObject.put("transactionId", "11");
+        jsonObject.put("userId", "21");
+        jsonObject.put("eventTimestap", timeMillsec);
+
+        // Test with a json event message
+        jsonObject.put("severity", "info");
+        final String infoJson = jsonObject.toString();
+        logger.info(infoJson);
+        msgs.add(infoJson);
+
+
+        // Test with a text event message
+        final String infoText = String.format("{EventTimestamp:%s, EventMsg:'this is a text info for log4j2 logger}", timeMillsec);
+        logger.info(infoText);
+        msgs.add(infoText);
+
+        TestUtil.verifyEventsSentToSplunk(msgs);
+        TestUtil.deleteHttpEventCollectorToken(httpEventCollectorName);
     }
 }

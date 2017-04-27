@@ -60,7 +60,7 @@ Log4j and Logback are thread-safe.
 
 ### Sending events to HTTP Event Collector
 
-HTTP Event Collector requires Splunk 6.3+. Splunk Java library supports sending
+[HTTP Event Collector](http://dev.splunk.com/view/event-collector/SP-CAAAE6M) requires Splunk 6.3+. Splunk Java library supports sending
 events through `java.util.logging`, `log4j` and `logback` standard loggers. 
 In order to use HTTP Event Collector it has to be enabled on the server and an 
 application token should be created.
@@ -80,6 +80,33 @@ Sending events is simple:
 Logger LOGGER = java.util.logging.Logger.getLogger("splunk.java.util");
 LOGGER.info("hello world");
 ```
+
+Logback configuration looks like:
+
+```xml
+      <!-- Splunk HTTP Appender -->
+        <appender name="splunkHttpAppender" class="com.splunk.logging.HttpEventCollectorLogbackAppender">
+           <url>${lsplunk.http.url}</url>
+           <token>${splunk.http.token}</token>
+           <source>${splunk.source}</source>
+           <host>${splunk.httpevent.listener.host}</host>
+           <messageFormat>${splunk.event.message.format}</messageFormat>
+           <disableCertificateValidation>${splunk.cert.disable-validation}</disableCertificateValidation>
+           <layout class="ch.qos.logback.classic.PatternLayout">
+              <pattern>%date{ISO8601} [%thread] %level: %msg%n</pattern>
+           </layout>
+        </appender>
+        
+        <logger name="com.example.app" additivity="false" level="INFO">
+            <appender-ref ref="splunkHttpAppender"/>
+        </logger>
+        
+        <root level="INFO">
+            <appender-ref ref="splunkHttpAppender"/>
+        </root>
+```
+#### Message Format
+An event message format could be configured for HTTP event appender in logging framework configuration. It could have one of the two possible values - text, json. It is an optional property with default value as 'text'. Message format 'json' is used where the event message could be in json format.
 
 For more information, see http://dev.splunk.com/view/SP-CAAAE2K.
 

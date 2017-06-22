@@ -55,7 +55,6 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
     public static final String MetadataSourceTypeTag = "sourcetype";
     private static final String AuthorizationHeaderTag = "Authorization";
     private static final String AuthorizationHeaderScheme = "Splunk %s";
-    private static final String HttpEventCollectorUriPath = "/services/collector/event/1.0";
     private static final String HttpContentType = "application/json; profile=urn:splunk:event:1.0; charset=utf-8";
     private static final String SendModeSequential = "sequential";
     private static final String SendModeSParallel = "parallel";
@@ -105,7 +104,7 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
             long delay, long maxEventsBatchCount, long maxEventsBatchSize,
             String sendModeStr,
             Dictionary<String, String> metadata) {
-        this.url = Url + HttpEventCollectorUriPath;
+        this.url = Url; 
         this.token = token;
         // when size configuration setting is missing it's treated as "infinity",
         // i.e., any value is accepted.
@@ -298,6 +297,7 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
         this.middleware.postEvents(events, this, new HttpEventCollectorMiddleware.IHttpSenderCallback() {
             @Override
             public void completed(int statusCode, String reply) {
+				System.out.println(reply);
                 if (statusCode != 200) {
                     HttpEventCollectorErrorHandler.error(
                             events,

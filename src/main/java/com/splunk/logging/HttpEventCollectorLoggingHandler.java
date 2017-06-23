@@ -101,6 +101,7 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
     private final String UrlConfTag = "url";
     private final String SendModeTag = "send_mode";
     private final String MiddlewareTag = "middleware";
+    private final String AckTag = "ack";	
 
     /** HttpEventCollectorLoggingHandler c-or */
     public HttpEventCollectorLoggingHandler() {
@@ -131,10 +132,11 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
         long retriesOnError = getConfigurationNumericProperty(RetriesOnErrorTag, 0);
         String sendMode = getConfigurationProperty(SendModeTag, "sequential");
         String middleware = getConfigurationProperty(MiddlewareTag, "");
+	 boolean ack = Boolean.parseBoolean(getConfigurationProperty(AckTag, "true"));
 
         // delegate all configuration params to event sender
         this.sender = new HttpEventCollectorSender(
-                url, token, delay, batchCount, batchSize, sendMode, metadata);
+                url, token, delay, batchCount, batchSize, sendMode, ack, metadata);
 
         // plug a user middleware
         if (middleware != null && !middleware.isEmpty()) {

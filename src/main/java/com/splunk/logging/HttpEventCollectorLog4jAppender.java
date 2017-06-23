@@ -55,7 +55,8 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
                          long retriesOnError,
                          String sendMode,
                          String middleware,
-                         final String disableCertificateValidation)
+                         final String disableCertificateValidation,
+			     boolean ack)
     {
         super(name, filter, layout, ignoreExceptions);
         Dictionary<String, String> metadata = new Hashtable<String, String>();
@@ -64,7 +65,7 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
         metadata.put(HttpEventCollectorSender.MetadataSourceTag, source != null ? source : "");
         metadata.put(HttpEventCollectorSender.MetadataSourceTypeTag, sourcetype != null ? sourcetype : "");
 
-        this.sender = new HttpEventCollectorSender(url, token, batchInterval, batchCount, batchSize, sendMode, metadata);
+        this.sender = new HttpEventCollectorSender(url, token, batchInterval, batchCount, batchSize, sendMode, ack, metadata);
 
         // plug a user middleware
         if (middleware != null && !middleware.isEmpty()) {
@@ -106,7 +107,8 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
             @PluginAttribute("middleware") final String middleware,
             @PluginAttribute("disableCertificateValidation") final String disableCertificateValidation,
             @PluginElement("Layout") Layout<? extends Serializable> layout,
-            @PluginElement("Filter") final Filter filter
+            @PluginElement("Filter") final Filter filter,
+	     @PluginAttribute("ack") final boolean ack
     )
     {
         if (name == null)
@@ -144,7 +146,8 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
                 parseInt(retriesOnError, 0),
                 sendMode,
                 middleware,
-                disableCertificateValidation);
+                disableCertificateValidation,
+		   ack);
     }
 
 

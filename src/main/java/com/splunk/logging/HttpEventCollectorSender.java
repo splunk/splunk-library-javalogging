@@ -59,7 +59,6 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
     private static final String SendModeSequential = "sequential";
     private static final String SendModeSParallel = "parallel";
     private static final String ChannelHeader = "X-Splunk-Request-Channel";	
-    private final String channel = newChannel();
 
 	public String getChannel() {
 		return channel;
@@ -99,6 +98,8 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
     private boolean disableCertificateValidation = false;
     private SendMode sendMode = SendMode.Sequential;
     private HttpEventCollectorMiddleware middleware = new HttpEventCollectorMiddleware();
+    private final String channel = newChannel();
+    private boolean ack = false;	
 
     /**
      * Initialize HttpEventCollectorSender
@@ -113,9 +114,11 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
             final String Url, final String token,
             long delay, long maxEventsBatchCount, long maxEventsBatchSize,
             String sendModeStr,
+	     boolean ack,
             Dictionary<String, String> metadata) {
         this.url = Url; 
         this.token = token;
+	  this.ack = ack;	
         // when size configuration setting is missing it's treated as "infinity",
         // i.e., any value is accepted.
         if (maxEventsBatchCount == 0 && maxEventsBatchSize > 0) {
@@ -337,9 +340,11 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
         httpPost.setHeader(
                 AuthorizationHeaderTag,
                 String.format(AuthorizationHeaderScheme, token));
-        httpPost.setHeader(
-                ChannelHeader,
-                getChannel());		
+		   if (ack) { //only send channel UUID if we are using acks 
+			httpPost.setHeader(
+					ChannelHeader,
+					getChannel());
+		    } 
 		
         StringEntity entity = new StringEntity(eventsBatchString.toString(), encoding);
         entity.setContentType(HttpContentType);

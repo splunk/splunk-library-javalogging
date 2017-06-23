@@ -58,6 +58,16 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
     private static final String HttpContentType = "application/json; profile=urn:splunk:event:1.0; charset=utf-8";
     private static final String SendModeSequential = "sequential";
     private static final String SendModeSParallel = "parallel";
+    private static final String ChannelHeader = "X-Splunk-Request-Channel";	
+    private final String channel = newChannel();
+
+	public String getChannel() {
+		return channel;
+	}
+	
+    private static String newChannel() {
+		return java.util.UUID.randomUUID().toString();
+    }
 
     /**
      * Sender operation mode. Parallel means that all HTTP requests are
@@ -327,6 +337,10 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
         httpPost.setHeader(
                 AuthorizationHeaderTag,
                 String.format(AuthorizationHeaderScheme, token));
+        httpPost.setHeader(
+                ChannelHeader,
+                getChannel());		
+		
         StringEntity entity = new StringEntity(eventsBatchString.toString(), encoding);
         entity.setContentType(HttpContentType);
         httpPost.setEntity(entity);

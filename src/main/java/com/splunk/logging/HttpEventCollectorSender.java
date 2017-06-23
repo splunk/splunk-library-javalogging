@@ -310,7 +310,6 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
         this.middleware.postEvents(events, this, new HttpEventCollectorMiddleware.IHttpSenderCallback() {
             @Override
             public void completed(int statusCode, String reply) {
-				System.out.println(reply);
                 if (statusCode != 200) {
                     HttpEventCollectorErrorHandler.error(
                             events,
@@ -327,6 +326,7 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
         });
     }
 
+	@Override
     public void postEvents(final List<HttpEventCollectorEventInfo> events,
                            final HttpEventCollectorMiddleware.IHttpSenderCallback callback) {
         startHttpClient(); // make sure http client is started
@@ -355,13 +355,17 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
                 String reply = "";
                 int httpStatusCode = response.getStatusLine().getStatusCode();
                 // read reply only in case of a server error
-                if (httpStatusCode != 200) {
+               //if (httpStatusCode != 200) {
                     try {
                         reply = EntityUtils.toString(response.getEntity(), encoding);
+				         System.out.println("reply: "+ reply);	//fixme undo hack 		
                     } catch (IOException e) {
-                        reply = e.getMessage();
+				//if IOException ocurrs toStringing response, this is not something we can expect client 
+				//to handle
+				throw new RuntimeException(e.getMessage(), e);
+                        //reply = e.getMessage();
                     }
-                }
+                //}
                 callback.completed(httpStatusCode, reply);
             }
 

@@ -40,6 +40,7 @@ public class HttpEventCollectorResendMiddleware
         this.retriesOnError = retriesOnError;
     }
 
+	@Override
     public void postEvents(
             final List<HttpEventCollectorEventInfo> events,
             HttpEventCollectorMiddleware.IHttpSender sender,

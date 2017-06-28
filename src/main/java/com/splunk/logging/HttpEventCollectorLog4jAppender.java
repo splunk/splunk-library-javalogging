@@ -56,7 +56,8 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
                          String sendMode,
                          String middleware,
                          final String disableCertificateValidation,
-			     boolean ack)
+			     boolean ack,
+			     String ackUrl)
     {
         super(name, filter, layout, ignoreExceptions);
         Dictionary<String, String> metadata = new Hashtable<String, String>();
@@ -65,7 +66,8 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
         metadata.put(HttpEventCollectorSender.MetadataSourceTag, source != null ? source : "");
         metadata.put(HttpEventCollectorSender.MetadataSourceTypeTag, sourcetype != null ? sourcetype : "");
 
-        this.sender = new HttpEventCollectorSender(url, token, batchInterval, batchCount, batchSize, sendMode, ack, metadata);
+        this.sender = new HttpEventCollectorSender(url, token, batchInterval, batchCount, batchSize, sendMode, ack, ackUrl, metadata);
+	 //this.ack
 
         // plug a user middleware
         if (middleware != null && !middleware.isEmpty()) {
@@ -108,7 +110,8 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
             @PluginAttribute("disableCertificateValidation") final String disableCertificateValidation,
             @PluginElement("Layout") Layout<? extends Serializable> layout,
             @PluginElement("Filter") final Filter filter,
-	     @PluginAttribute("ack") final boolean ack
+            @PluginAttribute("ack") final boolean ack,
+            @PluginAttribute("ackUrl") final String ackUrl			
     )
     {
         if (name == null)
@@ -133,6 +136,11 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
         {
             layout = PatternLayout.createLayout("%m", null, null, Charset.forName("UTF-8"), true, false, null, null);
         }
+        
+        if (ack && (null==ackUrl || ackUrl.isEmpty())){        
+          LOGGER.error("AckUrl must be presetnt when ack=true");
+          return null;
+        }
 
         final boolean ignoreExceptions = true;
 
@@ -147,7 +155,8 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
                 sendMode,
                 middleware,
                 disableCertificateValidation,
-		   ack);
+                ack, 
+                ackUrl);
     }
 
 

@@ -17,12 +17,15 @@ package com.splunk.logging;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.time.Duration;
 import java.util.Collection;
+import java.util.Date;
 import java.util.Observable;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import jdk.nashorn.internal.runtime.regexp.joni.EncodingHelper;
 
 /**
  *
@@ -32,7 +35,7 @@ public class ChannelMetrics extends Observable {
   private static final ObjectMapper mapper = new ObjectMapper();
   private final ConcurrentMap<Long, Long> birthTimes = new ConcurrentSkipListMap<>(); //ackid -> creation time
   private long oldestUnackedBirthtime = Long.MIN_VALUE;
-  private long mostRecentTimeToSuccess = Long.MIN_VALUE;
+  private long mostRecentTimeToSuccess = 0;
   
   @Override
   public String toString(){
@@ -86,15 +89,15 @@ public class ChannelMetrics extends Observable {
     return birthTimes.size();
   }
 
-  public long getOldestUnacked() {
-    return oldestUnackedBirthtime;
+  public String getOldest(){
+    return new Date(oldestUnackedBirthtime).toString();
   }
 
   /**
    * @return the mostRecentTimeToSuccess
    */
-  public long getMostRecentTimeToSuccess() {
-    return mostRecentTimeToSuccess;
+  public String getMostRecentTimeToSuccess() {
+    return Duration.ofMillis(mostRecentTimeToSuccess).toString();
   }
 
 }

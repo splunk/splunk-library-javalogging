@@ -23,9 +23,6 @@ import java.util.Date;
 import java.util.Observable;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ConcurrentSkipListMap;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import jdk.nashorn.internal.runtime.regexp.joni.EncodingHelper;
 
 /**
  *

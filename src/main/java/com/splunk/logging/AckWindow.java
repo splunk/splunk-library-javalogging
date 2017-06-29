@@ -23,10 +23,13 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 /**
- *
+ * Keeps track of acks that we are waiting for success on. Updates ChannelMetrics
+ * every time an ackId is created, and also when success is received on an ackId. This 
+ * is not really a window in the sense of a sliding window but "window" seems apropos to
+ * describe it.
  * @author ghendrey
  */
-public class AckPollRequest {
+public class AckWindow {
 
   private Set<Long> acks = new LinkedHashSet<>();
   @JsonIgnore

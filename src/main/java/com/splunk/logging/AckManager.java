@@ -21,14 +21,19 @@ import java.io.IOException;
 import java.util.Map;
 
 /**
- *
+ * AckManager is the mediator between sending and receiving messages to splunk (as such it is the 
+ * only piece of the Ack-system that touches the HttpEventCollectorSender). AckManager sends via the sender 
+ * and receives and unmarshals responses.  From these responses it  maintains the
+ * ack window by adding newly received ackIds to the ack window, or removing them on success. It also owns
+ * the AckPollScheduler which will periodically call back "pollAcks" on this, which sends the content of the 
+ * ackWindow to Splunk via the sender, to check their status.
  * @author ghendrey
  */
 public class AckManager {
   private static final ObjectMapper mapper = new ObjectMapper();
   private HttpEventCollectorSender sender;
   private final AckPollScheduler ackPollController = new AckPollScheduler();
-  private final AckPollRequest ackPollReq = new AckPollRequest();
+  private final AckWindow ackWindow = new AckWindow();
 
 
   AckManager(HttpEventCollectorSender sender) {
@@ -38,12 +43,12 @@ public class AckManager {
   /**
    * @return the ackPollReq
    */
-  public AckPollRequest getAckPollReq() {
-    return ackPollReq;
+  public AckWindow getAckPollReq() {
+    return ackWindow;
   }
   
   public ChannelMetrics getChannelMetrics(){
-    return ackPollReq.getChannelMetrics();
+    return ackWindow.getChannelMetrics();
   }
 
   public void consumeEventPostResponse(String resp) {    
@@ -57,7 +62,7 @@ public class AckManager {
     } catch (IOException ex) {
       throw new RuntimeException(ex.getMessage(), ex);
     }
-    ackPollReq.add(epr);
+    ackWindow.add(epr);
     if(!ackPollController.isStarted()){
       ackPollController.start(this);
     }    
@@ -69,8 +74,8 @@ public class AckManager {
       System.out.println(resp);
       AckPollResponse ackPollResp = mapper.
               readValue(resp, AckPollResponse.class);
-      this.ackPollReq.remove(ackPollResp);
-      if(this.ackPollReq.isEmpty()){
+      this.ackWindow.remove(ackPollResp);
+      if(this.ackWindow.isEmpty()){
         this.ackPollController.stop();
       }
     } catch (IOException ex) {

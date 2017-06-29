@@ -17,13 +17,13 @@ package com.splunk.logging;
 
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListMap;
 
 /**
- *
+ * A simple value object for unmarshalling the response to the ack poll. Convenience method to extract the
+ * ackIds that have succeeded.
  * @author ghendrey
  */
 public class AckPollResponse {
@@ -35,7 +35,7 @@ public class AckPollResponse {
   Collection<Long> getSuccessIds() {
     Set<Long> successful = new HashSet<>();
     for(Map.Entry<String,Boolean> e:acks.entrySet()){
-      if(e.getValue()){
+      if(e.getValue()){ //was 'true' in json, meaning it succeeded
         successful.add(Long.parseLong(e.getKey()));
       }
     }

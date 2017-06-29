@@ -20,7 +20,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 /**
- *
+ * Periodically delegates polling for acks to the AckManager. Just a simple periodic scheduler.
  * @author ghendrey
  */
 class AckPollScheduler {

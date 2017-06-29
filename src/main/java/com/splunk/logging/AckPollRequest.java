@@ -15,8 +15,10 @@
  */
 package com.splunk.logging;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -27,27 +29,39 @@ import java.util.Set;
 public class AckPollRequest {
 
   private Set<Long> acks = new LinkedHashSet<>();
+  @JsonIgnore
   private final ObjectMapper mapper = new ObjectMapper();
+  @JsonIgnore
+  private final ChannelMetrics channelMetrics = new ChannelMetrics();
+ 
 
   @Override
   public String toString() {
     try {
-      return mapper.writeValueAsString(this);
+      return mapper.writeValueAsString(this); //this class itself marshals out to {"acks":[id,id,id]}
     } catch (JsonProcessingException ex) {
       throw new RuntimeException(ex.getMessage(), ex);
     }
   }
 
+  @JsonIgnore
   public boolean isEmpty(){
     return acks.isEmpty();
   }
   
   public void add(EventPostResponse epr) {
-    acks.add(epr.getAckId());
+    Long ackId = epr.getAckId();
+    acks.add(ackId);
+    channelMetrics.ackIdCreated(ackId);
   }
 
   public void remove(AckPollResponse apr) {
-    acks.removeAll(apr.getSuccessIds());
+    Collection<Long> succeeded = apr.getSuccessIds();
+    if(succeeded.isEmpty()){
+      return;
+    }
+    acks.removeAll(succeeded);
+    channelMetrics.ackIdSucceeded(succeeded);
   }
 
   /**
@@ -63,5 +77,11 @@ public class AckPollRequest {
   public void setAcks(Set<Long> acks) {
     this.acks = acks;
   }
+
+  ChannelMetrics getChannelMetrics() {
+    return this.channelMetrics;
+  }
+
+ 
 
 }

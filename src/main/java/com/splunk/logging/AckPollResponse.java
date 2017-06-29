@@ -32,7 +32,7 @@ public class AckPollResponse {
   public AckPollResponse() {
   } 
   
-  Collection<?> getSuccessIds() {
+  Collection<Long> getSuccessIds() {
     Set<Long> successful = new HashSet<>();
     for(Map.Entry<String,Boolean> e:acks.entrySet()){
       if(e.getValue()){

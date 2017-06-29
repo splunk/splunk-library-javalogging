@@ -25,11 +25,11 @@ import java.util.Map;
  * @author ghendrey
  */
 public class AckManager {
-
+  private static final ObjectMapper mapper = new ObjectMapper();
   private HttpEventCollectorSender sender;
-  private final AckPollController ackPollController = new AckPollController();
+  private final AckPollScheduler ackPollController = new AckPollScheduler();
   private final AckPollRequest ackPollReq = new AckPollRequest();
-  private final ObjectMapper mapper = new ObjectMapper();
+
 
   AckManager(HttpEventCollectorSender sender) {
     this.sender = sender;
@@ -40,6 +40,10 @@ public class AckManager {
    */
   public AckPollRequest getAckPollReq() {
     return ackPollReq;
+  }
+  
+  public ChannelMetrics getChannelMetrics(){
+    return ackPollReq.getChannelMetrics();
   }
 
   public void consumeEventPostResponse(String resp) {    
@@ -95,7 +99,7 @@ public class AckManager {
   /**
    * @return the sender
    */
-  public HttpEventCollectorSender getSender() {
+  HttpEventCollectorSender getSender() {
     return sender;
   }
 

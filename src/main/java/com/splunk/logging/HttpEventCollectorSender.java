@@ -45,6 +45,7 @@ import java.util.List;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Locale;
+import java.util.Observable;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -480,6 +481,12 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
   class AckExtractorMiddleware extends HttpEventCollectorMiddleware.HttpSenderMiddleware {
 
    AckManager ackMgr = new AckManager(HttpEventCollectorSender.this);
+   
+   AckExtractorMiddleware(){
+     ackMgr.getChannelMetrics().addObserver((Observable o, Object arg)->{
+       System.out.println(o); //print out channel metrics
+     });
+   }
 
     @Override
     public void postEvents(

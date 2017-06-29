@@ -15,16 +15,86 @@
  */
 package com.splunk.logging;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.Collection;
+import java.util.Observable;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 /**
  *
  * @author ghendrey
  */
-public class ChannelMetrics {
-  /*
-  public int getUnacknowledgedCount(){
-    
-  }
+public class ChannelMetrics extends Observable {
+  private static final ObjectMapper mapper = new ObjectMapper();
+  private final ConcurrentMap<Long, Long> birthTimes = new ConcurrentSkipListMap<>(); //ackid -> creation time
+  private long oldestUnackedBirthtime = Long.MIN_VALUE;
+  private long mostRecentTimeToSuccess = Long.MIN_VALUE;
   
-  public long 
-  */
+  @Override
+  public String toString(){
+    try {
+      return "METRICS ---> "+mapper.writeValueAsString(this);
+    } catch (JsonProcessingException ex) {
+      throw new RuntimeException(ex.getMessage(), ex);
+    }
+  }
+
+  public void ackIdCreated(long ackId) {
+    long birthtime = System.currentTimeMillis();
+    birthTimes.put(ackId, birthtime);
+    if (oldestUnackedBirthtime == Long.MIN_VALUE) { //not set yet id MIN_VALUE
+      oldestUnackedBirthtime = birthtime; //this happens only once. It's a dumb firt run edgecase
+      this.setChanged();
+      this.notifyObservers();
+    }
+  }
+
+  public void ackIdSucceeded(Collection<Long> succeeded) {
+    succeeded.forEach((Long e) -> { //yeah! gratuitous use of streams!!
+      Long birthTime;
+      if (null != (birthTime = birthTimes.remove(e))) {
+        this.mostRecentTimeToSuccess = System.currentTimeMillis() - birthTime;
+        if (oldestUnackedBirthtime == this.mostRecentTimeToSuccess) { //in this case we just processed the oldest ack
+          oldestUnackedBirthtime = scanForOldestUnacked();//so we need to figure out which unacked id is now oldest
+        }
+      } else {
+        throw new IllegalStateException("no birth time recorder for ackId: " + e);
+      }
+    });
+    this.setChanged();
+    this.notifyObservers();
+  }
+
+  private long scanForOldestUnacked() {
+    long oldest = Long.MAX_VALUE;
+    for (long birthtime : birthTimes.values()) { //O(n) acceptave 'cause window gonna be small
+      if (birthtime < oldest) {
+        oldest = birthtime;
+      }
+    }
+    return oldest;
+  }
+
+  /**
+   * @return the unacknowledgedCount
+   */
+  public int getUnacknowledgedCount() {
+    return birthTimes.size();
+  }
+
+  public long getOldestUnacked() {
+    return oldestUnackedBirthtime;
+  }
+
+  /**
+   * @return the mostRecentTimeToSuccess
+   */
+  public long getMostRecentTimeToSuccess() {
+    return mostRecentTimeToSuccess;
+  }
+
 }

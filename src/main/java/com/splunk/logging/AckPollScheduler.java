@@ -23,7 +23,7 @@ import java.util.concurrent.TimeUnit;
  *
  * @author ghendrey
  */
-class AckPollController {
+class AckPollScheduler {
 
   private AckManager ackManager;
   private ScheduledExecutorService scheduler;
@@ -46,7 +46,7 @@ class AckPollController {
 
   }
 
-  boolean isStarted() {
+  synchronized boolean isStarted() {
     return started;
   }
 

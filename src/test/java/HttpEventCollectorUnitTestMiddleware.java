@@ -1,3 +1,4 @@
+import com.splunk.logging.EventBatch;
 import com.splunk.logging.HttpEventCollectorEventInfo;
 import com.splunk.logging.HttpEventCollectorMiddleware;
 
@@ -26,7 +27,7 @@ import java.util.List;
  */
 public class HttpEventCollectorUnitTestMiddleware extends HttpEventCollectorMiddleware.HttpSenderMiddleware {
     @Override
-    public void postEvents(List<HttpEventCollectorEventInfo> events,
+    public void postEvents(EventBatch events,
                            HttpEventCollectorMiddleware.IHttpSender sender,
                            HttpEventCollectorMiddleware.IHttpSenderCallback callback) {
         eventsReceived += events.size();
@@ -49,7 +50,7 @@ public class HttpEventCollectorUnitTestMiddleware extends HttpEventCollectorMidd
     }
 
     public static class IO {
-        public void input(List<HttpEventCollectorEventInfo> events) {}
+        public void input(EventBatch events) {}
         public HttpResponse output() { return new HttpResponse(); }
     }
 

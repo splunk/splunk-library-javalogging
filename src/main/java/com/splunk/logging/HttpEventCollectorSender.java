@@ -17,8 +17,6 @@ package com.splunk.logging;
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.concurrent.FutureCallback;
@@ -36,9 +34,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.security.cert.X509Certificate;
-import java.util.ArrayList;
 import java.util.Dictionary;
-import java.util.LinkedHashSet;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.List;
@@ -46,7 +42,6 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.Locale;
 import java.util.Observable;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -54,7 +49,7 @@ import java.util.logging.Logger;
  * This is an internal helper class that sends logging events to Splunk http
  * event collector.
  */
-final class HttpEventCollectorSender extends TimerTask implements HttpEventCollectorMiddleware.IHttpSender {
+final class HttpEventCollectorSender implements HttpEventCollectorMiddleware.IHttpSender {
 
   public static final String MetadataTimeTag = "time";
   public static final String MetadataHostTag = "host";
@@ -92,15 +87,11 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
   public static final int DefaultBatchInterval = 10 * 1000; // 10 seconds
   public static final int DefaultBatchSize = 10 * 1024; // 10KB
   public static final int DefaultBatchCount = 10; // 10 events
-
+  
+  private Timer timer = new Timer();
   private String url;
   private String token;
-  private long maxEventsBatchCount;
-  private long maxEventsBatchSize;
-  private Dictionary<String, String> metadata;
-  private Timer timer;
-  private List<HttpEventCollectorEventInfo> eventsBatch = new LinkedList<HttpEventCollectorEventInfo>();
-  private long eventsBatchSize = 0; // estimated total size of events batch
+  private EventBatch eventsBatch;// = new EventBatch();  
   private CloseableHttpAsyncClient httpClient;
   private boolean disableCertificateValidation = false;
   private SendMode sendMode = SendMode.Sequential;
@@ -125,7 +116,7 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
           String sendModeStr,
           boolean ack,
           String ackUrl,
-          Dictionary<String, String> metadata) {
+          Map<String, String> metadata) {
     this.url = Url;
     this.token = token;
     this.ack = ack;
@@ -138,16 +129,13 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
       }
       this.middleware.add(new AckExtractorMiddleware());
     }
-    // when size configuration setting is missing it's treated as "infinity",
-    // i.e., any value is accepted.
-    if (maxEventsBatchCount == 0 && maxEventsBatchSize > 0) {
-      maxEventsBatchCount = Long.MAX_VALUE;
-    } else if (maxEventsBatchSize == 0 && maxEventsBatchCount > 0) {
-      maxEventsBatchSize = Long.MAX_VALUE;
-    }
-    this.maxEventsBatchCount = maxEventsBatchCount;
-    this.maxEventsBatchSize = maxEventsBatchSize;
-    this.metadata = metadata;
+
+    this.eventsBatch = new EventBatch(this, 
+                                              maxEventsBatchCount,
+                                              maxEventsBatchSize, 
+                                              delay, 
+                                              metadata,
+                                              timer);
     if (sendModeStr != null) {
       if (sendModeStr.equals(SendModeSequential)) {
         this.sendMode = SendMode.Sequential;
@@ -159,11 +147,6 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
       }
     }
 
-    if (delay > 0) {
-      // start heartbeat timer
-      timer = new Timer();
-      timer.scheduleAtFixedRate(this, delay, delay);
-    }
   }
 
   public void addMiddleware(
@@ -192,42 +175,33 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
             = new HttpEventCollectorEventInfo(severity, message, logger_name,
                     thread_name, properties, exception_message, marker);
     eventsBatch.add(eventInfo);
-    eventsBatchSize += severity.length() + message.length();
-    if (eventsBatch.size() >= maxEventsBatchCount || eventsBatchSize > maxEventsBatchSize) {
-      flush();
-    }
   }
 
   /**
    * Flush all pending events
    */
   public synchronized void flush() {
-    if (eventsBatch.size() > 0) {
-      postEventsAsync(eventsBatch);
+    if(eventsBatch.isFlushable()){ //true if there were actually events to flush
+      eventsBatch.flush();
+      // Create new EventsBatch because events inside previous batch are
+      // sending asynchronously and "previous" instance of EventBatch object
+      // is still in use.
+      eventsBatch = new EventBatch(this,
+              eventsBatch.getMaxEventsBatchCount(),
+              eventsBatch.getMaxEventsBatchSize(),
+              eventsBatch.getFlushInterval(),
+              eventsBatch.getMetadata(),
+              timer);
     }
-    // Clear the batch. A new list should be created because events are
-    // sending asynchronously and "previous" instance of eventsBatch object
-    // is still in use.
-    eventsBatch = new LinkedList<HttpEventCollectorEventInfo>();
-    eventsBatchSize = 0;
+
   }
 
   /**
    * Close events sender
    */
   public void close() {
-    if (timer != null) {
-      timer.cancel();
-    }
-    flush();
-  }
-
-  /**
-   * Timer heartbeat
-   */
-  @Override // TimerTask
-  public void run() {
-    flush();
+    eventsBatch.close();
+    timer.cancel();
   }
 
   /**
@@ -236,56 +210,6 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
    */
   public void disableCertificateValidation() {
     disableCertificateValidation = true;
-  }
-
-  @SuppressWarnings("unchecked")
-  private static void putIfPresent(JSONObject collection, String tag,
-          String value) {
-    if (value != null && value.length() > 0) {
-      collection.put(tag, value);
-    }
-  }
-
-  @SuppressWarnings("unchecked")
-  private String serializeEventInfo(HttpEventCollectorEventInfo eventInfo) {
-    // create event json content
-    //
-    // cf: http://dev.splunk.com/view/event-collector/SP-CAAAE6P
-    //
-    JSONObject event = new JSONObject();
-    // event timestamp and metadata
-    putIfPresent(event, MetadataTimeTag, String.format(Locale.US, "%.3f",
-            eventInfo.getTime()));
-    putIfPresent(event, MetadataHostTag, metadata.get(MetadataHostTag));
-    putIfPresent(event, MetadataIndexTag, metadata.get(MetadataIndexTag));
-    putIfPresent(event, MetadataSourceTag, metadata.get(MetadataSourceTag));
-    putIfPresent(event, MetadataSourceTypeTag, metadata.get(
-            MetadataSourceTypeTag));
-    // event body
-    JSONObject body = new JSONObject();
-    putIfPresent(body, "severity", eventInfo.getSeverity());
-    putIfPresent(body, "message", eventInfo.getMessage());
-    putIfPresent(body, "logger", eventInfo.getLoggerName());
-    putIfPresent(body, "thread", eventInfo.getThreadName());
-    // add an exception record if and only if there is one
-    // in practice, the message also has the exception information attached
-    if (eventInfo.getExceptionMessage() != null) {
-      putIfPresent(body, "exception", eventInfo.getExceptionMessage());
-    }
-
-    // add properties if and only if there are any
-    final Map<String, String> props = eventInfo.getProperties();
-    if (props != null && !props.isEmpty()) {
-      body.put("properties", props);
-    }
-    // add marker if and only if there is one
-    final Serializable marker = eventInfo.getMarker();
-    if (marker != null) {
-      putIfPresent(body, "marker", marker.toString());
-    }
-    // join event and body
-    event.put("event", body);
-    return event.toString();
   }
 
   private void startHttpClient() {
@@ -337,7 +261,7 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
     }
   }
 
-  private void postEventsAsync(final List<HttpEventCollectorEventInfo> events) {
+  void postEventsAsync(final EventBatch events) {
     this.middleware.postEvents(events, this,
             new HttpEventCollectorMiddleware.IHttpSenderCallback() {
       @Override
@@ -361,15 +285,11 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
   }
 
   @Override
-  public void postEvents(final List<HttpEventCollectorEventInfo> events,
+  public void postEvents(final EventBatch events,
           final HttpEventCollectorMiddleware.IHttpSenderCallback callback) {
     startHttpClient(); // make sure http client is started
     final String encoding = "utf-8";
-    // convert events list into a string
-    StringBuilder eventsBatchString = new StringBuilder();
-    for (HttpEventCollectorEventInfo eventInfo : events) {
-      eventsBatchString.append(serializeEventInfo(eventInfo));
-    }
+
     // create http request
     final HttpPost httpPost = new HttpPost(url);
     httpPost.setHeader(
@@ -381,7 +301,7 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
               getChannel());
     }
 
-    StringEntity entity = new StringEntity(eventsBatchString.toString(),
+    StringEntity entity = new StringEntity(eventsBatch.toString(),//eventsBatchString.toString(),
             encoding);
     entity.setContentType(HttpContentType);
     httpPost.setEntity(entity);
@@ -393,8 +313,7 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
         // read reply only in case of a server error
         //if (httpStatusCode != 200) {
         try {
-          reply = EntityUtils.toString(response.getEntity(), encoding);
-          System.out.println("reply: " + reply);	//fixme undo hack 		
+          reply = EntityUtils.toString(response.getEntity(), encoding);		
         } catch (IOException e) {
           //if IOException ocurrs toStringing response, this is not something we can expect client 
           //to handle
@@ -432,9 +351,9 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
       throw new RuntimeException(
               "getAcks called but acks have not been enabled.");
     }
-     httpPost.setHeader(
-              ChannelHeader,
-              getChannel());    
+    httpPost.setHeader(
+            ChannelHeader,
+            getChannel());
 
     StringEntity entity;
     try {
@@ -480,36 +399,26 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
 
   class AckExtractorMiddleware extends HttpEventCollectorMiddleware.HttpSenderMiddleware {
 
-   AckManager ackMgr = new AckManager(HttpEventCollectorSender.this);
-   
-   AckExtractorMiddleware(){
-     ackMgr.getChannelMetrics().addObserver((Observable o, Object arg)->{
-       System.out.println(o); //print out channel metrics
-     });
-   }
+    AckManager ackMgr = new AckManager(HttpEventCollectorSender.this);
+
+    AckExtractorMiddleware() {
+      ackMgr.getChannelMetrics().addObserver((Observable o, Object arg) -> {
+        System.out.println(o); //print out channel metrics
+      });
+    }
 
     @Override
     public void postEvents(
-            final List<HttpEventCollectorEventInfo> events,
+            final EventBatch events,
             HttpEventCollectorMiddleware.IHttpSender sender,
             HttpEventCollectorMiddleware.IHttpSenderCallback callback) {
       callNext(events, sender,
               new HttpEventCollectorMiddleware.IHttpSenderCallback() {
         @Override
         public void completed(int statusCode, final String reply) {
-          System.out.println("middelwareOK: " + reply);
+          System.out.println("reply: " + reply);
           if (statusCode == 200) {
             try {
-              /*
-              Map<String, Object> map = mapper.readValue(reply,
-                      new TypeReference<Map<String, Object>>() {
-              });
-              System.out.println("ACKID:" + map.get("ackId"));
-              long ackId = Long.parseLong(map.get("ackId").toString());
-              AckExtractorMiddleware.this.acks.getAcks().add(ackId);
-              System.out.println(HttpEventCollectorSender.this.channel);
-              System.out.println(formatAcks());
-*/
               ackMgr.consumeEventPostResponse(reply);
             } catch (Exception ex) {
               Logger.getLogger(AckExtractorMiddleware.class.getName()).
@@ -530,9 +439,6 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
       });
     }
 
-    
-
   }
 
-  
 }

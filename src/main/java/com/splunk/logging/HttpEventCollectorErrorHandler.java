@@ -77,7 +77,7 @@ public class HttpEventCollectorErrorHandler {
         }
 
         /**
-         * * @return error text replied by Splunk server
+         *  @return error text replied by Splunk server
          */
         public String getErrorText() {
             return errorText;
@@ -89,7 +89,7 @@ public class HttpEventCollectorErrorHandler {
     }
 
     public interface ErrorCallback {
-        void error(final List<HttpEventCollectorEventInfo> data, final Exception ex);
+        void error(final EventBatch data, final Exception ex);
     }
 
     private static ErrorCallback errorCallback;
@@ -107,7 +107,7 @@ public class HttpEventCollectorErrorHandler {
      * @param data
      * @param ex is an exception thrown by posting or processing data
      */
-    public static void error(final List<HttpEventCollectorEventInfo> data, final Exception ex) {
+    public static void error(final EventBatch data, final Exception ex) {
         if (errorCallback != null) {
             errorCallback.error(data, ex);
         }

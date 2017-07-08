@@ -40,7 +40,7 @@ public class HttpEventCollectorMiddleware {
 	 * @param sender is http sender
 	 * @param callback async callback
 	 */
-	public void postEvents(final List<HttpEventCollectorEventInfo> events,
+	public void postEvents(final EventBatch events,
 			IHttpSender sender,
 			IHttpSenderCallback callback) {
 		if (httpSenderMiddleware == null) {
@@ -80,7 +80,7 @@ public class HttpEventCollectorMiddleware {
 	 */
 	public interface IHttpSender {
 
-		public void postEvents(final List<HttpEventCollectorEventInfo> events,
+		public void postEvents(final EventBatch events,
 				IHttpSenderCallback callback);
 
 		public void pollAcks(AckManager m,
@@ -107,13 +107,13 @@ public class HttpEventCollectorMiddleware {
 		private HttpSenderMiddleware next;
 
 		public void postEvents(
-				final List<HttpEventCollectorEventInfo> events,
+				final EventBatch events,
 				IHttpSender sender,
 				IHttpSenderCallback callback) {
 			callNext(events, sender, callback);
 		}
 
-		protected void callNext(final List<HttpEventCollectorEventInfo> events,
+		protected void callNext(final EventBatch events,
 				IHttpSender sender,
 				IHttpSenderCallback callback) {
 			if (next != null) {

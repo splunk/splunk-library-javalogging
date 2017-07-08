@@ -18,8 +18,16 @@ package com.splunk.logging;
  * under the License.
  */
 
+import static com.splunk.logging.HttpEventCollectorSender.MetadataHostTag;
+import static com.splunk.logging.HttpEventCollectorSender.MetadataIndexTag;
+import static com.splunk.logging.HttpEventCollectorSender.MetadataSourceTag;
+import static com.splunk.logging.HttpEventCollectorSender.MetadataSourceTypeTag;
+import static com.splunk.logging.HttpEventCollectorSender.MetadataTimeTag;
 import java.io.Serializable;
+import java.util.Locale;
 import java.util.Map;
+import org.apache.http.entity.StringEntity;
+import org.json.simple.JSONObject;
 
 /**
  * Container for Splunk http event collector event data
@@ -103,4 +111,53 @@ public class HttpEventCollectorEventInfo {
      * @return event marker
      */
     public Serializable getMarker() { return marker; }
+
+
+  public String toString(Map<String, String> metadata) {
+      // create event json content
+    //
+    // cf: http://dev.splunk.com/view/event-collector/SP-CAAAE6P
+    //
+    JSONObject event = new JSONObject();
+    // event timestamp and metadata
+    putIfPresent(event, MetadataTimeTag, String.format(Locale.US, "%.3f",
+            getTime()));
+    putIfPresent(event, MetadataHostTag, metadata.get(MetadataHostTag));
+    putIfPresent(event, MetadataIndexTag, metadata.get(MetadataIndexTag));
+    putIfPresent(event, MetadataSourceTag, metadata.get(MetadataSourceTag));
+    putIfPresent(event, MetadataSourceTypeTag, metadata.get(
+            MetadataSourceTypeTag));
+    // event body
+    JSONObject body = new JSONObject();
+    putIfPresent(body, "severity", getSeverity());
+    putIfPresent(body, "message", getMessage());
+    putIfPresent(body, "logger", getLoggerName());
+    putIfPresent(body, "thread", getThreadName());
+    // add an exception record if and only if there is one
+    // in practice, the message also has the exception information attached
+    if (getExceptionMessage() != null) {
+      putIfPresent(body, "exception", getExceptionMessage());
+    }
+
+    // add properties if and only if there are any
+    final Map<String, String> props = getProperties();
+    if (props != null && !props.isEmpty()) {
+      body.put("properties", props);
+    }
+    // add marker if and only if there is one
+    final Serializable marker = getMarker();
+    if (marker != null) {
+      putIfPresent(body, "marker", marker.toString());
+    }
+    // join event and body
+    event.put("event", body);
+    return event.toString();  
+  }
+    @SuppressWarnings("unchecked")
+  private static void putIfPresent(JSONObject collection, String tag,
+          String value) {
+    if (value != null && value.length() > 0) {
+      collection.put(tag, value);
+    }
+  }
 }

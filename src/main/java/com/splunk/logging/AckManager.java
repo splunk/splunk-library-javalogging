@@ -52,7 +52,6 @@ public class AckManager {
   }
 
   public void consumeEventPostResponse(String resp) {    
-    System.out.println(resp);
     EventPostResponse epr;
     try {
       Map<String, Object> map = mapper.readValue(resp,
@@ -71,7 +70,6 @@ public class AckManager {
   
     public void consumeAckPollResponse(String resp) {
     try {
-      System.out.println(resp);
       AckPollResponse ackPollResp = mapper.
               readValue(resp, AckPollResponse.class);
       this.ackWindow.remove(ackPollResp);

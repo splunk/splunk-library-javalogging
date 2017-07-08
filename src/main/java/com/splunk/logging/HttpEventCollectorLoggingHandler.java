@@ -80,9 +80,9 @@ package com.splunk.logging;
  * com.splunk.logging.HttpEventCollectorLoggingHandler.send_mode=sequential
  */
 
-import java.util.Dictionary;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 import java.util.logging.Handler;
 import java.util.logging.LogManager;
 import java.util.logging.LogRecord;
@@ -107,7 +107,7 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
     /** HttpEventCollectorLoggingHandler c-or */
     public HttpEventCollectorLoggingHandler() {
         // read configuration settings
-        Dictionary<String, String> metadata = new Hashtable<String, String>();
+        Map<String, String> metadata = new HashMap<>();
         metadata.put(HttpEventCollectorSender.MetadataHostTag,
                 getConfigurationProperty(HttpEventCollectorSender.MetadataHostTag, ""));
 
@@ -133,7 +133,7 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
         long retriesOnError = getConfigurationNumericProperty(RetriesOnErrorTag, 0);
         String sendMode = getConfigurationProperty(SendModeTag, "sequential");
         String middleware = getConfigurationProperty(MiddlewareTag, "");
-	     boolean ack = Boolean.parseBoolean(getConfigurationProperty(AckTag, "true"));
+	     boolean ack = Boolean.parseBoolean(getConfigurationProperty(AckTag, "false"));
         String ackUrl = getConfigurationProperty(AckTag, "");
 
         // delegate all configuration params to event sender

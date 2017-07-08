@@ -42,7 +42,7 @@ public class HttpEventCollectorResendMiddleware
 
 	@Override
     public void postEvents(
-            final List<HttpEventCollectorEventInfo> events,
+            final EventBatch events,
             HttpEventCollectorMiddleware.IHttpSender sender,
             HttpEventCollectorMiddleware.IHttpSenderCallback callback) {
          callNext(events, sender, new Callback(events, sender, callback));
@@ -50,14 +50,14 @@ public class HttpEventCollectorResendMiddleware
 
     private class Callback implements HttpEventCollectorMiddleware.IHttpSenderCallback {
         private long retries = 0;
-        private final List<HttpEventCollectorEventInfo> events;
+        private final EventBatch events;
         private HttpEventCollectorMiddleware.IHttpSenderCallback prevCallback;
         private HttpEventCollectorMiddleware.IHttpSender sender;
         private final long RetryDelayCeiling = 60 * 1000; // 1 minute
         private long retryDelay = 1000; // start with 1 second
 
         public Callback(
-                final List<HttpEventCollectorEventInfo> events,
+                final EventBatch events,
                 HttpEventCollectorMiddleware.IHttpSender sender,
                 HttpEventCollectorMiddleware.IHttpSenderCallback prevCallback) {
             this.events = events;

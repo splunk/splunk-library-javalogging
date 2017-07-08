@@ -14,6 +14,7 @@
  * under the License.
  */
 
+import com.splunk.logging.EventBatch;
 import java.util.*;
 
 import com.splunk.logging.HttpEventCollectorErrorHandler;
@@ -26,7 +27,7 @@ import java.util.logging.Logger;
 public final class HttpEventCollector_JavaLoggingTest {
 
     private String httpEventCollectorName = "JavaLoggingTest";
-    List<List<HttpEventCollectorEventInfo>> errors = new ArrayList<List<HttpEventCollectorEventInfo>>();
+    List<EventBatch> errors = new ArrayList<EventBatch>();
     List<HttpEventCollectorErrorHandler.ServerErrorException> logEx = new ArrayList<HttpEventCollectorErrorHandler.ServerErrorException>();
 
     /**
@@ -233,7 +234,7 @@ public final class HttpEventCollector_JavaLoggingTest {
         logEx.clear();
         //define error callback
         HttpEventCollectorErrorHandler.onError(new HttpEventCollectorErrorHandler.ErrorCallback() {
-            public void error(final List<HttpEventCollectorEventInfo> data, final Exception ex) {
+            public void error(final EventBatch data, final Exception ex) {
                 synchronized (errors) {
                     errors.add(data);
                     logEx.add((HttpEventCollectorErrorHandler.ServerErrorException) ex);
@@ -282,8 +283,8 @@ public final class HttpEventCollector_JavaLoggingTest {
         Assert.assertEquals(4, logEx.get(1).getErrorCode());
 
 
-        for (List<HttpEventCollectorEventInfo> infos : errors) {
-            for (HttpEventCollectorEventInfo info : infos) {
+        for (EventBatch infos : errors) {
+            for (HttpEventCollectorEventInfo info : infos.getEvents()) {
                 System.out.println(info.getMessage());
             }
         }
@@ -301,7 +302,7 @@ public final class HttpEventCollector_JavaLoggingTest {
 
         //define error callback
         HttpEventCollectorErrorHandler.onError(new HttpEventCollectorErrorHandler.ErrorCallback() {
-            public void error(final List<HttpEventCollectorEventInfo> data, final Exception ex) {
+            public void error(final EventBatch data, final Exception ex) {
                 synchronized (errors) {
                     errors.add(data);
                     logEx.add((HttpEventCollectorErrorHandler.ServerErrorException) ex);

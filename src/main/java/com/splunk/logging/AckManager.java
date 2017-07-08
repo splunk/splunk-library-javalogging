@@ -73,9 +73,6 @@ public class AckManager {
       AckPollResponse ackPollResp = mapper.
               readValue(resp, AckPollResponse.class);
       this.ackWindow.remove(ackPollResp);
-      if(this.ackWindow.isEmpty()){
-        this.ackPollController.stop();
-      }
     } catch (IOException ex) {
       throw new RuntimeException(ex.getMessage(), ex);
     }

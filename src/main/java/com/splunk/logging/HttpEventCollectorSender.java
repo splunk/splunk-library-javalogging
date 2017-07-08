@@ -127,7 +127,7 @@ final class HttpEventCollectorSender implements HttpEventCollectorMiddleware.IHt
         throw new RuntimeException(
                 "AckUrl was not specified, but HttpEventCollectorSender set to use acks.");
       }
-      this.middleware.add(new AckExtractorMiddleware());
+      this.middleware.add(new AckMiddleware(this));
     }
 
     this.eventsBatch = new EventBatch(this, 
@@ -394,50 +394,6 @@ final class HttpEventCollectorSender implements HttpEventCollectorMiddleware.IHt
       public void cancelled() {
       }
     });
-
-  }
-
-  class AckExtractorMiddleware extends HttpEventCollectorMiddleware.HttpSenderMiddleware {
-
-    AckManager ackMgr = new AckManager(HttpEventCollectorSender.this);
-
-    AckExtractorMiddleware() {
-      ackMgr.getChannelMetrics().addObserver((Observable o, Object arg) -> {
-        System.out.println(o); //print out channel metrics
-      });
-    }
-
-    @Override
-    public void postEvents(
-            final EventBatch events,
-            HttpEventCollectorMiddleware.IHttpSender sender,
-            HttpEventCollectorMiddleware.IHttpSenderCallback callback) {
-      callNext(events, sender,
-              new HttpEventCollectorMiddleware.IHttpSenderCallback() {
-        @Override
-        public void completed(int statusCode, final String reply) {
-          System.out.println("reply: " + reply);
-          if (statusCode == 200) {
-            try {
-              ackMgr.consumeEventPostResponse(reply);
-            } catch (Exception ex) {
-              Logger.getLogger(AckExtractorMiddleware.class.getName()).
-                      log(Level.SEVERE, null, ex);
-            }
-
-          } else {
-            Logger.getLogger(AckExtractorMiddleware.class.getName()).
-                    log(Level.SEVERE, "server didn't return ack ids");
-          }
-        }
-
-        @Override
-        public void failed(final Exception ex) {
-          System.out.println("ooops failed");
-          throw new RuntimeException(ex.getMessage(), ex);
-        }
-      });
-    }
 
   }
 

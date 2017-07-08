@@ -15,7 +15,6 @@
  */
 package com.splunk.logging;
 
-import java.util.List;
 import java.util.Observable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -24,40 +23,36 @@ import java.util.logging.Logger;
  *
  * @author ghendrey
  */
-public class AckManagerHttpMiddleware extends HttpEventCollectorMiddleware.HttpSenderMiddleware {
+class AckMiddleware extends HttpEventCollectorMiddleware.HttpSenderMiddleware {
+  
+  final AckManager ackMgr;
 
-  AckManager ackMgr;
-
-  AckManagerHttpMiddleware(HttpEventCollectorSender sender) {
+  AckMiddleware(final HttpEventCollectorSender sender) {
     this.ackMgr = new AckManager(sender);
-    this.ackMgr.getChannelMetrics().addObserver((Observable o, Object arg) -> {
+    ackMgr.getChannelMetrics().
+            addObserver((Observable o, Object arg) -> {
       System.out.println(o); //print out channel metrics
     });
   }
 
   @Override
-  public void postEvents(
-          final EventBatch events,
+  public void postEvents(final EventBatch events,
           HttpEventCollectorMiddleware.IHttpSender sender,
           HttpEventCollectorMiddleware.IHttpSenderCallback callback) {
     callNext(events, sender,
             new HttpEventCollectorMiddleware.IHttpSenderCallback() {
       @Override
       public void completed(int statusCode, final String reply) {
+        System.out.println("reply: " + reply);
         if (statusCode == 200) {
           try {
             ackMgr.consumeEventPostResponse(reply);
           } catch (Exception ex) {
-            Logger.getLogger(
-                    AckMiddleware.class.
-                    getName()).
+            Logger.getLogger(AckMiddleware.class.getName()).
                     log(Level.SEVERE, null, ex);
           }
-
         } else {
-          Logger.getLogger(
-                  AckMiddleware.class.
-                  getName()).
+          Logger.getLogger(AckMiddleware.class.getName()).
                   log(Level.SEVERE, "server didn't return ack ids");
         }
       }
@@ -69,4 +64,5 @@ public class AckManagerHttpMiddleware extends HttpEventCollectorMiddleware.HttpS
       }
     });
   }
+  
 }

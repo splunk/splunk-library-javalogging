@@ -35,7 +35,13 @@ public class AckWindow {
   @JsonIgnore
   private final ObjectMapper mapper = new ObjectMapper();
   @JsonIgnore
-  private final ChannelMetrics channelMetrics = new ChannelMetrics();
+  private final ChannelMetrics channelMetrics;
+  private final HttpEventCollectorSender sender;
+
+  AckWindow(HttpEventCollectorSender sender) {
+    this.sender = sender;
+    this.channelMetrics = new ChannelMetrics(sender);
+  }
  
 
   @Override

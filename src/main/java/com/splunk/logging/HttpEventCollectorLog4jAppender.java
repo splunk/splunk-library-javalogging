@@ -67,7 +67,6 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
         metadata.put(HttpEventCollectorSender.MetadataSourceTypeTag, sourcetype != null ? sourcetype : "");
 
         this.sender = new HttpEventCollectorSender(url, token, batchInterval, batchCount, batchSize, sendMode, ack, ackUrl, metadata);
-	 //this.ack
 
         // plug a user middleware
         if (middleware != null && !middleware.isEmpty()) {

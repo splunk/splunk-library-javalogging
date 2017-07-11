@@ -49,7 +49,7 @@ import java.util.logging.Logger;
  * This is an internal helper class that sends logging events to Splunk http
  * event collector.
  */
-final class HttpEventCollectorSender implements HttpEventCollectorMiddleware.IHttpSender {
+public final class HttpEventCollectorSender implements HttpEventCollectorMiddleware.IHttpSender {
 
   public static final String MetadataTimeTag = "time";
   public static final String MetadataHostTag = "host";
@@ -99,6 +99,7 @@ final class HttpEventCollectorSender implements HttpEventCollectorMiddleware.IHt
   private final String channel = newChannel();
   private boolean ack = false;
   private String ackUrl;
+  private AckMiddleware ackMiddleware;
 
   /**
    * Initialize HttpEventCollectorSender
@@ -127,7 +128,8 @@ final class HttpEventCollectorSender implements HttpEventCollectorMiddleware.IHt
         throw new RuntimeException(
                 "AckUrl was not specified, but HttpEventCollectorSender set to use acks.");
       }
-      this.middleware.add(new AckMiddleware(this));
+      this.ackMiddleware = new AckMiddleware(this);
+      this.middleware.add(ackMiddleware);
     }
 
     this.eventsBatch = new EventBatch(this, 
@@ -210,6 +212,10 @@ final class HttpEventCollectorSender implements HttpEventCollectorMiddleware.IHt
    */
   public void disableCertificateValidation() {
     disableCertificateValidation = true;
+  }
+  
+  public ChannelMetrics getChannelMetrics(){
+    return this.ackMiddleware.getChannelMetrics();
   }
 
   private void startHttpClient() {

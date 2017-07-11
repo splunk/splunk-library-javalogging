@@ -17,7 +17,6 @@ package com.splunk.logging;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.time.Duration;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Observable;
@@ -29,10 +28,15 @@ import java.util.concurrent.ConcurrentSkipListMap;
  * @author ghendrey
  */
 public class ChannelMetrics extends Observable {
-  private static final ObjectMapper mapper = new ObjectMapper();
+  private static final ObjectMapper mapper = new ObjectMapper(); //JSON serializer
   private final ConcurrentMap<Long, Long> birthTimes = new ConcurrentSkipListMap<>(); //ackid -> creation time
   private long oldestUnackedBirthtime = Long.MIN_VALUE;
   private long mostRecentTimeToSuccess = 0;
+  private final HttpEventCollectorSender sender;
+
+  ChannelMetrics(HttpEventCollectorSender sender) {
+    this.sender = sender;
+  }
   
   @Override
   public String toString(){
@@ -49,7 +53,7 @@ public class ChannelMetrics extends Observable {
     if (oldestUnackedBirthtime == Long.MIN_VALUE) { //not set yet id MIN_VALUE
       oldestUnackedBirthtime = birthtime; //this happens only once. It's a dumb firt run edgecase
       this.setChanged();
-      this.notifyObservers();
+      this.notifyObservers(sender);
     }
   }
 
@@ -66,7 +70,7 @@ public class ChannelMetrics extends Observable {
       }
     });
     this.setChanged();
-    this.notifyObservers();
+    this.notifyObservers(sender);
   }
 
   private long scanForOldestUnacked() {
@@ -93,8 +97,22 @@ public class ChannelMetrics extends Observable {
   /**
    * @return the mostRecentTimeToSuccess
    */
-  public String getMostRecentTimeToSuccess() {
-    return Duration.ofMillis(mostRecentTimeToSuccess).toString();
+  public long getMostRecentTimeToSuccess() {
+    return mostRecentTimeToSuccess; //Duration.ofMillis(mostRecentTimeToSuccess).toString();
   }
 
+  /**
+   * @return the birthTimes
+   */
+  public ConcurrentMap<Long, Long> getBirthTimes() {
+    return birthTimes;
+  }
+
+  /**
+   * @return the oldestUnackedBirthtime
+   */
+  public long getOldestUnackedBirthtime() {
+    return oldestUnackedBirthtime;
+  }
+  
 }

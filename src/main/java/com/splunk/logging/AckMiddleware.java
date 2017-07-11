@@ -65,4 +65,8 @@ class AckMiddleware extends HttpEventCollectorMiddleware.HttpSenderMiddleware {
     });
   }
   
+  public ChannelMetrics getChannelMetrics(){
+    return this.ackMgr.getChannelMetrics();
+  }
+  
 }

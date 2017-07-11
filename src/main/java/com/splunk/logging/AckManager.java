@@ -31,13 +31,14 @@ import java.util.Map;
  */
 public class AckManager {
   private static final ObjectMapper mapper = new ObjectMapper();
-  private HttpEventCollectorSender sender;
+  private final HttpEventCollectorSender sender;
   private final AckPollScheduler ackPollController = new AckPollScheduler();
-  private final AckWindow ackWindow = new AckWindow();
+  private final AckWindow ackWindow; 
 
 
   AckManager(HttpEventCollectorSender sender) {
     this.sender = sender;
+    this .ackWindow = new AckWindow(sender);
   }
 
   /**

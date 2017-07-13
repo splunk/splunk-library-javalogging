@@ -16,81 +16,84 @@
 package com.splunk.logging;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Collection;
-import java.util.LinkedHashSet;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
- * Keeps track of acks that we are waiting for success on. Updates ChannelMetrics
- * every time an ackId is created, and also when success is received on an ackId. This 
- * is not really a window in the sense of a sliding window but "window" seems apropos to
- * describe it.
+ * Keeps track of acks that we are waiting for success on. Updates
+ * ChannelMetrics every time an ackId is created, and also when success is
+ * received on an ackId. This is not really a window in the sense of a sliding
+ * window but "window" seems apropos to describe it.
+ *
  * @author ghendrey
  */
 public class AckWindow {
+  private final static ObjectMapper mapper = new ObjectMapper();
+  private final Map<Long, EventBatch> polledAcks = new ConcurrentSkipListMap<>(); //key ackID
+  private final Map<Long, EventBatch> postedEventBatches = new ConcurrentSkipListMap<>();//key EventBatch ID (autoincrement)
+  private final ChannelMetrics channelMetrics;  
 
-  private Set<Long> acks = new LinkedHashSet<>();
-  @JsonIgnore
-  private final ObjectMapper mapper = new ObjectMapper();
-  @JsonIgnore
-  private final ChannelMetrics channelMetrics;
-  private final HttpEventCollectorSender sender;
-
-  AckWindow(HttpEventCollectorSender sender) {
-    this.sender = sender;
-    this.channelMetrics = new ChannelMetrics(sender);
+  AckWindow(ChannelMetrics channelMetrics) {
+    this.channelMetrics = channelMetrics;
   }
- 
 
   @Override
   public String toString() {
-    try {
-      return mapper.writeValueAsString(this); //this class itself marshals out to {"acks":[id,id,id]}
-    } catch (JsonProcessingException ex) {
-      throw new RuntimeException(ex.getMessage(), ex);
-    }
-  }
 
-  @JsonIgnore
-  public boolean isEmpty(){
-    return acks.isEmpty();
+    try {
+      Map json = new HashMap();
+      json.put("acks",polledAcks.keySet()); //{"acks":[1,2,3...]}
+      return mapper.writeValueAsString(json); //this class itself marshals out to {"acks":[id,id,id]}
+    } catch (JsonProcessingException ex) {
+      Logger.getLogger(AckWindow.class.getName()).log(Level.SEVERE, null, ex);
+      throw new RuntimeException(ex.getMessage(),ex);
+    }
+
   }
   
-  public void add(EventPostResponse epr) {
+  public boolean isEmpty() {
+    return polledAcks.isEmpty() && postedEventBatches.isEmpty();
+  }
+
+  public synchronized void preEventPost(EventBatch batch) {
+    postedEventBatches.put(batch.getId(), batch);  //track what we attempt to post, so in case fail we can try again  
+  }
+
+  public synchronized void handleEventPostResponse(EventPostResponse epr,
+          EventBatch events) {
     Long ackId = epr.getAckId();
-    acks.add(ackId);
+    postedEventBatches.remove(events.getId()); //we are now sure the server reveived the events POST
+    polledAcks.put(ackId, events);
     channelMetrics.ackIdCreated(ackId);
   }
 
-  public void remove(AckPollResponse apr) {
+  public synchronized void handleAckPollResponse(AckPollResponse apr) {
     Collection<Long> succeeded = apr.getSuccessIds();
-    if(succeeded.isEmpty()){
+    if (succeeded.isEmpty()) {
       return;
     }
-    acks.removeAll(succeeded);
+    polledAcks.keySet().removeAll(succeeded);
     channelMetrics.ackIdSucceeded(succeeded);
-  }
-
-  /**
-   * @return the acks
-   */
-  public Set<Long> getAcks() {
-    return acks;
-  }
-
-  /**
-   * @param acks the acks to set
-   */
-  public void setAcks(Set<Long> acks) {
-    this.acks = acks;
   }
 
   ChannelMetrics getChannelMetrics() {
     return this.channelMetrics;
   }
 
- 
+  public Set<EventBatch> getUnacknowleldgedEvents() {
+    Set<EventBatch> unacked = new HashSet<>();
+    unacked.addAll(this.postedEventBatches.values());
+    unacked.addAll(this.polledAcks.values());
+    return unacked;
+  }
 
 }

@@ -35,14 +35,16 @@ class AckPollScheduler {
     }
     this.ackManager = am;
     this.scheduler = Executors.newScheduledThreadPool(1);
-    this.started = true;
     Runnable poller = () -> {
           if(this.ackManager.getAckPollReq().isEmpty()){
+              System.out.println("No acks to poll for");
               return;
           }
           this.ackManager.pollAcks();
     };
     scheduler.scheduleAtFixedRate(poller, 0, 1, TimeUnit.SECONDS);
+    this.started = true;
+    System.out.println("STARTED POLLING");
 
   }
 
@@ -51,6 +53,7 @@ class AckPollScheduler {
   }
 
   public synchronized void stop() {
+    System.out.println("SHUTTING DOWN POLLER");
     scheduler.shutdown();
     scheduler = null;
   }

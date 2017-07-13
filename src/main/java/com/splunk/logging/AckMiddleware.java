@@ -25,20 +25,26 @@ import java.util.logging.Logger;
  */
 class AckMiddleware extends HttpEventCollectorMiddleware.HttpSenderMiddleware {
   
-  final AckManager ackMgr;
+  private final AckManager ackMgr;
 
   AckMiddleware(final HttpEventCollectorSender sender) {
     this.ackMgr = new AckManager(sender);
-    ackMgr.getChannelMetrics().
+    getChannelMetrics().
             addObserver((Observable o, Object arg) -> {
       System.out.println(o); //print out channel metrics
     });
+  }
+  
+  public final ChannelMetrics getChannelMetrics(){
+    return ackMgr.getChannelMetrics();
   }
 
   @Override
   public void postEvents(final EventBatch events,
           HttpEventCollectorMiddleware.IHttpSender sender,
           HttpEventCollectorMiddleware.IHttpSenderCallback callback) {
+    ackMgr.preEventsPost(events);
+    System.out.println(events.toString());
     callNext(events, sender,
             new HttpEventCollectorMiddleware.IHttpSenderCallback() {
       @Override
@@ -46,7 +52,7 @@ class AckMiddleware extends HttpEventCollectorMiddleware.HttpSenderMiddleware {
         System.out.println("reply: " + reply);
         if (statusCode == 200) {
           try {
-            ackMgr.consumeEventPostResponse(reply);
+            getAckManager().consumeEventPostResponse(reply, events);
           } catch (Exception ex) {
             Logger.getLogger(AckMiddleware.class.getName()).
                     log(Level.SEVERE, null, ex);
@@ -54,19 +60,26 @@ class AckMiddleware extends HttpEventCollectorMiddleware.HttpSenderMiddleware {
         } else {
           Logger.getLogger(AckMiddleware.class.getName()).
                   log(Level.SEVERE, "server didn't return ack ids");
+          getAckManager().eventPostNotOK(statusCode, reply, events);
         }
       }
 
       @Override
       public void failed(final Exception ex) {
+        getAckManager().eventPostFailure(ex);
         System.out.println("ooops failed");
         throw new RuntimeException(ex.getMessage(), ex);
       }
     });
   }
-  
-  public ChannelMetrics getChannelMetrics(){
-    return this.ackMgr.getChannelMetrics();
+
+  /**
+   * @return the ackMgr
+   */
+  public AckManager getAckManager() {
+    return ackMgr;
   }
+  
+
   
 }

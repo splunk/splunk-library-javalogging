@@ -20,13 +20,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  *
  * @author ghendrey
  */
 public class EventBatch implements SerializedEventProducer {
-  
+  private static AtomicLong batchIdGenerator = new AtomicLong(0);
+  private long id;
+  private Long ackId; //Will be null until we receive ackId for this batch from HEC
   private final long maxEventsBatchCount;
   private final long maxEventsBatchSize;
   private final long flushInterval;
@@ -84,8 +87,10 @@ public class EventBatch implements SerializedEventProducer {
   
   protected synchronized void flush() {
       flushTask.cancel();
-      sender.postEventsAsync(this);
       flushed = true;
+      id = batchIdGenerator.incrementAndGet();//must generate this batch's ID before posting events      
+      sender.postEventsAsync(this);
+
   }
   
   /**
@@ -152,6 +157,27 @@ public List<HttpEventCollectorEventInfo>  getEvents(){
    */
   public Map<String, String> getMetadata() {
     return metadata;
+  }
+
+  /**
+   * @return the id
+   */
+  public long getId() {
+    return id;
+  }
+
+  /**
+   * @return the ackId
+   */
+  public Long getAckId() {
+    return ackId;
+  }
+
+  /**
+   * @param ackId the ackId to set
+   */
+  public void setAckId(Long ackId) {
+    this.ackId = ackId;
   }
   
   private class ScheduledFlush extends TimerTask{

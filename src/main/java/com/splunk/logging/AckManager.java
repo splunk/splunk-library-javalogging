@@ -21,24 +21,29 @@ import java.io.IOException;
 import java.util.Map;
 
 /**
- * AckManager is the mediator between sending and receiving messages to splunk (as such it is the 
- * only piece of the Ack-system that touches the HttpEventCollectorSender). AckManager sends via the sender 
- * and receives and unmarshals responses.  From these responses it  maintains the
- * ack window by adding newly received ackIds to the ack window, or removing them on success. It also owns
- * the AckPollScheduler which will periodically call back "pollAcks" on this, which sends the content of the 
- * ackWindow to Splunk via the sender, to check their status.
+ * AckManager is the mediator between sending and receiving messages to splunk
+ * (as such it is the only piece of the Ack-system that touches the
+ * HttpEventCollectorSender). AckManager sends via the sender and receives and
+ * unmarshals responses. From these responses it maintains the ack window by
+ * adding newly received ackIds to the ack window, or removing them on success.
+ * It also owns the AckPollScheduler which will periodically call back
+ * "pollAcks" on this, which sends the content of the ackWindow to Splunk via
+ * the sender, to check their status.
+ *
  * @author ghendrey
  */
-public class AckManager {
+public class AckManager implements AckLifecycle{
+
   private static final ObjectMapper mapper = new ObjectMapper();
   private final HttpEventCollectorSender sender;
   private final AckPollScheduler ackPollController = new AckPollScheduler();
-  private final AckWindow ackWindow; 
-
+  private final AckWindow ackWindow;
+  private final ChannelMetrics channelMetrics;
 
   AckManager(HttpEventCollectorSender sender) {
     this.sender = sender;
-    this .ackWindow = new AckWindow(sender);
+    this.channelMetrics = new ChannelMetrics(sender);
+    this.ackWindow = new AckWindow(this.channelMetrics);
   }
 
   /**
@@ -47,55 +52,66 @@ public class AckManager {
   public AckWindow getAckPollReq() {
     return ackWindow;
   }
-  
-  public ChannelMetrics getChannelMetrics(){
-    return ackWindow.getChannelMetrics();
+
+  public ChannelMetrics getChannelMetrics() {
+    return channelMetrics;
   }
 
-  public void consumeEventPostResponse(String resp) {    
+  //called by AckMiddleware when event post response comes back with the indexer-generated ackId
+  public void consumeEventPostResponse(String resp, EventBatch events) {
     EventPostResponse epr;
     try {
       Map<String, Object> map = mapper.readValue(resp,
               new TypeReference<Map<String, Object>>() {
       });
       epr = new EventPostResponse(map);
+      getChannelMetrics().eventPostOK();
     } catch (IOException ex) {
       throw new RuntimeException(ex.getMessage(), ex);
     }
-    ackWindow.add(epr);
-    if(!ackPollController.isStarted()){
-      ackPollController.start(this);
-    }    
-   
+    events.setAckId(events.getAckId()); //tell the batch what its HEC-generated ackId is.
+    System.out.println("ABOUT TO HANDLE EPR");
+    ackWindow.handleEventPostResponse(epr, events);
+    if (!ackPollController.isStarted()) {
+      ackPollController.start(this); //will call back to pollAcks() for sending the list of ackIds to HEC 
+    }
+
   }
-  
-    public void consumeAckPollResponse(String resp) {
+
+  public void consumeAckPollResponse(String resp) {
     try {
       AckPollResponse ackPollResp = mapper.
               readValue(resp, AckPollResponse.class);
-      this.ackWindow.remove(ackPollResp);
+      getChannelMetrics().ackPollOK();
+      this.ackWindow.handleAckPollResponse(ackPollResp);
     } catch (IOException ex) {
       throw new RuntimeException(ex.getMessage(), ex);
     }
 
   }
 
-  
-  public void pollAcks(){
+  //called by the AckPollScheduler
+  public void pollAcks() {
+    System.out.println("POLLING ACKS...");
+    preAckPoll();
     sender.pollAcks(this,
             new HttpEventCollectorMiddleware.IHttpSenderCallback() {
       @Override
       public void completed(int statusCode, String reply) {
-        consumeAckPollResponse(reply);
+        System.out.println("reply: " + reply);
+        if (statusCode == 200) {
+          consumeAckPollResponse(reply);
+        } else {
+          ackPollNotOK(statusCode, reply);
+        }
       }
 
       @Override
       public void failed(Exception ex) {
-        throw new RuntimeException(ex.getMessage(), ex);
+        ackPollFailed(ex);
       }
     });
   }
-
 
   /**
    * @return the sender
@@ -103,5 +119,55 @@ public class AckManager {
   HttpEventCollectorSender getSender() {
     return sender;
   }
+
+  @Override
+  public void preEventsPost(EventBatch events) {
+    ackWindow.preEventPost(events);
+    getChannelMetrics().preEventsPost(events);
+  }
+
+
+  @Override
+  public void eventPostNotOK(int statusCode, String reply, EventBatch events) {
+    getChannelMetrics().eventPostNotOK(statusCode, reply, events);
+  }
+
+  @Override
+  public void preAckPoll(){
+    getChannelMetrics().preAckPoll();
+  }
+
+  @Override
+  public void eventPostOK() {
+    getChannelMetrics().eventPostOK();
+  }
+
+  @Override
+  public void eventPostFailure(Exception ex) {
+    getChannelMetrics().eventPostFailure(ex);  
+  }
+
+  @Override
+  public void ackPollOK() {
+    getChannelMetrics().ackPollOK();
+  }
+
+  @Override
+  public void ackPollNotOK(int statusCode, String reply) {
+      getChannelMetrics().ackPollNotOK(statusCode, reply);
+   }
+
+  @Override
+  public void ackPollFailed(Exception ex) {
+      getChannelMetrics().ackPollFailed(ex);
+  }
+
+  /**
+   * @return the ackWindow
+   */
+  public AckWindow getAckWindow() {
+    return ackWindow;
+  }
+
 
 }

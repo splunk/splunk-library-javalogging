@@ -150,6 +150,10 @@ public final class HttpEventCollectorSender implements HttpEventCollectorMiddlew
     }
 
   }
+  
+  public AckWindow getAckWindow(){
+    return this.ackMiddleware.getAckManager().getAckWindow();
+  }
 
   public void addMiddleware(
           HttpEventCollectorMiddleware.HttpSenderMiddleware middleware) {
@@ -272,7 +276,7 @@ public final class HttpEventCollectorSender implements HttpEventCollectorMiddlew
             new HttpEventCollectorMiddleware.IHttpSenderCallback() {
       @Override
       public void completed(int statusCode, String reply) {
-        if (statusCode != 200) {
+        if (statusCode != 200) {          
           HttpEventCollectorErrorHandler.error(
                   events,
                   new HttpEventCollectorErrorHandler.ServerErrorException(
@@ -364,7 +368,7 @@ public final class HttpEventCollectorSender implements HttpEventCollectorMiddlew
     StringEntity entity;
     try {
       String req = ackMgr.getAckPollReq().toString();
-      System.out.println(req);
+      System.out.println("posting acks: "+ req);      
       entity = new StringEntity(req);
     } catch (UnsupportedEncodingException ex) {
       throw new RuntimeException(ex.getMessage(), ex);
@@ -380,7 +384,7 @@ public final class HttpEventCollectorSender implements HttpEventCollectorMiddlew
         //if (httpStatusCode != 200) {
         try {
           reply = EntityUtils.toString(response.getEntity(), encoding);
-          System.out.println("reply: " + reply);	//fixme undo hack 		
+          //System.out.println("reply: " + reply);	//fixme undo hack 		
         } catch (IOException e) {
           //if IOException ocurrs toStringing response, this is not something we can expect client 
           //to handle

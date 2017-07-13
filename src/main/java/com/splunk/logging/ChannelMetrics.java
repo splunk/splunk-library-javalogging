@@ -27,21 +27,30 @@ import java.util.concurrent.ConcurrentSkipListMap;
  *
  * @author ghendrey
  */
-public class ChannelMetrics extends Observable {
+public class ChannelMetrics extends Observable implements AckLifecycle {
+
   private static final ObjectMapper mapper = new ObjectMapper(); //JSON serializer
   private final ConcurrentMap<Long, Long> birthTimes = new ConcurrentSkipListMap<>(); //ackid -> creation time
   private long oldestUnackedBirthtime = Long.MIN_VALUE;
   private long mostRecentTimeToSuccess = 0;
   private final HttpEventCollectorSender sender;
+  private long eventPostCount;
+  private long eventPostOKCount;
+  private long eventPostNotOKCount;
+  private long eventPostFailureCount;
+  private long ackPollCount;
+  private long ackPollOKCount;
+  private long ackPollNotOKCount;
+  private long ackPollFailureCount;
 
   ChannelMetrics(HttpEventCollectorSender sender) {
     this.sender = sender;
   }
-  
+
   @Override
-  public String toString(){
+  public String toString() {
     try {
-      return "METRICS ---> "+mapper.writeValueAsString(this);
+      return "METRICS ---> " + mapper.writeValueAsString(this);
     } catch (JsonProcessingException ex) {
       throw new RuntimeException(ex.getMessage(), ex);
     }
@@ -66,7 +75,7 @@ public class ChannelMetrics extends Observable {
           oldestUnackedBirthtime = scanForOldestUnacked();//so we need to figure out which unacked id is now oldest
         }
       } else {
-        throw new IllegalStateException("no birth time recorder for ackId: " + e);
+        throw new IllegalStateException("no birth time recorded for ackId: " + e);
       }
     });
     this.setChanged();
@@ -75,7 +84,7 @@ public class ChannelMetrics extends Observable {
 
   private long scanForOldestUnacked() {
     long oldest = Long.MAX_VALUE;
-    for (long birthtime : birthTimes.values()) { //O(n) acceptave 'cause window gonna be small
+    for (long birthtime : birthTimes.values()) { //O(n) acceptable 'cause window gonna be small
       if (birthtime < oldest) {
         oldest = birthtime;
       }
@@ -90,7 +99,7 @@ public class ChannelMetrics extends Observable {
     return birthTimes.size();
   }
 
-  public String getOldest(){
+  public String getOldest() {
     return new Date(oldestUnackedBirthtime).toString();
   }
 
@@ -114,5 +123,51 @@ public class ChannelMetrics extends Observable {
   public long getOldestUnackedBirthtime() {
     return oldestUnackedBirthtime;
   }
+   
+  @Override
+  public void preEventsPost(EventBatch batch) {
+    eventPostCount++;
+  }
+    
+  @Override
+  public void eventPostOK(){
+    eventPostOKCount++;
+  }
+
+  @Override
+  public void eventPostNotOK(int code, String msg, EventBatch events) {
+    eventPostNotOKCount++;
+  }
+
+  @Override
+  public void eventPostFailure(Exception ex) {
+    eventPostFailureCount++;
+  }
   
+  @Override
+   public void preAckPoll() {
+    ackPollCount++;
+  }
+   
+  @Override
+  public void ackPollOK(){
+    ackPollOKCount++;
+  }
+
+  @Override
+  public void ackPollNotOK(int statusCode, String reply) {
+    ackPollNotOKCount++;
+  }
+
+  @Override
+  public void ackPollFailed(Exception ex) {
+    ackPollFailureCount++;
+  }
+
+ 
+
+
+  
+  
+
 }

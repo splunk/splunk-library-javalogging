@@ -17,7 +17,6 @@ package com.splunk.logging;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.util.Collection;
 import java.util.Date;
 import java.util.Observable;
 import java.util.concurrent.ConcurrentMap;
@@ -66,20 +65,18 @@ public class ChannelMetrics extends Observable implements AckLifecycle {
     }
   }
 
-  public void ackIdSucceeded(Collection<Long> succeeded) {
-    succeeded.forEach((Long e) -> { //yeah! gratuitous use of streams!!
-      Long birthTime;
-      if (null != (birthTime = birthTimes.remove(e))) {
-        this.mostRecentTimeToSuccess = System.currentTimeMillis() - birthTime;
-        if (oldestUnackedBirthtime == this.mostRecentTimeToSuccess) { //in this case we just processed the oldest ack
-          oldestUnackedBirthtime = scanForOldestUnacked();//so we need to figure out which unacked id is now oldest
-        }
-      } else {
-        throw new IllegalStateException("no birth time recorded for ackId: " + e);
+  private void ackIdSucceeded(long ackId) {
+
+    Long birthTime;
+    if (null != (birthTime = birthTimes.remove(ackId))) {
+      this.mostRecentTimeToSuccess = System.currentTimeMillis() - birthTime;
+      if (oldestUnackedBirthtime == this.mostRecentTimeToSuccess) { //in this case we just processed the oldest ack
+        oldestUnackedBirthtime = scanForOldestUnacked();//so we need to figure out which unacked id is now oldest
       }
-    });
-    this.setChanged();
-    this.notifyObservers(sender);
+    } else {
+      throw new IllegalStateException("no birth time recorded for ackId: " + ackId);
+    }
+
   }
 
   private long scanForOldestUnacked() {
@@ -123,14 +120,16 @@ public class ChannelMetrics extends Observable implements AckLifecycle {
   public long getOldestUnackedBirthtime() {
     return oldestUnackedBirthtime;
   }
-   
+
   @Override
   public void preEventsPost(EventBatch batch) {
     eventPostCount++;
+    //setChanged();
+    //notifyObservers(PRE_POST);
   }
-    
+
   @Override
-  public void eventPostOK(){
+  public void eventPostOK(EventBatch events) {
     eventPostOKCount++;
   }
 
@@ -143,15 +142,20 @@ public class ChannelMetrics extends Observable implements AckLifecycle {
   public void eventPostFailure(Exception ex) {
     eventPostFailureCount++;
   }
-  
+
   @Override
-   public void preAckPoll() {
+  public void preAckPoll() {
     ackPollCount++;
   }
-   
+
   @Override
-  public void ackPollOK(){
+  public void ackPollOK(EventBatch events) {
     ackPollOKCount++;
+    ackIdSucceeded(events.getAckId());
+    setChanged();
+    AckLifecycleState state = new AckLifecycleState(
+            AckLifecycleState.State.ACK_POLL_OK, events);
+    notifyObservers(state);
   }
 
   @Override
@@ -163,11 +167,5 @@ public class ChannelMetrics extends Observable implements AckLifecycle {
   public void ackPollFailed(Exception ex) {
     ackPollFailureCount++;
   }
-
- 
-
-
-  
-  
 
 }

@@ -19,6 +19,8 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * AckManager is the mediator between sending and receiving messages to splunk
@@ -65,11 +67,12 @@ public class AckManager implements AckLifecycle{
               new TypeReference<Map<String, Object>>() {
       });
       epr = new EventPostResponse(map);
-      getChannelMetrics().eventPostOK();
+      events.setAckId(epr.getAckId()); //tell the batch what its HEC-generated ackId is.
+      getChannelMetrics().eventPostOK(events);
     } catch (IOException ex) {
+      Logger.getLogger(getClass().getName()).log(Level.SEVERE, ex.getMessage(), ex);
       throw new RuntimeException(ex.getMessage(), ex);
     }
-    events.setAckId(events.getAckId()); //tell the batch what its HEC-generated ackId is.
     System.out.println("ABOUT TO HANDLE EPR");
     ackWindow.handleEventPostResponse(epr, events);
     if (!ackPollController.isStarted()) {
@@ -82,7 +85,6 @@ public class AckManager implements AckLifecycle{
     try {
       AckPollResponse ackPollResp = mapper.
               readValue(resp, AckPollResponse.class);
-      getChannelMetrics().ackPollOK();
       this.ackWindow.handleAckPollResponse(ackPollResp);
     } catch (IOException ex) {
       throw new RuntimeException(ex.getMessage(), ex);
@@ -138,8 +140,8 @@ public class AckManager implements AckLifecycle{
   }
 
   @Override
-  public void eventPostOK() {
-    getChannelMetrics().eventPostOK();
+  public void eventPostOK(EventBatch events) {
+    getChannelMetrics().eventPostOK(events);
   }
 
   @Override
@@ -148,8 +150,11 @@ public class AckManager implements AckLifecycle{
   }
 
   @Override
-  public void ackPollOK() {
-    getChannelMetrics().ackPollOK();
+  public void ackPollOK(EventBatch events) {
+    //see consumeEventsPostResponse. We don't yet know what the events are that 
+    //are correlated to the ack poll response! So this method can't ever be
+    //legally called
+    throw new IllegalStateException("ackPollOK was illegally called on AckManager");
   }
 
   @Override

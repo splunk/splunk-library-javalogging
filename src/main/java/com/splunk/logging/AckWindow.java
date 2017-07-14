@@ -81,8 +81,14 @@ public class AckWindow {
     if (succeeded.isEmpty()) {
       return;
     }
+    for(long ackId:succeeded){
+      EventBatch events = this.polledAcks.get(ackId);
+      if(null == events){
+        Logger.getLogger(getClass().getName()).log(Level.SEVERE, "Unable to find EventBatch in buffer for successfully acknowledged ackId: {0}", ackId);
+      }
+      channelMetrics.ackPollOK(events);
+    }
     polledAcks.keySet().removeAll(succeeded);
-    channelMetrics.ackIdSucceeded(succeeded);
   }
 
   ChannelMetrics getChannelMetrics() {

@@ -19,22 +19,29 @@ package com.splunk.logging;
  *
  * @author ghendrey
  */
-public interface AckLifecycle {
+public class AckLifecycleState {
+  public enum State {
+    PRE_EVENT_POST, EVENT_POST_OK, EVENT_POST_NOT_OK, EVENT_POST_FAILURE, PRE_ACK_POLL, ACK_POLL_OK, ACK_POLL_NOT_OK, ACK_POLL_FAILURE
+  };  
+  private final State currentState;
+  private final EventBatch events;
 
-  void preEventsPost(EventBatch events);
+  public AckLifecycleState(State currentState, EventBatch events) {
+    this.currentState = currentState;
+    this.events = events;
+  }
 
-  void eventPostOK(EventBatch events);
+  /**
+   * @return the currentState
+   */
+  public State getCurrentState() {
+    return currentState;
+  }
 
-  void eventPostNotOK(int code, String msg, EventBatch events);
-
-  void eventPostFailure(Exception ex);
-
-  void preAckPoll();
-
-  void ackPollOK(EventBatch events);
-
-  void ackPollNotOK(int statusCode, String reply);
-
-  void ackPollFailed(Exception ex);
+  /**
+   * @return the events
+   */
+  public EventBatch getEvents() {
+    return events;
+  }
 }
-

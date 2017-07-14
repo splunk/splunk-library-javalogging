@@ -182,6 +182,25 @@ public final class HttpEventCollectorSender implements HttpEventCollectorMiddlew
                     thread_name, properties, exception_message, marker);
     eventsBatch.add(eventInfo);
   }
+  
+/**
+   * Immediately send the EventBatch
+   * @param events the batch of events to immediately send
+   */
+  public synchronized void sendBatch(EventBatch events) {
+       this.eventsBatch = events;
+       eventsBatch.setSender(this);
+       eventsBatch.flush();
+      // Create new EventsBatch because events inside previous batch are
+      // sending asynchronously and "previous" instance of EventBatch object
+      // is still in use.
+      eventsBatch = new EventBatch(this,
+              eventsBatch.getMaxEventsBatchCount(),
+              eventsBatch.getMaxEventsBatchSize(),
+              eventsBatch.getFlushInterval(),
+              eventsBatch.getMetadata(),
+              timer);
+  }  
 
   /**
    * Flush all pending events

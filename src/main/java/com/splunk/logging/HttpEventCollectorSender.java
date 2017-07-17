@@ -62,6 +62,10 @@ public final class HttpEventCollectorSender implements HttpEventCollectorMiddlew
   private static final String SendModeSequential = "sequential";
   private static final String SendModeSParallel = "parallel";
   private static final String ChannelHeader = "X-Splunk-Request-Channel";
+  private long maxEventsBatchCount;
+  private long maxEventsBatchSize;
+  private final long delay;
+  private final Map<String, String> metadata;
 
   public String getChannel() {
     return channel;
@@ -122,6 +126,13 @@ public final class HttpEventCollectorSender implements HttpEventCollectorMiddlew
     this.token = token;
     this.ack = ack;
     this.ackUrl = ackUrl;
+        if (maxEventsBatchCount == 0 && maxEventsBatchSize > 0) {
+      this.maxEventsBatchCount = Long.MAX_VALUE;
+    } else if (maxEventsBatchSize == 0 && maxEventsBatchCount > 0) {
+      this.maxEventsBatchSize = Long.MAX_VALUE;
+    }
+   this.delay= delay; 
+   this.metadata=metadata;
 
     if (ack) {
       if (null == ackUrl || ackUrl.isEmpty()) {
@@ -131,13 +142,7 @@ public final class HttpEventCollectorSender implements HttpEventCollectorMiddlew
       this.ackMiddleware = new AckMiddleware(this);
       this.middleware.add(ackMiddleware);
     }
-
-    this.eventsBatch = new EventBatch(this, 
-                                              maxEventsBatchCount,
-                                              maxEventsBatchSize, 
-                                              delay, 
-                                              metadata,
-                                              timer);
+    
     if (sendModeStr != null) {
       if (sendModeStr.equals(SendModeSequential)) {
         this.sendMode = SendMode.Sequential;
@@ -176,6 +181,12 @@ public final class HttpEventCollectorSender implements HttpEventCollectorMiddlew
           final String exception_message,
           Serializable marker
   ) {
+    this.eventsBatch = new EventBatch(this, 
+                                              maxEventsBatchCount,
+                                              maxEventsBatchSize, 
+                                              delay, 
+                                              metadata,
+                                              timer);
     // create event info container and add it to the batch
     HttpEventCollectorEventInfo eventInfo
             = new HttpEventCollectorEventInfo(severity, message, logger_name,
@@ -188,18 +199,13 @@ public final class HttpEventCollectorSender implements HttpEventCollectorMiddlew
    * @param events the batch of events to immediately send
    */
   public synchronized void sendBatch(EventBatch events) {
+      if(events.isFlushed()){
+        throw new IllegalStateException("Illegal attempt to send already-flushed batch. EventBatch is not reusable.");
+      }
        this.eventsBatch = events;
        eventsBatch.setSender(this);
        eventsBatch.flush();
-      // Create new EventsBatch because events inside previous batch are
-      // sending asynchronously and "previous" instance of EventBatch object
-      // is still in use.
-      eventsBatch = new EventBatch(this,
-              eventsBatch.getMaxEventsBatchCount(),
-              eventsBatch.getMaxEventsBatchSize(),
-              eventsBatch.getFlushInterval(),
-              eventsBatch.getMetadata(),
-              timer);
+
   }  
 
   /**

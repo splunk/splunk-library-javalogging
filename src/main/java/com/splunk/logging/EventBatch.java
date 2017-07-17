@@ -30,7 +30,7 @@ import java.util.concurrent.atomic.AtomicLong;
 public class EventBatch implements SerializedEventProducer {
 
   private static AtomicLong batchIdGenerator = new AtomicLong(0);
-  private long id = batchIdGenerator.incrementAndGet();//must generate this batch's ID before posting events 
+  private String id =String.format("%019d", batchIdGenerator.incrementAndGet());//must generate this batch's ID before posting events, since it's string and strings compare lexicographically we should zero pad to 19 digits (max long value)
   private Long ackId; //Will be null until we receive ackId for this batch from HEC
   private long maxEventsBatchCount;
   private long maxEventsBatchSize;
@@ -43,6 +43,7 @@ public class EventBatch implements SerializedEventProducer {
   private final StringBuilder stringBuilder = new StringBuilder();
   private boolean flushed = false;
   private boolean autoflush = true;
+  private boolean acknowledged;
         
   public EventBatch() {
     this.autoflush = false;
@@ -177,7 +178,7 @@ public class EventBatch implements SerializedEventProducer {
   /**
    * @return the id
    */
-  public long getId() {
+  public String getId() {
     return id;
   }
 
@@ -225,6 +226,27 @@ public class EventBatch implements SerializedEventProducer {
 
   void setSender(HttpEventCollectorSender sender) {
     this.sender = sender;
+  }
+
+  /**
+   * @return the acknowledged
+   */
+  public boolean isAcknowledged() {
+    return acknowledged;
+  }
+
+  /**
+   * @param acknowledged the acknowledged to set
+   */
+  public void setAcknowledged(boolean acknowledged) {
+    this.acknowledged = acknowledged;
+  }
+
+  /**
+   * @return the flushed
+   */
+  public boolean isFlushed() {
+    return flushed;
   }
 
   private class ScheduledFlush extends TimerTask {

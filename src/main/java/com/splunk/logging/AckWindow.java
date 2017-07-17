@@ -15,8 +15,6 @@
  */
 package com.splunk.logging;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Collection;
@@ -39,7 +37,7 @@ import java.util.logging.Logger;
 public class AckWindow {
   private final static ObjectMapper mapper = new ObjectMapper();
   private final Map<Long, EventBatch> polledAcks = new ConcurrentSkipListMap<>(); //key ackID
-  private final Map<Long, EventBatch> postedEventBatches = new ConcurrentSkipListMap<>();//key EventBatch ID (autoincrement)
+  private final Map<String, EventBatch> postedEventBatches = new ConcurrentSkipListMap<>();//key EventBatch ID
   private final ChannelMetrics channelMetrics;  
 
   AckWindow(ChannelMetrics channelMetrics) {

@@ -150,7 +150,6 @@ public class ChannelMetrics extends Observable implements AckLifecycle {
 
   @Override
   public void ackPollOK(EventBatch events) {
-    events.setAcknowledged(true);
     ackPollOKCount++;
     ackIdSucceeded(events.getAckId());
     setChanged();

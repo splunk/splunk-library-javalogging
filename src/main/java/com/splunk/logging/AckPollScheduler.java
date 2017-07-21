@@ -53,7 +53,7 @@ class AckPollScheduler {
   }
 
   public synchronized void stop() {
-    System.out.println("SHUTTING DOWN POLLER");
+    System.out.println("SHUTTING DOWN ACK POLLER");
     scheduler.shutdown();
     scheduler = null;
   }

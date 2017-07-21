@@ -17,6 +17,7 @@ package com.splunk.logging;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.Closeable;
 import java.io.IOException;
 import java.util.Map;
 import java.util.logging.Level;
@@ -34,7 +35,7 @@ import java.util.logging.Logger;
  *
  * @author ghendrey
  */
-public class AckManager implements AckLifecycle{
+public class AckManager implements AckLifecycle, Closeable{
 
   private static final ObjectMapper mapper = new ObjectMapper();
   private final HttpEventCollectorSender sender;
@@ -172,6 +173,11 @@ public class AckManager implements AckLifecycle{
    */
   public AckWindow getAckWindow() {
     return ackWindow;
+  }
+
+  @Override
+  public void close() {
+    this.ackPollController.stop();
   }
 
 

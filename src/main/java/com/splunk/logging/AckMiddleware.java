@@ -15,6 +15,8 @@
  */
 package com.splunk.logging;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.util.Observable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -23,7 +25,7 @@ import java.util.logging.Logger;
  *
  * @author ghendrey
  */
-class AckMiddleware extends HttpEventCollectorMiddleware.HttpSenderMiddleware {
+class AckMiddleware extends HttpEventCollectorMiddleware.HttpSenderMiddleware implements Closeable {
   
   private final AckManager ackMgr;
 
@@ -78,6 +80,11 @@ class AckMiddleware extends HttpEventCollectorMiddleware.HttpSenderMiddleware {
    */
   public AckManager getAckManager() {
     return ackMgr;
+  }
+
+  @Override
+  public void close()  {
+    this.ackMgr.close();
   }
   
 

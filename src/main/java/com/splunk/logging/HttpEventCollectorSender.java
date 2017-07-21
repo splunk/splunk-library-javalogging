@@ -28,22 +28,13 @@ import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
 import org.apache.http.impl.nio.client.HttpAsyncClients;
 import org.apache.http.util.EntityUtils;
 
-import org.json.simple.JSONObject;
 import javax.net.ssl.SSLContext;
 import java.io.IOException;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.security.cert.X509Certificate;
-import java.util.Dictionary;
 import java.util.Timer;
-import java.util.TimerTask;
-import java.util.List;
-import java.util.LinkedList;
 import java.util.Map;
-import java.util.Locale;
-import java.util.Observable;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * This is an internal helper class that sends logging events to Splunk http
@@ -232,6 +223,7 @@ public final class HttpEventCollectorSender implements HttpEventCollectorMiddlew
    */
   public void close() {
     eventsBatch.close();
+    this.ackMiddleware.close();
     timer.cancel();
   }
 

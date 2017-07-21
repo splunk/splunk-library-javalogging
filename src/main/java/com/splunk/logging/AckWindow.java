@@ -62,31 +62,34 @@ public class AckWindow {
     return polledAcks.isEmpty() && postedEventBatches.isEmpty();
   }
 
-  public synchronized void preEventPost(EventBatch batch) {
+  public void preEventPost(EventBatch batch) {
     postedEventBatches.put(batch.getId(), batch);  //track what we attempt to post, so in case fail we can try again  
   }
 
-  public synchronized void handleEventPostResponse(EventPostResponse epr,
+  public void handleEventPostResponse(EventPostResponse epr,
           EventBatch events) {
     Long ackId = epr.getAckId();
     postedEventBatches.remove(events.getId()); //we are now sure the server reveived the events POST
     polledAcks.put(ackId, events);
-    channelMetrics.ackIdCreated(ackId);
+    channelMetrics.ackIdCreated(ackId, events);
   }
 
-  public synchronized void handleAckPollResponse(AckPollResponse apr) {
+  public void handleAckPollResponse(AckPollResponse apr) {
     Collection<Long> succeeded = apr.getSuccessIds();
     if (succeeded.isEmpty()) {
       return;
     }
+
     for(long ackId:succeeded){
       EventBatch events = this.polledAcks.get(ackId);
       if(null == events){
         Logger.getLogger(getClass().getName()).log(Level.SEVERE, "Unable to find EventBatch in buffer for successfully acknowledged ackId: {0}", ackId);
       }
       channelMetrics.ackPollOK(events);
+      //polledAcks.remove(ackId);      
     }
     polledAcks.keySet().removeAll(succeeded);
+
   }
 
   ChannelMetrics getChannelMetrics() {

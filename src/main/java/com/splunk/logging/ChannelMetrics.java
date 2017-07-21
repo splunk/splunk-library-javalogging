@@ -55,13 +55,16 @@ public class ChannelMetrics extends Observable implements AckLifecycle {
     }
   }
 
-  public void ackIdCreated(long ackId) {
+  public void ackIdCreated(long ackId, EventBatch events) {
     long birthtime = System.currentTimeMillis();
     birthTimes.put(ackId, birthtime);
     if (oldestUnackedBirthtime == Long.MIN_VALUE) { //not set yet id MIN_VALUE
       oldestUnackedBirthtime = birthtime; //this happens only once. It's a dumb firt run edgecase
       this.setChanged();
-      this.notifyObservers(sender);
+      AckLifecycleState state = new AckLifecycleState(
+            AckLifecycleState.State.EVENT_POST_OK, events, this.sender);
+    System.out.println("NOTIFYING ACK_POLL_OK");
+      this.notifyObservers(state);
     }
   }
 
@@ -154,7 +157,8 @@ public class ChannelMetrics extends Observable implements AckLifecycle {
     ackIdSucceeded(events.getAckId());
     setChanged();
     AckLifecycleState state = new AckLifecycleState(
-            AckLifecycleState.State.ACK_POLL_OK, events);
+            AckLifecycleState.State.ACK_POLL_OK, events, this.sender);
+    System.out.println("NOTIFYING ACK_POLL_OK");
     notifyObservers(state);
   }
 

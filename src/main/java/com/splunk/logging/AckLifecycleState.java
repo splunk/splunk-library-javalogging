@@ -20,15 +20,24 @@ package com.splunk.logging;
  * @author ghendrey
  */
 public class AckLifecycleState {
+
+  /**
+   * @return the sender
+   */
+  public HttpEventCollectorSender getSender() {
+    return sender;
+  }
   public enum State {
     PRE_EVENT_POST, EVENT_POST_OK, EVENT_POST_NOT_OK, EVENT_POST_FAILURE, PRE_ACK_POLL, ACK_POLL_OK, ACK_POLL_NOT_OK, ACK_POLL_FAILURE
   };  
   private final State currentState;
   private final EventBatch events;
+  private final HttpEventCollectorSender sender;
 
-  public AckLifecycleState(State currentState, EventBatch events) {
+  public AckLifecycleState(State currentState, EventBatch events, HttpEventCollectorSender sender) {
     this.currentState = currentState;
     this.events = events;
+    this.sender = sender;
   }
 
   /**

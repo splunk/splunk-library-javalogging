@@ -42,6 +42,7 @@ public class AckManager implements AckLifecycle, Closeable{
   private final AckPollScheduler ackPollController = new AckPollScheduler();
   private final AckWindow ackWindow;
   private final ChannelMetrics channelMetrics;
+  private boolean ackPollInProgress;
 
   AckManager(HttpEventCollectorSender sender) {
     this.sender = sender;
@@ -95,25 +96,33 @@ public class AckManager implements AckLifecycle, Closeable{
 
   //called by the AckPollScheduler
   public void pollAcks() {
+    if(this.ackWindow.isEmpty()){
+      return; //ack poll scheduled but not needed
+    }
     System.out.println("POLLING ACKS...");
+    this.ackPollInProgress = true;
     preAckPoll();
+    System.out.println("sending acks");
     sender.pollAcks(this,
             new HttpEventCollectorMiddleware.IHttpSenderCallback() {
       @Override
       public void completed(int statusCode, String reply) {
-        System.out.println("reply: " + reply);
+        System.out.println("channel="+getSender().getChannel()+" reply: " + reply);
         if (statusCode == 200) {
           consumeAckPollResponse(reply);
         } else {
           ackPollNotOK(statusCode, reply);
         }
+        AckManager.this.ackPollInProgress = false;
       }
 
       @Override
       public void failed(Exception ex) {
         ackPollFailed(ex);
+        AckManager.this.ackPollInProgress = false;
       }
     });
+    System.out.println("sent acks");
   }
 
   /**
@@ -178,6 +187,10 @@ public class AckManager implements AckLifecycle, Closeable{
   @Override
   public void close() {
     this.ackPollController.stop();
+  }
+
+  boolean isAckPollInProgress() {
+    return this.ackPollInProgress;
   }
 
 

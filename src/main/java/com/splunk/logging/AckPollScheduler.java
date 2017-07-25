@@ -39,6 +39,9 @@ class AckPollScheduler {
           if(this.ackManager.getAckPollReq().isEmpty()){
               System.out.println("No acks to poll for");
               return;
+          }else if(this.ackManager.isAckPollInProgress()){
+              System.out.println("skipping ack poll - already have one in flight");
+              return;
           }
           this.ackManager.pollAcks();
     };
@@ -54,7 +57,9 @@ class AckPollScheduler {
 
   public synchronized void stop() {
     System.out.println("SHUTTING DOWN ACK POLLER");
-    scheduler.shutdown();
+    if(null != scheduler){    
+      scheduler.shutdown();
+    }
     scheduler = null;
   }
   

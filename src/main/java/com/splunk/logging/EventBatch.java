@@ -22,12 +22,15 @@ import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.logging.Logger;
 
 /**
  *
  * @author ghendrey
  */
 public class EventBatch implements SerializedEventProducer {
+
+  private static final Logger LOG = Logger.getLogger(EventBatch.class.getName());
 
   private static AtomicLong batchIdGenerator = new AtomicLong(0);
   private String id =String.format("%019d", batchIdGenerator.incrementAndGet());//must generate this batch's ID before posting events, since it's string and strings compare lexicographically we should zero pad to 19 digits (max long value)
@@ -225,6 +228,11 @@ public class EventBatch implements SerializedEventProducer {
   }
 
   void setSender(HttpEventCollectorSender sender) {
+    if(null != this.sender){
+     String msg = "attempt to change the value of sender. Channel was " + this.sender.getChannel()+", and attempt to change to " + sender.getChannel();
+     LOG.severe(msg);
+     throw new IllegalStateException(msg);
+    }
     this.sender = sender;
   }
 
@@ -247,6 +255,13 @@ public class EventBatch implements SerializedEventProducer {
    */
   public boolean isFlushed() {
     return flushed;
+  }
+
+  /**
+   * @return the sender
+   */
+  public HttpEventCollectorSender getSender() {
+    return sender;
   }
 
   private class ScheduledFlush extends TimerTask {

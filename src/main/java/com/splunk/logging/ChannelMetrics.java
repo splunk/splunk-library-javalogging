@@ -17,16 +17,23 @@ package com.splunk.logging;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Observable;
+import java.util.Observer;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.logging.Logger;
 
 /**
  *
  * @author ghendrey
  */
 public class ChannelMetrics extends Observable implements AckLifecycle {
+
+  private static final Logger LOG = Logger.getLogger(ChannelMetrics.class.
+          getName());
 
   private static final ObjectMapper mapper = new ObjectMapper(); //JSON serializer
   private final ConcurrentMap<Long, Long> birthTimes = new ConcurrentSkipListMap<>(); //ackid -> creation time
@@ -48,12 +55,23 @@ public class ChannelMetrics extends Observable implements AckLifecycle {
 
   @Override
   public String toString() {
+    return "ChannelMetrics{" + "birthTimesSize=" + birthTimes.size() + ", oldestUnackedBirthtime=" + oldestUnackedBirthtime + ", mostRecentTimeToSuccess=" + mostRecentTimeToSuccess + ", sender=" + sender + ", eventPostCount=" + eventPostCount + ", eventPostOKCount=" + eventPostOKCount + ", eventPostNotOKCount=" + eventPostNotOKCount + ", eventPostFailureCount=" + eventPostFailureCount + ", ackPollCount=" + ackPollCount + ", ackPollOKCount=" + ackPollOKCount + ", ackPollNotOKCount=" + ackPollNotOKCount + ", ackPollFailureCount=" + ackPollFailureCount + '}';
+  }
+
+  boolean isChannelEmpty() {
+    return birthTimes.isEmpty();
+  }
+
+  /*
+  @Override
+  public String toString() {
     try {
       return "METRICS ---> " + mapper.writeValueAsString(this);
     } catch (JsonProcessingException ex) {
       throw new RuntimeException(ex.getMessage(), ex);
     }
   }
+   */
 
   public void ackIdCreated(long ackId, EventBatch events) {
     long birthtime = System.currentTimeMillis();
@@ -62,8 +80,8 @@ public class ChannelMetrics extends Observable implements AckLifecycle {
       oldestUnackedBirthtime = birthtime; //this happens only once. It's a dumb firt run edgecase
       this.setChanged();
       AckLifecycleState state = new AckLifecycleState(
-            AckLifecycleState.State.EVENT_POST_OK, events, this.sender);
-    System.out.println("NOTIFYING ACK_POLL_OK");
+              AckLifecycleState.State.EVENT_POST_OK, events, this.sender);
+      System.out.println("NOTIFYING ACK_POLL_OK");
       this.notifyObservers(state);
     }
   }
@@ -77,7 +95,9 @@ public class ChannelMetrics extends Observable implements AckLifecycle {
         oldestUnackedBirthtime = scanForOldestUnacked();//so we need to figure out which unacked id is now oldest
       }
     } else {
-      throw new IllegalStateException("no birth time recorded for ackId: " + ackId);
+      LOG.severe("no birth time recorded for ackId: " + ackId);
+      throw new IllegalStateException(
+              "no birth time recorded for ackId: " + ackId);
     }
 
   }
@@ -127,8 +147,12 @@ public class ChannelMetrics extends Observable implements AckLifecycle {
   @Override
   public void preEventsPost(EventBatch batch) {
     eventPostCount++;
-    //setChanged();
-    //notifyObservers(PRE_POST);
+    /*
+    setChanged();
+    AckLifecycleState state = new AckLifecycleState(
+              AckLifecycleState.State.PRE_ACK_POLL, batch, this.sender);
+      notifyObservers(state);
+*/
   }
 
   @Override
@@ -153,13 +177,18 @@ public class ChannelMetrics extends Observable implements AckLifecycle {
 
   @Override
   public void ackPollOK(EventBatch events) {
-    ackPollOKCount++;
-    ackIdSucceeded(events.getAckId());
-    setChanged();
-    AckLifecycleState state = new AckLifecycleState(
-            AckLifecycleState.State.ACK_POLL_OK, events, this.sender);
-    System.out.println("NOTIFYING ACK_POLL_OK");
-    notifyObservers(state);
+    try {
+      ackPollOKCount++;
+      ackIdSucceeded(events.getAckId());
+      setChanged();
+      AckLifecycleState state = new AckLifecycleState(
+              AckLifecycleState.State.ACK_POLL_OK, events, this.sender);
+      System.out.println("NOTIFYING ACK_POLL_OK");
+      notifyObservers(state);
+    } catch (Exception e) {
+      LOG.severe(e.getMessage());
+      throw new RuntimeException(e.getMessage(), e);
+    }
   }
 
   @Override

@@ -35,10 +35,13 @@ import java.util.logging.Logger;
  * @author ghendrey
  */
 public class AckWindow {
+
+  private static final Logger LOG = Logger.getLogger(AckWindow.class.getName());
+
   private final static ObjectMapper mapper = new ObjectMapper();
   private final Map<Long, EventBatch> polledAcks = new ConcurrentSkipListMap<>(); //key ackID
   private final Map<String, EventBatch> postedEventBatches = new ConcurrentSkipListMap<>();//key EventBatch ID
-  private final ChannelMetrics channelMetrics;  
+  private final ChannelMetrics channelMetrics;
 
   AckWindow(ChannelMetrics channelMetrics) {
     this.channelMetrics = channelMetrics;
@@ -49,17 +52,17 @@ public class AckWindow {
 
     try {
       Map json = new HashMap();
-      json.put("acks",polledAcks.keySet()); //{"acks":[1,2,3...]}
+      json.put("acks", polledAcks.keySet()); //{"acks":[1,2,3...]}
       return mapper.writeValueAsString(json); //this class itself marshals out to {"acks":[id,id,id]}
     } catch (JsonProcessingException ex) {
       Logger.getLogger(AckWindow.class.getName()).log(Level.SEVERE, null, ex);
-      throw new RuntimeException(ex.getMessage(),ex);
+      throw new RuntimeException(ex.getMessage(), ex);
     }
 
   }
-  
+
   public boolean isEmpty() {
-    return polledAcks.isEmpty() && postedEventBatches.isEmpty();
+    return this.channelMetrics.isChannelEmpty();//polledAcks.isEmpty() && postedEventBatches.isEmpty();
   }
 
   public void preEventPost(EventBatch batch) {
@@ -75,21 +78,37 @@ public class AckWindow {
   }
 
   public void handleAckPollResponse(AckPollResponse apr) {
-    Collection<Long> succeeded = apr.getSuccessIds();
-    if (succeeded.isEmpty()) {
-      return;
-    }
-
-    for(long ackId:succeeded){
-      EventBatch events = this.polledAcks.get(ackId);
-      if(null == events){
-        Logger.getLogger(getClass().getName()).log(Level.SEVERE, "Unable to find EventBatch in buffer for successfully acknowledged ackId: {0}", ackId);
+    try {
+      Collection<Long> succeeded = apr.getSuccessIds();
+      System.out.println("success acked ids: " + succeeded);
+      if (succeeded.isEmpty()) {
+        return;
       }
-      channelMetrics.ackPollOK(events);
-      //polledAcks.remove(ackId);      
-    }
-    polledAcks.keySet().removeAll(succeeded);
 
+      for (long ackId : succeeded) {
+        EventBatch events = this.polledAcks.get(ackId);
+        System.out.println("got ack on channel=" + events.getSender().getChannel() + ", seqno=" + events.getId() +", ackid=" + events.getAckId());
+        if(ackId != events.getAckId()){
+          String msg = "ackId mismatch key ackID=" +ackId + " recordedAckId=" + events.getAckId();
+          LOG.severe(msg);
+          throw new IllegalStateException(msg);
+        }
+        if (null == events) {
+          Logger.getLogger(getClass().getName()).log(Level.SEVERE,
+                  "Unable to find EventBatch in buffer for successfully acknowledged ackId: {0}",
+                  ackId);
+        }
+        
+        channelMetrics.ackPollOK(events);
+        //polledAcks.remove(ackId);      
+      }
+      //System.out.println("polledAcks was " + polledAcks.keySet());
+      polledAcks.keySet().removeAll(succeeded);
+      //System.out.println("polledAcks now " + polledAcks.keySet());
+    } catch (Exception e) {
+      LOG.severe("caught exception in handleAckPollResponse: " + e.getMessage());
+      throw new RuntimeException(e.getMessage(), e);
+    }
   }
 
   ChannelMetrics getChannelMetrics() {

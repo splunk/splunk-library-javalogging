@@ -35,12 +35,15 @@ import java.io.UnsupportedEncodingException;
 import java.security.cert.X509Certificate;
 import java.util.Timer;
 import java.util.Map;
+import java.util.logging.Logger;
 
 /**
  * This is an internal helper class that sends logging events to Splunk http
  * event collector.
  */
 public final class HttpEventCollectorSender implements HttpEventCollectorMiddleware.IHttpSender {
+
+  private static final Logger LOG = Logger.getLogger(HttpEventCollectorSender.class.getName());
 
   public static final String MetadataTimeTag = "time";
   public static final String MetadataHostTag = "host";
@@ -191,6 +194,7 @@ public final class HttpEventCollectorSender implements HttpEventCollectorMiddlew
    */
   public synchronized void sendBatch(EventBatch events) {
       if(events.isFlushed()){
+        LOG.severe("Illegal attempt to send already-flushed batch. EventBatch is not reusable.");
         throw new IllegalStateException("Illegal attempt to send already-flushed batch. EventBatch is not reusable.");
       }
        this.eventsBatch = events;
@@ -222,9 +226,12 @@ public final class HttpEventCollectorSender implements HttpEventCollectorMiddlew
    * Close events sender
    */
   public void close() {
-    eventsBatch.close();
+    if(null != eventsBatch){ //can happen if no msgs sent on this sender
+      eventsBatch.close();
+    }
     this.ackMiddleware.close();
     timer.cancel();
+    stopHttpClient();
   }
 
   /**
@@ -342,6 +349,7 @@ public final class HttpEventCollectorSender implements HttpEventCollectorMiddlew
         try {
           reply = EntityUtils.toString(response.getEntity(), encoding);		
         } catch (IOException e) {
+          e.printStackTrace();
           //if IOException ocurrs toStringing response, this is not something we can expect client 
           //to handle
           throw new RuntimeException(e.getMessage(), e);
@@ -353,6 +361,7 @@ public final class HttpEventCollectorSender implements HttpEventCollectorMiddlew
 
       @Override
       public void failed(Exception ex) {
+        ex.printStackTrace();
         callback.failed(ex);
       }
 
@@ -385,9 +394,10 @@ public final class HttpEventCollectorSender implements HttpEventCollectorMiddlew
     StringEntity entity;
     try {
       String req = ackMgr.getAckPollReq().toString();
-      System.out.println("posting acks: "+ req);      
+      System.out.println("channel="+getChannel()+" posting acks: "+ req);      
       entity = new StringEntity(req);
     } catch (UnsupportedEncodingException ex) {
+      LOG.severe(ex.getMessage());
       throw new RuntimeException(ex.getMessage(), ex);
     }
     entity.setContentType(HttpContentType);
@@ -403,6 +413,7 @@ public final class HttpEventCollectorSender implements HttpEventCollectorMiddlew
           reply = EntityUtils.toString(response.getEntity(), encoding);
           //System.out.println("reply: " + reply);	//fixme undo hack 		
         } catch (IOException e) {
+          e.printStackTrace();
           //if IOException ocurrs toStringing response, this is not something we can expect client 
           //to handle
           throw new RuntimeException(e.getMessage(), e);
@@ -414,11 +425,13 @@ public final class HttpEventCollectorSender implements HttpEventCollectorMiddlew
 
       @Override
       public void failed(Exception ex) {
+        ex.printStackTrace();
         callback.failed(ex);
       }
 
       @Override
       public void cancelled() {
+        System.out.println("cancelled"); //todo fixme
       }
     });
 

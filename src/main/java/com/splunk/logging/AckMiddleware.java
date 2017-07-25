@@ -31,10 +31,10 @@ class AckMiddleware extends HttpEventCollectorMiddleware.HttpSenderMiddleware im
 
   AckMiddleware(final HttpEventCollectorSender sender) {
     this.ackMgr = new AckManager(sender);
-    getChannelMetrics().
+    /*getChannelMetrics().
             addObserver((Observable o, Object arg) -> {
-      System.out.println(o); //print out channel metrics
-    });
+      System.out.println(o); //print out channel metrics    
+    });*/
   }
   
   public final ChannelMetrics getChannelMetrics(){
@@ -46,12 +46,12 @@ class AckMiddleware extends HttpEventCollectorMiddleware.HttpSenderMiddleware im
           HttpEventCollectorMiddleware.IHttpSender sender,
           HttpEventCollectorMiddleware.IHttpSenderCallback callback) {
     ackMgr.preEventsPost(events);
-    System.out.println(events.toString());
+    System.out.println("channel="+ackMgr.getSender().getChannel() + " events: "+events.toString());
     callNext(events, sender,
             new HttpEventCollectorMiddleware.IHttpSenderCallback() {
       @Override
       public void completed(int statusCode, final String reply) {
-        System.out.println("reply: " + reply);
+        System.out.println("channel="+ackMgr.getSender().getChannel() + " reply : " + reply);
         if (statusCode == 200) {
           try {
             getAckManager().consumeEventPostResponse(reply, events);
@@ -69,7 +69,7 @@ class AckMiddleware extends HttpEventCollectorMiddleware.HttpSenderMiddleware im
       @Override
       public void failed(final Exception ex) {
         getAckManager().eventPostFailure(ex);
-        System.out.println("ooops failed");
+        //System.out.println("HTTP failure for " + AckMiddleware.this.ackMgr.getSender().);
         throw new RuntimeException(ex.getMessage(), ex);
       }
     });

@@ -89,7 +89,9 @@ public final class HttpEventCollectorSender implements HttpEventCollectorMiddlew
   private Timer timer = new Timer();
   private String url;
   private String token;
-  private EventBatch eventsBatch;// = new EventBatch();  
+  private String endpoint;
+  private String eventtype;
+  private EventBatch eventsBatch;// = new EventBatch();
   private CloseableHttpAsyncClient httpClient;
   private boolean disableCertificateValidation = false;
   private SendMode sendMode = SendMode.Sequential;
@@ -183,12 +185,37 @@ public final class HttpEventCollectorSender implements HttpEventCollectorMiddlew
                                               timer);
     // create event info container and add it to the batch
     HttpEventCollectorEventInfo eventInfo
-            = new HttpEventCollectorEventInfo(severity, message, logger_name,
+            = new HttpEventCollectorEventInfo("events", "json", severity, message, logger_name,
                     thread_name, properties, exception_message, marker);
     eventsBatch.add(eventInfo);
   }
-  
-/**
+
+  public synchronized void send(
+          final String endpoint,
+          final String eventtype,
+          final String severity,
+          final String message,
+          final String logger_name,
+          final String thread_name,
+          Map<String, String> properties,
+          final String exception_message,
+          Serializable marker
+  ) {
+    this.eventsBatch = new EventBatch(this,
+            maxEventsBatchCount,
+            maxEventsBatchSize,
+            delay,
+            metadata,
+            timer);
+    // create event info container and add it to the batch
+    HttpEventCollectorEventInfo eventInfo
+            = new HttpEventCollectorEventInfo(endpoint, eventtype, severity, message, logger_name,
+            thread_name, properties, exception_message, marker);
+    eventsBatch.add(eventInfo);
+  }
+
+
+  /**
    * Immediately send the EventBatch
    * @param events the batch of events to immediately send
    */

@@ -34,6 +34,8 @@ import org.json.simple.JSONObject;
  */
 public class HttpEventCollectorEventInfo {
     private double time; // time in fractional seconds since "unix epoch" format
+    private final String endpoint;
+    private final String eventtype;
     private final String severity;
     private final String message;
     private final String logger_name;
@@ -48,6 +50,8 @@ public class HttpEventCollectorEventInfo {
      * @param message is an event content
      */
     public HttpEventCollectorEventInfo(
+            final String endpoint,
+            final String eventtype,
             final String severity,
             final String message,
             final String logger_name,
@@ -57,6 +61,8 @@ public class HttpEventCollectorEventInfo {
             final Serializable marker
     ) {
         this.time = System.currentTimeMillis() / 1000.0;
+        this.endpoint = endpoint;
+        this.eventtype = eventtype;
         this.severity = severity;
         this.message = message;
         this.logger_name = logger_name;
@@ -98,6 +104,16 @@ public class HttpEventCollectorEventInfo {
     public final String getThreadName() { return thread_name; }
 
     /**
+     * @return endpoint
+     */
+    public final String getEndpoint() { return endpoint; }
+
+    /**
+     * @return eventtype
+     */
+    public final String getEventType() { return eventtype; }
+
+    /**
      * @return event MDC properties
      */
     public Map<String,String> getProperties() { return properties; }
@@ -112,52 +128,86 @@ public class HttpEventCollectorEventInfo {
      */
     public Serializable getMarker() { return marker; }
 
-
-  public String toString(Map<String, String> metadata) {
-      // create event json content
-    //
-    // cf: http://dev.splunk.com/view/event-collector/SP-CAAAE6P
-    //
-    JSONObject event = new JSONObject();
-    // event timestamp and metadata
-    putIfPresent(event, MetadataTimeTag, String.format(Locale.US, "%.3f",
-            getTime()));
-    putIfPresent(event, MetadataHostTag, metadata.get(MetadataHostTag));
-    putIfPresent(event, MetadataIndexTag, metadata.get(MetadataIndexTag));
-    putIfPresent(event, MetadataSourceTag, metadata.get(MetadataSourceTag));
-    putIfPresent(event, MetadataSourceTypeTag, metadata.get(
-            MetadataSourceTypeTag));
-    // event body
-    JSONObject body = new JSONObject();
-    putIfPresent(body, "severity", getSeverity());
-    putIfPresent(body, "message", getMessage());
-    putIfPresent(body, "logger", getLoggerName());
-    putIfPresent(body, "thread", getThreadName());
-    // add an exception record if and only if there is one
-    // in practice, the message also has the exception information attached
-    if (getExceptionMessage() != null) {
-      putIfPresent(body, "exception", getExceptionMessage());
+    private String forRawEndpoint() {
+        if (getEventType().equals("blob")) {
+            String raw_data = getMessage();
+            return raw_data.toString();
+        } else if (getEventType().equals("json")) {
+            JSONObject raw_data = new JSONObject();
+            putIfPresent(raw_data, "time", String.format(Locale.US, "%.3f",
+                    getTime()));
+            putIfPresent(raw_data, "message", getMessage());
+            return raw_data.toString();
+        } else {
+            throw new IllegalArgumentException("Invalid Event Type.");
+        }
     }
 
-    // add properties if and only if there are any
-    final Map<String, String> props = getProperties();
-    if (props != null && !props.isEmpty()) {
-      body.put("properties", props);
+    private String forEventEndpoint(Map<String, String> metadata) {
+        JSONObject event = new JSONObject();
+        // event timestamp and metadata
+        putIfPresent(event, MetadataTimeTag, String.format(Locale.US, "%.3f",
+                getTime()));
+        putIfPresent(event, MetadataHostTag, metadata.get(MetadataHostTag));
+        putIfPresent(event, MetadataIndexTag, metadata.get(MetadataIndexTag));
+        putIfPresent(event, MetadataSourceTag, metadata.get(MetadataSourceTag));
+        putIfPresent(event, MetadataSourceTypeTag, metadata.get(
+                MetadataSourceTypeTag));
+        // event body
+        JSONObject body = new JSONObject();
+        putIfPresent(body, "severity", getSeverity());
+        putIfPresent(body, "message", getMessage());
+        putIfPresent(body, "logger", getLoggerName());
+        putIfPresent(body, "thread", getThreadName());
+        // add an exception record if and only if there is one
+        // in practice, the message also has the exception information attached
+        if (getExceptionMessage() != null) {
+            putIfPresent(body, "exception", getExceptionMessage());
+        }
+
+        // add properties if and only if there are any
+        final Map<String, String> props = getProperties();
+        if (props != null && !props.isEmpty()) {
+            body.put("properties", props);
+        }
+        // add marker if and only if there is one
+        final Serializable marker = getMarker();
+        if (marker != null) {
+            putIfPresent(body, "marker", marker.toString());
+        }
+        // join event and body
+        if (getEventType().equals("json")) {
+            event.put("event", body);
+            return event.toString();
+        } else if (getEventType().equals("blob")) {
+            event.put("event", getMessage());
+            return event.toString();
+        } else {
+            throw new IllegalArgumentException("Invalid Event Type.");
+        }
     }
-    // add marker if and only if there is one
-    final Serializable marker = getMarker();
-    if (marker != null) {
-      putIfPresent(body, "marker", marker.toString());
+
+    public String toString(Map<String, String> metadata) {
+        // create event json content
+        //
+        // cf: http://dev.splunk.com/view/event-collector/SP-CAAAE6P
+        //
+        String event;
+        if (getEndpoint().equals("raw")) {
+            event = forRawEndpoint();
+        } else if (getEndpoint().equals("event")) {
+            event = forEventEndpoint(metadata);
+        } else {
+            throw new IllegalArgumentException("Invalid Endpoint.");
+        }
+        return event;
     }
-    // join event and body
-    event.put("event", body);
-    return event.toString();  
-  }
+
     @SuppressWarnings("unchecked")
-  private static void putIfPresent(JSONObject collection, String tag,
-          String value) {
-    if (value != null && value.length() > 0) {
-      collection.put(tag, value);
+    private static void putIfPresent(JSONObject collection, String tag,
+                                     String value) {
+        if (value != null && value.length() > 0) {
+            collection.put(tag, value);
+        }
     }
-  }
 }

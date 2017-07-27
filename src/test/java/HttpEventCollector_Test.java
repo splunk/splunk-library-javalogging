@@ -30,6 +30,7 @@ import java.util.*;
 import java.lang.reflect.*;
 
 import com.splunk.*;
+import com.splunk.logging.EventBatch;
 import org.slf4j.*;
 
 public class HttpEventCollector_Test {
@@ -104,7 +105,7 @@ public class HttpEventCollector_Test {
     @Test
     public void TryToLogToSplunkWithDisabledHttpEventCollector() throws Exception {
         HttpEventCollectorErrorHandler.onError(new HttpEventCollectorErrorHandler.ErrorCallback() {
-            public void error(final List<HttpEventCollectorEventInfo> data, final Exception ex) {
+            public void error(final EventBatch data, final Exception ex) {
                 String exceptionInfo = ex.getMessage() + " " + ex.getStackTrace();
                 HttpEventCollectorErrorHandler.ServerErrorException serverErrorException =
                         new HttpEventCollectorErrorHandler.ServerErrorException(exceptionInfo);
@@ -199,7 +200,7 @@ public class HttpEventCollector_Test {
 
     private void LogToSplunk(boolean batching) throws Exception {
         HttpEventCollectorErrorHandler.onError(new HttpEventCollectorErrorHandler.ErrorCallback() {
-            public void error(final List<HttpEventCollectorEventInfo> data, final Exception ex) {
+            public void error(final EventBatch data, final Exception ex) {
                 HttpEventCollectorErrorHandler.ServerErrorException serverErrorException =
                         (HttpEventCollectorErrorHandler.ServerErrorException) ex;
                 System.out.printf("ERROR: %s", ex.toString());
@@ -264,7 +265,7 @@ public class HttpEventCollector_Test {
     public  void ResendDataToSplunk() throws  Exception
     {
         HttpEventCollectorErrorHandler.onError(new HttpEventCollectorErrorHandler.ErrorCallback() {
-            public void error(final List<HttpEventCollectorEventInfo> data, final Exception ex) {
+            public void error(final EventBatch data, final Exception ex) {
                 HttpEventCollectorErrorHandler.ServerErrorException serverErrorException =
                         (HttpEventCollectorErrorHandler.ServerErrorException) ex;
                 System.out.printf("ERROR: %s", ex.toString());

@@ -20,8 +20,8 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.AppenderBase;
 import ch.qos.logback.core.Layout;
 
-import java.util.Dictionary;
-import java.util.Hashtable;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Logback Appender which writes its events to Splunk http event collector rest endpoint.
@@ -42,6 +42,8 @@ public class HttpEventCollectorLogbackAppender extends AppenderBase<ILoggingEven
     private long _batchSize = 0;
     private String _sendMode;
     private long _retriesOnError = 0;
+    private boolean _ack = false;
+    private String _ackUrl;
 
     @Override
     public void start() {
@@ -49,7 +51,7 @@ public class HttpEventCollectorLogbackAppender extends AppenderBase<ILoggingEven
             return;
 
         // init events sender
-        Dictionary<String, String> metadata = new Hashtable<String, String>();
+        Map<String, String> metadata = new HashMap<>();
         if (_host != null)
             metadata.put(HttpEventCollectorSender.MetadataHostTag, _host);
 
@@ -63,7 +65,7 @@ public class HttpEventCollectorLogbackAppender extends AppenderBase<ILoggingEven
             metadata.put(HttpEventCollectorSender.MetadataSourceTypeTag, _sourcetype);
 
         this.sender = new HttpEventCollectorSender(
-                _url, _token, _batchInterval, _batchCount, _batchSize, _sendMode, metadata);
+                _url, _token, _batchInterval, _batchCount, _batchSize, _sendMode, _ack, _ackUrl, metadata);
 
         // plug a user middleware
         if (_middleware != null && !_middleware.isEmpty()) {
@@ -206,5 +208,28 @@ public class HttpEventCollectorLogbackAppender extends AppenderBase<ILoggingEven
             return defaultValue;
         }
     }
+	
+    public boolean isAck() {
+	return _ack;
+    }
+
+    public void setAck(boolean ack) {
+	_ack = ack;
+    }
+
+  /**
+   * @return the _ackUrl
+   */
+  public String getAckUrl() {
+    return _ackUrl;
+  }
+
+  /**
+   * @param _ackUrl the _ackUrl to set
+   */
+  public void setAckUrl(String _ackUrl) {
+    this._ackUrl = _ackUrl;
+  }
+	
 }
 

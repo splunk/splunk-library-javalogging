@@ -16,22 +16,16 @@
  * under the License.
  */
 
+import com.splunk.logging.EventBatch;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.net.InetSocketAddress;
 
 import com.splunk.logging.HttpEventCollectorErrorHandler;
-import com.splunk.logging.HttpEventCollectorEventInfo;
 import org.junit.Assert;
 import org.junit.Test;
-import sun.rmi.runtime.Log;
 
 import java.io.ByteArrayInputStream;
-import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.logging.LogManager;
-import java.util.logging.Logger;
 
 public class HttpEventCollectorUnitTest {
     @Test
@@ -50,7 +44,7 @@ public class HttpEventCollectorUnitTest {
         HttpEventCollectorUnitTestMiddleware.eventsReceived = 0;
         HttpEventCollectorUnitTestMiddleware.io = new HttpEventCollectorUnitTestMiddleware.IO() {
             @Override
-            public void input(List<HttpEventCollectorEventInfo> events) {
+            public void input(EventBatch events) {
                 Assert.assertTrue(events.size() == 1);
                 Assert.assertTrue(events.get(0).getMessage().compareTo("hello log4j") == 0);
                 Assert.assertTrue(events.get(0).getSeverity().compareTo("INFO") == 0);
@@ -78,7 +72,7 @@ public class HttpEventCollectorUnitTest {
         HttpEventCollectorUnitTestMiddleware.eventsReceived = 0;
         HttpEventCollectorUnitTestMiddleware.io = new HttpEventCollectorUnitTestMiddleware.IO() {
             @Override
-            public void input(List<HttpEventCollectorEventInfo> events) {
+            public void input(EventBatch events) {
                 Assert.assertTrue(events.size() == 1);
                 Assert.assertTrue(events.get(0).getMessage().compareTo("hello logback") == 0);
                 Assert.assertTrue(events.get(0).getSeverity().compareTo("ERROR") == 0);
@@ -108,7 +102,7 @@ public class HttpEventCollectorUnitTest {
         HttpEventCollectorUnitTestMiddleware.eventsReceived = 0;
         HttpEventCollectorUnitTestMiddleware.io = new HttpEventCollectorUnitTestMiddleware.IO() {
             @Override
-            public void input(List<HttpEventCollectorEventInfo> events) {
+            public void input(EventBatch events) {
                 Assert.assertTrue(events.size() == 1);
                 Assert.assertTrue(events.get(0).getMessage().compareTo("hello java logger") == 0);
                 Assert.assertTrue(events.get(0).getSeverity().compareTo("WARNING") == 0);
@@ -144,7 +138,7 @@ public class HttpEventCollectorUnitTest {
             }
         };
         HttpEventCollectorErrorHandler.onError(new HttpEventCollectorErrorHandler.ErrorCallback() {
-            public void error(final List<HttpEventCollectorEventInfo> data, final Exception ex) {
+            public void error(final EventBatch data, final Exception ex) {
                 HttpEventCollectorErrorHandler.ServerErrorException serverErrorException =
                         (HttpEventCollectorErrorHandler.ServerErrorException) ex;
                 Assert.assertTrue(serverErrorException.getReply().compareTo("{\"text\":\"error\",\"code\":4}") == 0);
@@ -173,7 +167,7 @@ public class HttpEventCollectorUnitTest {
         HttpEventCollectorUnitTestMiddleware.io = new HttpEventCollectorUnitTestMiddleware.IO() {
             int retries = 0;
             @Override
-            public void input(List<HttpEventCollectorEventInfo> events) {
+            public void input(EventBatch events) {
                 Assert.assertTrue(events.get(0).getMessage().compareTo("hello") == 0);
                 Assert.assertTrue(events.get(0).getSeverity().compareTo("INFO") == 0);
             }
@@ -212,7 +206,7 @@ public class HttpEventCollectorUnitTest {
         HttpEventCollectorUnitTestMiddleware.eventsReceived = 0;
         HttpEventCollectorUnitTestMiddleware.io = new HttpEventCollectorUnitTestMiddleware.IO() {
             @Override
-            public void input(List<HttpEventCollectorEventInfo> events) {
+            public void input(EventBatch events) {
                 Assert.assertTrue(events.get(0).getMessage().compareTo("hello") == 0);
                 Assert.assertTrue(events.get(0).getSeverity().compareTo("INFO") == 0);
             }
@@ -224,7 +218,7 @@ public class HttpEventCollectorUnitTest {
             }
         };
         HttpEventCollectorErrorHandler.onError(new HttpEventCollectorErrorHandler.ErrorCallback() {
-            public void error(final List<HttpEventCollectorEventInfo> data, final Exception ex) {
+            public void error(final EventBatch data, final Exception ex) {
                 // ignore errors
             }
         });
@@ -247,7 +241,7 @@ public class HttpEventCollectorUnitTest {
         HttpEventCollectorUnitTestMiddleware.eventsReceived = 0;
         HttpEventCollectorUnitTestMiddleware.io = new HttpEventCollectorUnitTestMiddleware.IO() {
             @Override
-            public void input(List<HttpEventCollectorEventInfo> events) {
+            public void input(EventBatch events) {
                 Assert.assertTrue(events.size() == 3);
                 Assert.assertTrue(events.get(0).getMessage().compareTo("one") == 0);
                 Assert.assertTrue(events.get(1).getMessage().compareTo("two") == 0);
@@ -273,7 +267,7 @@ public class HttpEventCollectorUnitTest {
         HttpEventCollectorUnitTestMiddleware.eventsReceived = 0;
         HttpEventCollectorUnitTestMiddleware.io = new HttpEventCollectorUnitTestMiddleware.IO() {
             @Override
-            public void input(List<HttpEventCollectorEventInfo> events) {
+            public void input(EventBatch events) {
                 Assert.assertTrue(events.size() == DefaultBatchCount);
             }
         };
@@ -296,7 +290,7 @@ public class HttpEventCollectorUnitTest {
         HttpEventCollectorUnitTestMiddleware.eventsReceived = 0;
         HttpEventCollectorUnitTestMiddleware.io = new HttpEventCollectorUnitTestMiddleware.IO() {
             @Override
-            public void input(List<HttpEventCollectorEventInfo> events) {
+            public void input(EventBatch events) {
                 Assert.assertTrue(events.size() == 1);
             }
         };
@@ -319,7 +313,7 @@ public class HttpEventCollectorUnitTest {
         HttpEventCollectorUnitTestMiddleware.eventsReceived = 0;
         HttpEventCollectorUnitTestMiddleware.io = new HttpEventCollectorUnitTestMiddleware.IO() {
             @Override
-            public void input(List<HttpEventCollectorEventInfo> events) {
+            public void input(EventBatch events) {
                 Assert.assertTrue(events.size() == 1);
             }
         };

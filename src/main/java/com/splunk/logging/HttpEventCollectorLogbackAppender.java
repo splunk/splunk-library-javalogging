@@ -20,19 +20,21 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.AppenderBase;
 import ch.qos.logback.core.Layout;
 
+import java.util.Collections;
 import java.util.Dictionary;
 import java.util.Hashtable;
 
 /**
  * Logback Appender which writes its events to Splunk http event collector rest endpoint.
  */
-public class HttpEventCollectorLogbackAppender extends AppenderBase<ILoggingEvent> {
+public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
     private HttpEventCollectorSender sender = null;
-    private Layout<ILoggingEvent> _layout;
+    private Layout<E> _layout;
     private boolean _includeLoggerName = true;
     private boolean _includeThreadName = true;
     private boolean _includeMDC = true;
     private boolean _includeException = true;
+
     private String _source;
     private String _sourcetype;
     private String _host;
@@ -97,21 +99,44 @@ public class HttpEventCollectorLogbackAppender extends AppenderBase<ILoggingEven
     }
 
     @Override
-    protected void append(ILoggingEvent event) {
+    protected void append(E e) {
+        if (e instanceof ILoggingEvent) {
+            sendEvent((ILoggingEvent) e);
+        } else {
+            sendEvent(e);
+        }
+    }
+
+    private void sendEvent(ILoggingEvent event) {
         event.prepareForDeferredProcessing();
-        event.getCallerData();
+        if (event.hasCallerData()) {
+            event.getCallerData();
+        }
+
         MarkerConverter c = new MarkerConverter();
         if (event != null && started) {
             this.sender.send(
                     event.getLevel().toString(),
-                    _layout.doLayout(event),
+                    _layout.doLayout((E) event),
                     _includeLoggerName ? event.getLoggerName() : null,
                     _includeThreadName ? event.getThreadName() : null,
                     _includeMDC ? event.getMDCPropertyMap() : null,
                     (!_includeException || event.getThrowableProxy() == null) ? null : event.getThrowableProxy().getMessage(),
                     c.convert(event)
-                    );
+            );
         }
+    }
+
+    // send non ILoggingEvent such as ch.qos.logback.access.spi.IAccessEvent
+    private void sendEvent(E e) {
+        String message = _layout.doLayout(e);
+        if (message == null) {
+            throw new IllegalArgumentException(String.format(
+                    "The logback layout %s is probably incorrect, " +
+                            "and fails to format the message.",
+                    _layout.toString()));
+        }
+        this.sender.send(message);
     }
 
     public void setUrl(String url) {
@@ -130,11 +155,11 @@ public class HttpEventCollectorLogbackAppender extends AppenderBase<ILoggingEven
         return this._token;
     }
 
-    public void setLayout(Layout<ILoggingEvent> layout) {
+    public void setLayout(Layout<E> layout) {
         this._layout = layout;
     }
 
-    public Layout<ILoggingEvent> getLayout() {
+    public Layout<E> getLayout() {
         return this._layout;
     }
 

@@ -300,6 +300,41 @@ entries.
         setAuthAction("deny");
     }});
    ```
+  
+### Using logback-access with HEC appender
+[logback-access](https://logback.qos.ch/access.html) logs different type of events (`ch.qos.logback.access.spi.IAccessEvent`) as logback classic, which logs `ch.qos.logback.classic.spi.ILoggingEvent`. 
+
+To use this library with logback-access, you can try the following configuration:
+
+* logback access (to be put in `logback-access.xml` on the classpath)
+   ```
+    <configuration>
+        <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder>
+                <pattern>combined</pattern>
+            </encoder>
+        </appender>
+    
+        <appender name="hec_access_appender" class="com.splunk.logging.HttpEventCollectorLogbackAppender">
+            <url>https://localhost:8088</url>
+            <token>00000000-0000-0000-0000-000000000000</token>
+            <host>devhost</host>
+            <index>main</index>
+            <source>logback-client</source>
+            <sourcetype>logback</sourcetype>
+            <disableCertificateValidation>true</disableCertificateValidation>
+    
+            <layout class="ch.qos.logback.access.PatternLayout">
+                <pattern>%h %l %u %t %r %s %b</pattern>
+            </layout>
+        </appender>
+    
+        <appender-ref ref="CONSOLE" />
+        <appender-ref ref="hec_access_appender" />
+    </configuration>
+   ```
+    If you run into any issue, try add a `debug=true` attribute to the `configuration` for debugging.
+
 
 ## Splunk Enterprise
 

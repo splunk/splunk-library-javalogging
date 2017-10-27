@@ -6,7 +6,7 @@
 
   <groupId>com.splunk.logging</groupId>
   <artifactId>splunk-library-javalogging</artifactId>
-  <version>1.5.2</version>
+  <version>1.5.3</version>
   <packaging>jar</packaging>
 
   <name>Splunk Logging for Java</name>
@@ -16,6 +16,7 @@
 
     <properties>
         <maven.resources.overwrite>true</maven.resources.overwrite>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
     <profiles>
         <profile>
@@ -136,13 +137,19 @@
       <dependency>
           <groupId>ch.qos.logback</groupId>
           <artifactId>logback-classic</artifactId>
-          <version>1.0.13</version>
+          <version>1.1.11</version>
           <scope>provided</scope>
       </dependency>
       <dependency>
           <groupId>ch.qos.logback</groupId>
           <artifactId>logback-core</artifactId>
-          <version>1.0.13</version>
+          <version>1.1.11</version>
+          <scope>provided</scope>
+      </dependency>
+      <dependency>
+          <groupId>ch.qos.logback</groupId>
+          <artifactId>logback-access</artifactId>
+          <version>1.1.11</version>
           <scope>provided</scope>
       </dependency>
 

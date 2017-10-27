@@ -1,5 +1,9 @@
 # Splunk Logging for Java Changelog
 
+## Version 1.5.3
+* Add support for Logback access [#54](https://github.com/splunk/splunk-library-javalogging/issues/54)
+* Make more parameters optional for Log4j appender [#47](https://github.com/splunk/splunk-library-javalogging/issues/47)
+
 ## Version 1.5.2
 
 * Add support for setting the `host` metadata field, GitHub issue [#24](https://github.com/splunk/splunk-library-javalogging/issues/24).

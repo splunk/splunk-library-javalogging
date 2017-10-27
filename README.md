@@ -1,6 +1,6 @@
 # Splunk Logging for Java
 
-#### Version 1.5.2
+#### Version 1.5.3
 
 This project provides utilities to easily log data using Splunk's recommended 
 best practices to any supported logger, using any of the three major Java 
@@ -114,7 +114,7 @@ entries.
     <repository>
         <id>splunk</id>
         <name>splunk-releases</name>
-        <url>http://splunk.artifactoryonline.com/splunk/ext-releases-local</url>
+        <url>http://splunk.jfrog.io/splunk/ext-releases-local</url>
     </repository>
     ```
 
@@ -300,21 +300,48 @@ entries.
         setAuthAction("deny");
     }});
    ```
+  
+### Using logback-access with HEC appender
+[logback-access](https://logback.qos.ch/access.html) logs different type of events (`ch.qos.logback.access.spi.IAccessEvent`) as logback classic, which logs `ch.qos.logback.classic.spi.ILoggingEvent`. 
 
-## Splunk
+To use this library with logback-access, you can try the following configuration:
 
-If you haven't already installed Splunk, download it here: 
+* logback access (to be put in `logback-access.xml` on the classpath)
+   ```
+    <configuration>
+        <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder>
+                <pattern>combined</pattern>
+            </encoder>
+        </appender>
+    
+        <appender name="hec_access_appender" class="com.splunk.logging.HttpEventCollectorLogbackAppender">
+            <url>https://localhost:8088</url>
+            <token>00000000-0000-0000-0000-000000000000</token>
+            <host>devhost</host>
+            <index>main</index>
+            <source>logback-client</source>
+            <sourcetype>logback</sourcetype>
+            <disableCertificateValidation>true</disableCertificateValidation>
+    
+            <layout class="ch.qos.logback.access.PatternLayout">
+                <pattern>%h %l %u %t %r %s %b</pattern>
+            </layout>
+        </appender>
+    
+        <appender-ref ref="CONSOLE" />
+        <appender-ref ref="hec_access_appender" />
+    </configuration>
+   ```
+    If you run into any issue, try add a `debug=true` attribute to the `configuration` for debugging.
+
+
+## Splunk Enterprise
+
+If you haven't already installed Splunk Enterprise, download it here: 
 [http://www.splunk.com/download](http://www.splunk.com/download). 
-For more about installing and running Splunk and system requirements, 
-see [Installing & Running Splunk](http://dev.splunk.com/view/SP-CAAADRV).
-
-## Contribute
-
-[Get the Splunk Java Logging Framework from GitHub](https://github.com/splunk/splunk-library-javalogging) 
-and clone the resources to your computer. For example, use the following 
-command: 
-
-    git clone https://github.com/splunk/splunk-library-javalogging.git
+For more about installing and running Splunk Enterprise and system requirements, 
+see [Splunk Enterprise Installation Manual](http://docs.splunk.com/Documentation/Splunk/latest/Installation/).
 
 ## Resources
 
@@ -334,6 +361,23 @@ Introduction to the Splunk product and some of its capabilities
 
 * [http://docs.splunk.com/Documentation/Splunk/latest/User/SplunkOverview](http://docs.splunk.com/Documentation/Splunk/latest/User/SplunkOverview)
 
-## Contact
+## Contributions
+
+[Get the Splunk Java Logging Framework from GitHub](https://github.com/splunk/splunk-library-javalogging) 
+and clone the resources to your computer. For example, use the following 
+command: 
+
+    git clone https://github.com/splunk/splunk-library-javalogging.git
+    
+If you want to make a code contribution, go to the [Open Source](http://dev.splunk.com/view/opensource/SP-CAAAEDM) page for more information.
+
+## Support
+
+The Splunk logging library for Java is community-supported.
+
+1. You can find help through our community on [Splunk Answers](http://answers.splunk.com/) (use the `logging-library-java` tag to identify your questions).
+2. File issues on [GitHub](https://github.com/splunk/splunk-library-javalogging/issues).
+
+## Contact us
 
 You can reach the Dev Platform team at [devinfo@splunk.com](mailto:devinfo@splunk.com).

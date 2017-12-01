@@ -1,16 +1,14 @@
 package com.splunk.logging;
 
 /**
- * @copyright
- *
- * Copyright 2013-2015 Splunk, Inc.
- *
+ * @copyright Copyright 2013-2015 Splunk, Inc.
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License"): you may
  * not use this file except in compliance with the License. You may obtain
  * a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -28,20 +26,13 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
 import org.apache.http.impl.nio.client.HttpAsyncClients;
 import org.apache.http.util.EntityUtils;
-
 import org.json.simple.JSONObject;
+
 import javax.net.ssl.SSLContext;
 import java.io.IOException;
 import java.io.Serializable;
 import java.security.cert.X509Certificate;
-import java.util.Dictionary;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.List;
-import java.util.LinkedList;
-import java.util.Map;
-import java.util.Locale;
-
+import java.util.*;
 
 
 /**
@@ -53,9 +44,11 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
     public static final String MetadataIndexTag = "index";
     public static final String MetadataSourceTag = "source";
     public static final String MetadataSourceTypeTag = "sourcetype";
+    private static final String SPLUNKREQUESTCHANNELTag = "X-Splunk-Request-Channel";
     private static final String AuthorizationHeaderTag = "Authorization";
     private static final String AuthorizationHeaderScheme = "Splunk %s";
     private static final String HttpEventCollectorUriPath = "/services/collector/event/1.0";
+    private static final String HttpRawCollectorUriPath = "/services/collector/raw";
     private static final String HttpContentType = "application/json; profile=urn:splunk:event:1.0; charset=utf-8";
     private static final String SendModeSequential = "sequential";
     private static final String SendModeSParallel = "parallel";
@@ -65,11 +58,12 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
      * asynchronous and may be indexed out of order. Sequential mode guarantees
      * sequential order of the indexed events.
      */
-    public enum SendMode
-    {
+    public enum SendMode {
         Sequential,
         Parallel
-    };
+    }
+
+    ;
 
     /**
      * Recommended default values for events batching.
@@ -80,6 +74,8 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
 
     private String url;
     private String token;
+    private String channel;
+    private String type;
     private long maxEventsBatchCount;
     private long maxEventsBatchSize;
     private Dictionary<String, String> metadata;
@@ -93,20 +89,30 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
 
     /**
      * Initialize HttpEventCollectorSender
-     * @param Url http event collector input server
-     * @param token application token
-     * @param delay batching delay
+     *
+     * @param Url                 http event collector input server
+     * @param token               application token
+     * @param channel
+     * @param type
      * @param maxEventsBatchCount max number of events in a batch
-     * @param maxEventsBatchSize max size of batch
-     * @param metadata events metadata
+     * @param maxEventsBatchSize  max size of batch
+     * @param metadata            events metadata
+     * @param delay               batching delay
      */
     public HttpEventCollectorSender(
-            final String Url, final String token,
-            long delay, long maxEventsBatchCount, long maxEventsBatchSize,
-            String sendModeStr,
-            Dictionary<String, String> metadata) {
-        this.url = Url + HttpEventCollectorUriPath;
+            final String Url,
+            final String token,
+            final String channel,
+            final String type,
+            long maxEventsBatchCount, long maxEventsBatchSize, String sendModeStr, Dictionary<String, String> metadata, long delay) {
+
+        if ("Raw".equalsIgnoreCase(type))
+            this.url = Url + HttpRawCollectorUriPath;
+        else
+            this.url = Url + HttpEventCollectorUriPath;
         this.token = token;
+        this.channel = channel;
+        this.type = type;
         // when size configuration setting is missing it's treated as "infinity",
         // i.e., any value is accepted.
         if (maxEventsBatchCount == 0 && maxEventsBatchSize > 0) {
@@ -139,9 +145,10 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
 
     /**
      * Send a single logging event
-     * @note in case of batching the event isn't sent immediately
+     *
      * @param severity event severity level (info, warning, etc.)
-     * @param message event text
+     * @param message  event text
+     * @note in case of batching the event isn't sent immediately
      */
     public synchronized void send(
             final String severity,
@@ -164,8 +171,9 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
 
     /**
      * Send a single logging event with message only
-     * @note in case of batching the event isn't sent immediately
+     *
      * @param message event text
+     * @note in case of batching the event isn't sent immediately
      */
     public synchronized void send(final String message) {
         send("", message, "", "", null, null, "");
@@ -243,7 +251,7 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
         }
 
         // add properties if and only if there are any
-        final Map<String,String> props = eventInfo.getProperties();
+        final Map<String, String> props = eventInfo.getProperties();
         if (props != null && !props.isEmpty()) {
             body.put("properties", props);
         }
@@ -265,7 +273,7 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
         // limit max  number of async requests in sequential mode, 0 means "use
         // default limit"
         int maxConnTotal = sendMode == SendMode.Sequential ? 1 : 0;
-        if (! disableCertificateValidation) {
+        if (!disableCertificateValidation) {
             // create an http client that validates certificates
             httpClient = HttpAsyncClients.custom()
                     .setMaxConnTotal(maxConnTotal)
@@ -287,7 +295,8 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
                         .setHostnameVerifier(SSLConnectionSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER)
                         .setSSLContext(sslContext)
                         .build();
-            } catch (Exception e) { }
+            } catch (Exception e) {
+            }
         }
         httpClient.start();
     }
@@ -298,7 +307,8 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
         if (httpClient != null) {
             try {
                 httpClient.close();
-            } catch (IOException e) {}
+            } catch (IOException e) {
+            }
             httpClient = null;
         }
     }
@@ -336,6 +346,12 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
         httpPost.setHeader(
                 AuthorizationHeaderTag,
                 String.format(AuthorizationHeaderScheme, token));
+        if ("Raw".equalsIgnoreCase(type) && channel != null) {
+            httpPost.setHeader(
+                    SPLUNKREQUESTCHANNELTag,
+                    channel);
+        }
+
         StringEntity entity = new StringEntity(eventsBatchString.toString(), encoding);
         entity.setContentType(HttpContentType);
         httpPost.setEntity(entity);
@@ -361,7 +377,8 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
             }
 
             @Override
-            public void cancelled() {}
+            public void cancelled() {
+            }
         });
     }
 }

@@ -20,7 +20,6 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.AppenderBase;
 import ch.qos.logback.core.Layout;
 
-import java.util.Collections;
 import java.util.Dictionary;
 import java.util.Hashtable;
 
@@ -41,6 +40,8 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
     private String _index;
     private String _url;
     private String _token;
+    private String _channel;
+    private String _type;
     private String _disableCertificateValidation;
     private String _middleware;
     private long _batchInterval = 0;
@@ -69,7 +70,7 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
             metadata.put(HttpEventCollectorSender.MetadataSourceTypeTag, _sourcetype);
 
         this.sender = new HttpEventCollectorSender(
-                _url, _token, _batchInterval, _batchCount, _batchSize, _sendMode, metadata);
+                _url, _token, _channel, _type, _batchCount, _batchSize, _sendMode, metadata, _batchInterval);
 
         // plug a user middleware
         if (_middleware != null && !_middleware.isEmpty()) {
@@ -149,6 +150,14 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
 
     public void setToken(String token) {
         this._token = token;
+    }
+
+    public void setChannel(String channel) {
+        this._channel = channel;
+    }
+
+    public void setType(String type) {
+        this._type = type;
     }
 
     public String getToken() {

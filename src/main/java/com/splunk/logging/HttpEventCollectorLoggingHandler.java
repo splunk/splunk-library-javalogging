@@ -132,6 +132,12 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
         // app token
         String token = getConfigurationProperty("token", null);
 
+        //app channel
+        String channel = getConfigurationProperty("channel", null);
+
+        //app type
+        String type = getConfigurationProperty("type", null);
+
         // batching properties
         long delay = getConfigurationNumericProperty(BatchDelayConfTag, HttpEventCollectorSender.DefaultBatchInterval);
         long batchCount = getConfigurationNumericProperty(BatchCountConfTag, HttpEventCollectorSender.DefaultBatchCount);
@@ -146,7 +152,7 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
 
         // delegate all configuration params to event sender
         this.sender = new HttpEventCollectorSender(
-                url, token, delay, batchCount, batchSize, sendMode, metadata);
+                url, token, channel, type, batchCount, batchSize, sendMode, metadata, delay);
 
         // plug a user middleware
         if (middleware != null && !middleware.isEmpty()) {

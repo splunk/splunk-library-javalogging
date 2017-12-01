@@ -1,6 +1,15 @@
 # Splunk Logging for Java
 
-#### Version 1.5.3
+## New in this Version (1.5.4)
+ # Choice of endpoint: raw or events
+*If you use Raw as type, will use this endpoint
+ private static final String HttpRawCollectorUriPath = "/services/collector/raw";
+ You will also need to declare the chnannel (under channel variable)
+* Otherwise:
+ private static final String HttpEventCollectorUriPath = "/services/collector/event/1.0";
+
+
+#### Version 1.5.4
 
 This project provides utilities to easily log data using Splunk's recommended 
 best practices to any supported logger, using any of the three major Java 
@@ -104,7 +113,7 @@ entries.
     <dependency>
         <groupId>com.splunk.logging</groupId>
         <artifactId>splunk-library-javalogging</artifactId>
-        <version>1.5.2</version>
+        <version>1.5.4</version>
     </dependency>
     ```
 
@@ -226,19 +235,32 @@ entries.
         Note that TCP inputs are *not* the same as Splunk's management port.
         -->
         
-        <Appenders>
-            <Socket name="socket" host="127.0.0.1" port="15000">
-            <PatternLayout pattern="%p: %m%n" charset="UTF-8"/>
-            </Socket>
-        </Appenders>
-        <!-- Define a logger named 'splunk.logger' which writes to the socket appender we defined above. -->
-        <Loggers>
-            <Root level="INFO">
-            </Root>
-            <Logger name="splunk.logger" level="info">
-            <AppenderRef ref="socket"/>
-            </Logger>
-        </Loggers>
+         <appender name="splunk-appender" class="com.splunk.logging.HttpEventCollectorLogbackAppender">
+             <url>https://http-inputs-linknyc.splunkcloud.com</url>
+             <token>MyToken</token>
+             <disableCertificateValidation>true</disableCertificateValidation>
+             <source>MySource</source>
+             <sourcetype>MySourceType</sourcetype>
+             <batch_size_count>1</batch_size_count>
+          
+            <!--
+            If you use Raw as type, will use this endpoint 
+               private static final String HttpRawCollectorUriPath = "/services/collector/raw";
+            Otherwise:
+               private static final String HttpEventCollectorUriPath = "/services/collector/event/1.0";
+            -->
+             <type>Raw</type>
+            <!-- Channel only needed if type is Raw --> 
+             <channel>MyChannel</channel>
+             
+          <layout class="ch.qos.logback.classic.PatternLayout">
+                 <pattern>%msg</pattern>
+             </layout>
+         </appender>
+        
+     <root level="WARN">
+              <appender-ref ref="splunk-appender"/>
+          </root>
     </Configuration>
     ```
 

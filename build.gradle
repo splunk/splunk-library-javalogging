@@ -22,3 +22,26 @@ dependencies {
 	testCompile "org.apache.commons:commons-lang3:3.0"
 }
 
+sourceSets {
+	test {
+		java {
+			exclude "**/*"
+		}
+	}
+}
+
+cpdMain {
+	exclude "*"
+}
+
+pmdMain {
+	exclude "*"
+}
+
+cpdTest {
+	exclude "*"
+}
+
+pmdTest {
+	exclude "*"
+}

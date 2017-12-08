@@ -214,31 +214,31 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
 
     @SuppressWarnings("unchecked")
     private static void putIfPresent(JsonObject collection, String tag, String value) {
-		if(value != null && value.length() > 0) {
-			collection.addProperty(tag, value);
-		}
+        if(value != null && value.length() > 0) {
+            collection.addProperty(tag, value);
+        }
     }
 
     @SuppressWarnings("unchecked")
     private String serializeEventInfo(HttpEventCollectorEventInfo eventInfo) {
-		JsonParser jsonParser = new JsonParser();
+        JsonParser jsonParser = new JsonParser();
 
-		JsonObject outer = new JsonObject();
-		putIfPresent(outer, MetadataTimeTag, String.format(Locale.US, "%.3f", eventInfo.getTime()));
-		putIfPresent(outer, MetadataHostTag, metadata.get(MetadataHostTag));
-		putIfPresent(outer, MetadataIndexTag, metadata.get(MetadataIndexTag));
-		putIfPresent(outer, MetadataSourceTag, metadata.get(MetadataSourceTag));
-		putIfPresent(outer, MetadataSourceTypeTag, metadata.get(MetadataSourceTypeTag));
-		putIfPresent(outer, MetadataSourceTypeTag, metadata.get(MetadataSourceTypeTag));
-		
-		JsonElement element = jsonParser.parse(eventInfo.getMessage());
-		JsonObject event = element.getAsJsonObject();
-		putIfPresent(event, "severity", eventInfo.getSeverity());
-		putIfPresent(event, "logger", eventInfo.getLoggerName());
+        JsonObject outer = new JsonObject();
+        putIfPresent(outer, MetadataTimeTag, String.format(Locale.US, "%.3f", eventInfo.getTime()));
+        putIfPresent(outer, MetadataHostTag, metadata.get(MetadataHostTag));
+        putIfPresent(outer, MetadataIndexTag, metadata.get(MetadataIndexTag));
+        putIfPresent(outer, MetadataSourceTag, metadata.get(MetadataSourceTag));
+        putIfPresent(outer, MetadataSourceTypeTag, metadata.get(MetadataSourceTypeTag));
+        putIfPresent(outer, MetadataSourceTypeTag, metadata.get(MetadataSourceTypeTag));
 
-		outer.add("event", event);
+        JsonElement element = jsonParser.parse(eventInfo.getMessage());
+        JsonObject event = element.getAsJsonObject();
+        putIfPresent(event, "severity", eventInfo.getSeverity());
+        putIfPresent(event, "logger", eventInfo.getLoggerName());
 
-		return outer.toString();
+        outer.add("event", event);
+
+        return outer.toString();
     }
 
     private void startHttpClient() {

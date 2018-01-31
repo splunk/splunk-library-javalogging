@@ -19,6 +19,8 @@ package com.splunk.logging;
  */
 
 import org.apache.http.HttpResponse;
+import org.apache.http.client.config.CookieSpecs;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.concurrent.FutureCallback;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
@@ -267,7 +269,13 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
         int maxConnTotal = sendMode == SendMode.Sequential ? 1 : 0;
         if (! disableCertificateValidation) {
             // create an http client that validates certificates
+//            HttpClient httpClient = HttpClients.custom()
+//                    .setDefaultRequestConfig(RequestConfig.custom()
+//                            .setCookieSpec(CookieSpecs.STANDARD).build())
+//                    .build();
             httpClient = HttpAsyncClients.custom()
+                    .setDefaultRequestConfig(RequestConfig.custom()
+                            .setCookieSpec(CookieSpecs.STANDARD).build())
                     .setMaxConnTotal(maxConnTotal)
                     .build();
         } else {
@@ -283,6 +291,8 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
                 sslContext = SSLContexts.custom().loadTrustMaterial(
                         null, acceptingTrustStrategy).build();
                 httpClient = HttpAsyncClients.custom()
+                        .setDefaultRequestConfig(RequestConfig.custom()
+                                .setCookieSpec(CookieSpecs.STANDARD).build())
                         .setMaxConnTotal(maxConnTotal)
                         .setHostnameVerifier(SSLConnectionSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER)
                         .setSSLContext(sslContext)

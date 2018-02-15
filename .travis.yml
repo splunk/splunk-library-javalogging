@@ -35,7 +35,7 @@ language: java
 
 
 script:
-    mvn package -P AcceptanceTest
-    mvn package -P Unittest
+    - mvn package -P AcceptanceTest
+    - mvn package -P Unittest
 
 

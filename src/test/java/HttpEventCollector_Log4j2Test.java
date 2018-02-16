@@ -337,7 +337,7 @@ public final class HttpEventCollector_Log4j2Test {
     public void eventsIsIndexedInOrderOfSent() throws Exception {
         TestUtil.enableHttpEventCollector();
 
-        String indexName="httpevents_in_order";
+        String indexName="httpevents_in_order_l42";
         TestUtil.createIndex(indexName);
         String token = TestUtil.createHttpEventCollectorToken(httpEventCollectorName);
         String loggerName = "splunkLogger4j2OrderOfSent";

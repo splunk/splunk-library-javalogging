@@ -395,7 +395,7 @@ public final class HttpEventCollector_JavaLoggingTest {
     @Test
     public void eventsIsIndexedInOrderOfSent() throws Exception {
         TestUtil.enableHttpEventCollector();
-        String indexName="httpevents_in_order";
+        String indexName="httpevents_in_order_jl";
         TestUtil.createIndex(indexName);
         String token = TestUtil.createHttpEventCollectorToken(httpEventCollectorName);
 

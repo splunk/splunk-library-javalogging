@@ -327,7 +327,7 @@ public final class HttpEventCollector_LogbackTest {
     public void eventsIsIndexedInOrderOfSent() throws Exception {
         TestUtil.enableHttpEventCollector();
         String token = TestUtil.createHttpEventCollectorToken(httpEventCollectorName);
-        String indexName = "httpevents_in_order";
+        String indexName = "httpevents_in_order_lb";
         TestUtil.createIndex(indexName);
 
         String loggerName = "logBackLogger";

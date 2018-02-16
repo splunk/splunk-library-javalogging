@@ -336,7 +336,7 @@ public final class HttpEventCollector_JavaLoggingTest {
         Assert.assertEquals(1, errors.size());
 
         System.out.println(logEx.toString());
-        if(!logEx.toString().contains("Connection refused"))
+        if (!(logEx.toString().contains("Connection refused") || logEx.toString().contains("Connection closed")))
             Assert.fail(String.format("Unexpected error message '%s'", logEx.toString()));
     }
 

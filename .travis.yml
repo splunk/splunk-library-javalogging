@@ -21,7 +21,7 @@ before_install:
     # Add DOCKER to iptables, 1/10 times this is needed, force 0 exit status
     - sudo iptables -N DOCKER || true
     # Start Docker container
-    - docker run -p 127.0.0.1:8089:8089 -p 127.0.0.1:$TEST_TCP_PORT:$TEST_TCP_PORT -p 127.0.0.1:$TEST_UDP_PORT:$TEST_UDP_PORT/udp -d splunk/splunk-sdk-travis-ci:$SPLUNK_VERSION
+    - docker run -p 127.0.0.1:8089:8089 -p 127.0.0.1:8088:8088 -p 127.0.0.1:5555:5555 -p 127.0.0.1:15000:15000 -p 127.0.0.1:$TEST_TCP_PORT:$TEST_TCP_PORT -p 127.0.0.1:$TEST_UDP_PORT:$TEST_UDP_PORT/udp -d splunk/splunk-sdk-travis-ci:$SPLUNK_VERSION
     # curl Splunk until it returns valid data indicating it has been setup, try 20 times maximum
     - for i in `seq 0 20`; do if curl --fail -k https://localhost:8089/services/server/info &> /dev/null; then break; fi; echo $i; sleep 1; done
     # Additional sleep to make sure splunkd is
@@ -32,3 +32,10 @@ env:
     - SPLUNK_VERSION=7.0-sdk
 
 language: java
+
+
+script:
+  - mvn package -P Unittest
+  - mvn package -P AcceptanceTest
+
+

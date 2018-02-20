@@ -29,7 +29,9 @@ import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
 import org.apache.http.impl.nio.client.HttpAsyncClients;
 import org.apache.http.util.EntityUtils;
 
-import org.json.simple.JSONObject;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import javax.net.ssl.SSLContext;
 import java.io.IOException;
 import java.io.Serializable;
@@ -211,50 +213,32 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
     }
 
     @SuppressWarnings("unchecked")
-    private static void putIfPresent(JSONObject collection, String tag, String value) {
-        if (value != null && value.length() > 0) {
-            collection.put(tag, value);
+    private static void putIfPresent(JsonObject collection, String tag, String value) {
+        if(value != null && value.length() > 0) {
+            collection.addProperty(tag, value);
         }
     }
 
     @SuppressWarnings("unchecked")
     private String serializeEventInfo(HttpEventCollectorEventInfo eventInfo) {
-        // create event json content
-        //
-        // cf: http://dev.splunk.com/view/event-collector/SP-CAAAE6P
-        //
-        JSONObject event = new JSONObject();
-        // event timestamp and metadata
-        putIfPresent(event, MetadataTimeTag, String.format(Locale.US, "%.3f", eventInfo.getTime()));
-        putIfPresent(event, MetadataHostTag, metadata.get(MetadataHostTag));
-        putIfPresent(event, MetadataIndexTag, metadata.get(MetadataIndexTag));
-        putIfPresent(event, MetadataSourceTag, metadata.get(MetadataSourceTag));
-        putIfPresent(event, MetadataSourceTypeTag, metadata.get(MetadataSourceTypeTag));
-        // event body
-        JSONObject body = new JSONObject();
-        putIfPresent(body, "severity", eventInfo.getSeverity());
-        putIfPresent(body, "message", eventInfo.getMessage());
-        putIfPresent(body, "logger", eventInfo.getLoggerName());
-        putIfPresent(body, "thread", eventInfo.getThreadName());
-        // add an exception record if and only if there is one
-        // in practice, the message also has the exception information attached
-        if (eventInfo.getExceptionMessage() != null) {
-            putIfPresent(body, "exception", eventInfo.getExceptionMessage());
-        }
+        JsonParser jsonParser = new JsonParser();
 
-        // add properties if and only if there are any
-        final Map<String,String> props = eventInfo.getProperties();
-        if (props != null && !props.isEmpty()) {
-            body.put("properties", props);
-        }
-        // add marker if and only if there is one
-        final Serializable marker = eventInfo.getMarker();
-        if (marker != null) {
-            putIfPresent(body, "marker", marker.toString());
-        }
-        // join event and body
-        event.put("event", body);
-        return event.toString();
+        JsonObject outer = new JsonObject();
+        putIfPresent(outer, MetadataTimeTag, String.format(Locale.US, "%.3f", eventInfo.getTime()));
+        putIfPresent(outer, MetadataHostTag, metadata.get(MetadataHostTag));
+        putIfPresent(outer, MetadataIndexTag, metadata.get(MetadataIndexTag));
+        putIfPresent(outer, MetadataSourceTag, metadata.get(MetadataSourceTag));
+        putIfPresent(outer, MetadataSourceTypeTag, metadata.get(MetadataSourceTypeTag));
+        putIfPresent(outer, MetadataSourceTypeTag, metadata.get(MetadataSourceTypeTag));
+
+        JsonElement element = jsonParser.parse(eventInfo.getMessage());
+        JsonObject event = element.getAsJsonObject();
+        putIfPresent(event, "severity", eventInfo.getSeverity());
+        putIfPresent(event, "logger", eventInfo.getLoggerName());
+
+        outer.add("event", event);
+
+        return outer.toString();
     }
 
     private void startHttpClient() {

@@ -341,7 +341,7 @@ public final class HttpEventCollector_JavaLoggingTest {
         Assert.assertEquals(1, errors.size());
 
         System.out.println(logEx.toString());
-        if(!logEx.toString().contains("Connection refused") && !logEx.toString().contains("Connection closed"))
+        if (!(logEx.toString().contains("Connection refused") || logEx.toString().contains("Connection closed")))
             Assert.fail(String.format("Unexpected error message '%s'", logEx.toString()));
     }
 
@@ -400,7 +400,7 @@ public final class HttpEventCollector_JavaLoggingTest {
     @Test
     public void eventsIsIndexedInOrderOfSent() throws Exception {
         TestUtil.enableHttpEventCollector();
-        String indexName="httpevents_in_order";
+        String indexName="httpevents_in_order_jl";
         TestUtil.createIndex(indexName);
         String token = TestUtil.createHttpEventCollectorToken(httpEventCollectorName);
 

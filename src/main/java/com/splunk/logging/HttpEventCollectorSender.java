@@ -172,6 +172,15 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
     }
 
     /**
+     * Send a single logging event with message only
+     * @note in case of batching the event isn't sent immediately
+     * @param message event text
+     */
+    public synchronized void send(final String message) {
+        send("", message, "", "", null, null, "");
+    }
+
+    /**
      * Flush all pending events
      */
     public synchronized void flush() {

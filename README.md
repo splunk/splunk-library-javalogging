@@ -1,6 +1,6 @@
 # Splunk Logging for Java
 
-#### Version 1.5.2
+#### Version 1.5.3
 
 This project provides utilities to easily log data using Splunk's recommended 
 best practices to any supported logger, using any of the three major Java 
@@ -60,7 +60,7 @@ Log4j and Logback are thread-safe.
 
 ### Sending events to HTTP Event Collector
 
-[HTTP Event Collector](http://dev.splunk.com/view/event-collector/SP-CAAAE6M) requires Splunk 6.3+. Splunk Java library supports sending
+HTTP Event Collector requires Splunk 6.3+. Splunk Java library supports sending
 events through `java.util.logging`, `log4j` and `logback` standard loggers. 
 In order to use HTTP Event Collector it has to be enabled on the server and an 
 application token should be created.
@@ -81,30 +81,6 @@ Logger LOGGER = java.util.logging.Logger.getLogger("splunk.java.util");
 LOGGER.info("hello world");
 ```
 
-Logback configuration looks like:
-
-```xml
-      <!-- Splunk HTTP Appender -->
-        <appender name="splunkHttpAppender" class="com.splunk.logging.HttpEventCollectorLogbackAppender">
-           <url>${lsplunk.http.url}</url>
-           <token>${splunk.http.token}</token>
-           <source>${splunk.source}</source>
-           <host>${splunk.httpevent.listener.host}</host>
-           <messageFormat>${splunk.event.message.format}</messageFormat>
-           <disableCertificateValidation>${splunk.cert.disable-validation}</disableCertificateValidation>
-           <layout class="ch.qos.logback.classic.PatternLayout">
-              <pattern>%date{ISO8601} [%thread] %level: %msg%n</pattern>
-           </layout>
-        </appender>
-        
-        <logger name="com.example.app" additivity="false" level="INFO">
-            <appender-ref ref="splunkHttpAppender"/>
-        </logger>
-        
-        <root level="INFO">
-            <appender-ref ref="splunkHttpAppender"/>
-        </root>
-```
 #### Message Format
 An event message format could be configured for HTTP event appender in logging framework configuration. It could have one of the two possible values - text, json. It is an optional property with default value as 'text'. Message format 'json' is used where the event message could be in json format.
 
@@ -327,6 +303,41 @@ entries.
         setAuthAction("deny");
     }});
    ```
+  
+### Using logback-access with HEC appender
+[logback-access](https://logback.qos.ch/access.html) logs different type of events (`ch.qos.logback.access.spi.IAccessEvent`) as logback classic, which logs `ch.qos.logback.classic.spi.ILoggingEvent`. 
+
+To use this library with logback-access, you can try the following configuration:
+
+* logback access (to be put in `logback-access.xml` on the classpath)
+   ```
+    <configuration>
+        <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder>
+                <pattern>combined</pattern>
+            </encoder>
+        </appender>
+    
+        <appender name="hec_access_appender" class="com.splunk.logging.HttpEventCollectorLogbackAppender">
+            <url>https://localhost:8088</url>
+            <token>00000000-0000-0000-0000-000000000000</token>
+            <host>devhost</host>
+            <index>main</index>
+            <source>logback-client</source>
+            <sourcetype>logback</sourcetype>
+            <disableCertificateValidation>true</disableCertificateValidation>
+    
+            <layout class="ch.qos.logback.access.PatternLayout">
+                <pattern>%h %l %u %t %r %s %b</pattern>
+            </layout>
+        </appender>
+    
+        <appender-ref ref="CONSOLE" />
+        <appender-ref ref="hec_access_appender" />
+    </configuration>
+   ```
+    If you run into any issue, try add a `debug=true` attribute to the `configuration` for debugging.
+
 
 ## Splunk Enterprise
 

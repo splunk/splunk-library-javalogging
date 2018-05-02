@@ -18,6 +18,8 @@ import java.util.*;
 
 import com.splunk.logging.HttpEventCollectorErrorHandler;
 import com.splunk.logging.HttpEventCollectorEventInfo;
+
+import org.json.simple.JSONObject;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -330,6 +332,9 @@ public final class HttpEventCollector_JavaLoggingTest {
                 break;
             Thread.sleep(1000);
         }
+        
+        // Enable httpEventCollector endpoint
+        TestUtil.enableHttpEventCollector();
 
         if (logEx == null)
             Assert.fail("didn't catch errors");
@@ -425,4 +430,58 @@ public final class HttpEventCollector_JavaLoggingTest {
         TestUtil.deleteHttpEventCollectorToken(httpEventCollectorName);
         System.out.println("====================== Test pass=========================");
     }
+    
+    /**
+     * Test sending a JSON and text message with "_json" source type via http logging appender using java util logger
+     */
+    @Test
+    public void canSendJsonEventUsingUtilLoggerWithJsonSourceType() throws Exception {
+        canSendJsonEventUsingUtilLoggerWithSourceType("_json");
+    }
+    
+    /**
+     * Test sending a JSON and text message with "battlecat_test" source type via http logging appender using java util logger
+     */
+    @Test
+    public void canSendJsonEventUsingUtilLoggerWithDefaultSourceType() throws Exception {
+        canSendJsonEventUsingUtilLoggerWithSourceType("battlecat_test");
+    }
+    
+    @SuppressWarnings("unchecked")
+    private void canSendJsonEventUsingUtilLoggerWithSourceType(final String sourceType) throws Exception {
+        final String token = TestUtil.createHttpEventCollectorToken(httpEventCollectorName);
+
+        final String loggerName = "javaUtilLogger";
+        // Build User input map
+        final HashMap<String, String> userInputs = TestUtil.buildUserInputMap(loggerName, token, sourceType, "json");
+        
+        TestUtil.resetJavaLoggingConfiguration("logging_template.properties", "logging.properties", userInputs);
+
+        final List<String> msgs = new ArrayList<String>();
+
+        final long timeMillsec = new Date().getTime();
+
+        final JSONObject jsonObject = new JSONObject();
+        jsonObject.put("transactionId", "11");
+        jsonObject.put("userId", "21");
+        jsonObject.put("eventTimestap", timeMillsec);
+
+        final Logger logger = Logger.getLogger(loggerName);
+
+        // Test with a json event message
+        jsonObject.put("severity", "info");
+        final String infoJson = jsonObject.toString();
+        logger.info(infoJson);
+        msgs.add(infoJson);
+
+        // Test with a text event message
+        jsonObject.put("severity", "info");
+        final String infoText = String.format("{EventTimestamp:%s, EventMsg:'this is a text info for java util logger}", timeMillsec);
+        logger.info(infoText);
+        msgs.add(infoText);
+
+        TestUtil.verifyEventsSentToSplunk(msgs);
+        TestUtil.deleteHttpEventCollectorToken(httpEventCollectorName);
+    }
+    
 }

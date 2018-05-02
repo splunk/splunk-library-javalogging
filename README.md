@@ -81,6 +81,9 @@ Logger LOGGER = java.util.logging.Logger.getLogger("splunk.java.util");
 LOGGER.info("hello world");
 ```
 
+#### Message Format
+An event message format could be configured for HTTP event appender in logging framework configuration. It could have one of the two possible values - text, json. It is an optional property with default value as 'text'. Message format 'json' is used where the event message could be in json format.
+
 For more information, see http://dev.splunk.com/view/SP-CAAAE2K.
 
 # License

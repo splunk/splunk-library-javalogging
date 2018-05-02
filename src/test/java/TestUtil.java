@@ -111,7 +111,17 @@ public class TestUtil {
             indexes.remove(indexName);
         }
 
-        indexes.create(indexName);
+        int retry = 3;
+
+        while (retry > 0) {
+            try {
+                indexes.create(indexName);
+                return;
+            } catch (HttpException e) {
+                retry--;
+                Thread.sleep(1000);
+            }
+        }
     }
 
 

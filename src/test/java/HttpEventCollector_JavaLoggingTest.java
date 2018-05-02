@@ -430,7 +430,7 @@ public final class HttpEventCollector_JavaLoggingTest {
         TestUtil.deleteHttpEventCollectorToken(httpEventCollectorName);
         System.out.println("====================== Test pass=========================");
     }
-    
+
     /**
      * Test sending a JSON and text message with "_json" source type via http logging appender using java util logger
      */
@@ -438,7 +438,7 @@ public final class HttpEventCollector_JavaLoggingTest {
     public void canSendJsonEventUsingUtilLoggerWithJsonSourceType() throws Exception {
         canSendJsonEventUsingUtilLoggerWithSourceType("_json");
     }
-    
+
     /**
      * Test sending a JSON and text message with "battlecat_test" source type via http logging appender using java util logger
      */
@@ -446,15 +446,15 @@ public final class HttpEventCollector_JavaLoggingTest {
     public void canSendJsonEventUsingUtilLoggerWithDefaultSourceType() throws Exception {
         canSendJsonEventUsingUtilLoggerWithSourceType("battlecat_test");
     }
-    
+
     @SuppressWarnings("unchecked")
     private void canSendJsonEventUsingUtilLoggerWithSourceType(final String sourceType) throws Exception {
         final String token = TestUtil.createHttpEventCollectorToken(httpEventCollectorName);
 
-        final String loggerName = "javaUtilLogger";
+        final String loggerName = "javaUtilLogger" + sourceType;
         // Build User input map
         final HashMap<String, String> userInputs = TestUtil.buildUserInputMap(loggerName, token, sourceType, "json");
-        
+
         TestUtil.resetJavaLoggingConfiguration("logging_template.properties", "logging.properties", userInputs);
 
         final List<String> msgs = new ArrayList<String>();

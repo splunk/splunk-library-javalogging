@@ -30,6 +30,7 @@ import org.apache.http.impl.nio.client.HttpAsyncClients;
 import org.apache.http.util.EntityUtils;
 
 import org.json.simple.JSONObject;
+
 import javax.net.ssl.SSLContext;
 import java.io.IOException;
 import java.io.Serializable;
@@ -53,6 +54,7 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
     public static final String MetadataIndexTag = "index";
     public static final String MetadataSourceTag = "source";
     public static final String MetadataSourceTypeTag = "sourcetype";
+    public static final String MetadataMessageFormatTag = "messageFormat";
     private static final String AuthorizationHeaderTag = "Authorization";
     private static final String AuthorizationHeaderScheme = "Splunk %s";
     private static final String HttpEventCollectorUriPath = "/services/collector/event/1.0";
@@ -70,7 +72,7 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
         Sequential,
         Parallel
     };
-
+    
     /**
      * Recommended default values for events batching.
      */
@@ -90,6 +92,7 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
     private boolean disableCertificateValidation = false;
     private SendMode sendMode = SendMode.Sequential;
     private HttpEventCollectorMiddleware middleware = new HttpEventCollectorMiddleware();
+    private final MessageFormat messageFormat;
 
     /**
      * Initialize HttpEventCollectorSender
@@ -117,6 +120,12 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
         this.maxEventsBatchCount = maxEventsBatchCount;
         this.maxEventsBatchSize = maxEventsBatchSize;
         this.metadata = metadata;
+        
+        final String format = metadata.get(MetadataMessageFormatTag);
+        // Get MessageFormat enum from format string. Do this once per instance in constructor to avoid expensive operation in
+        // each event sender call
+        this.messageFormat = MessageFormat.fromFormat(format);
+        
         if (sendModeStr != null) {
             if (sendModeStr.equals(SendModeSequential))
                 this.sendMode = SendMode.Sequential;
@@ -211,8 +220,12 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
     }
 
     @SuppressWarnings("unchecked")
-    private static void putIfPresent(JSONObject collection, String tag, String value) {
-        if (value != null && value.length() > 0) {
+    private static void putIfPresent(JSONObject collection, String tag, Object value) {
+        if (value != null) {
+            if (value instanceof String && ((String) value).length() == 0) {
+                // Do not add blank string
+                return;
+            }
             collection.put(tag, value);
         }
     }
@@ -230,10 +243,14 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
         putIfPresent(event, MetadataIndexTag, metadata.get(MetadataIndexTag));
         putIfPresent(event, MetadataSourceTag, metadata.get(MetadataSourceTag));
         putIfPresent(event, MetadataSourceTypeTag, metadata.get(MetadataSourceTypeTag));
+        
+        // Parse message on the basis of format
+        final Object parsedMessage = this.messageFormat.parse(eventInfo.getMessage());
+        
         // event body
         JSONObject body = new JSONObject();
         putIfPresent(body, "severity", eventInfo.getSeverity());
-        putIfPresent(body, "message", eventInfo.getMessage());
+        putIfPresent(body, "message", parsedMessage);
         putIfPresent(body, "logger", eventInfo.getLoggerName());
         putIfPresent(body, "thread", eventInfo.getThreadName());
         // add an exception record if and only if there is one

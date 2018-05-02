@@ -37,6 +37,7 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
 
     private String _source;
     private String _sourcetype;
+    private String _messageFormat;
     private String _host;
     private String _index;
     private String _url;
@@ -67,6 +68,9 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
 
         if (_sourcetype != null)
             metadata.put(HttpEventCollectorSender.MetadataSourceTypeTag, _sourcetype);
+        
+        if (_messageFormat != null)
+            metadata.put(HttpEventCollectorSender.MetadataMessageFormatTag, _messageFormat);
 
         this.sender = new HttpEventCollectorSender(
                 _url, _token, _batchInterval, _batchCount, _batchSize, _sendMode, metadata);
@@ -209,6 +213,14 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
 
     public String getSourcetype() {
         return this._sourcetype;
+    }
+    
+    public void setMessageFormat(String messageFormat) {
+        this._messageFormat = messageFormat;
+    }
+
+    public String getMessageFormat() {
+        return this._messageFormat;
     }
 
     public void setHost(String host) {

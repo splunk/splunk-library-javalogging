@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Configuration status="info" name="example" packages="">
+<Configuration status="info" name="example" packages="com.splunk.logging">
     <Appenders>
         <Http
               name="httpconf"
               url="%scheme%://%host%:8088"
               token="%user_httpEventCollector_token%"
-
               host="%user_host%"
               index="%user_index%"
               source="%user_source%"
               sourcetype="%user_sourcetype%"
+              messageFormat="%user_messageFormat%"
               batch_interval="%user_batch_interval%"
               batch_size_bytes="%user_batch_size_bytes%"
               batch_size_count="%user_batch_size_count%"

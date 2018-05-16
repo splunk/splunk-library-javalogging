@@ -27,6 +27,7 @@ import org.apache.http.conn.ssl.TrustStrategy;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
 import org.apache.http.impl.nio.client.HttpAsyncClients;
+import org.apache.http.impl.nio.reactor.IOReactorConfig;
 import org.apache.http.util.EntityUtils;
 
 import org.json.simple.JSONObject;
@@ -80,6 +81,10 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
 
     private String url;
     private String token;
+    private final long poolSelectInterval;
+    private final int poolSocketTimeout;
+    private final int poolConnectionTimeout;
+    private final int poolMaxConnections;
     private long maxEventsBatchCount;
     private long maxEventsBatchSize;
     private Dictionary<String, String> metadata;
@@ -98,15 +103,24 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
      * @param delay batching delay
      * @param maxEventsBatchCount max number of events in a batch
      * @param maxEventsBatchSize max size of batch
+     * @param sendModeStr send mode, "parallel" or "sequential"
      * @param metadata events metadata
+     * @param poolSelectInterval Time interval in msec at which the I/O reactor wakes up to check for timed out sessions and session requests.
+     * @param poolSocketTimeout Socket timeout value in msec for non-blocking I/O operations
+     * @param poolConnectionTimeout  Connect timeout value in msec for non-blocking connection requests
+     * @param poolMaxConnections Maximum total connections value. Used only for sendModeStr="parallel"
      */
     public HttpEventCollectorSender(
             final String Url, final String token,
             long delay, long maxEventsBatchCount, long maxEventsBatchSize,
             String sendModeStr,
-            Dictionary<String, String> metadata) {
+            Dictionary<String, String> metadata, long poolSelectInterval, int poolSocketTimeout, int poolConnectionTimeout, int poolMaxConnections) {
         this.url = Url + HttpEventCollectorUriPath;
         this.token = token;
+        this.poolSelectInterval = poolSelectInterval;
+        this.poolSocketTimeout = poolSocketTimeout;
+        this.poolConnectionTimeout = poolConnectionTimeout;
+        this.poolMaxConnections = poolMaxConnections;
         // when size configuration setting is missing it's treated as "infinity",
         // i.e., any value is accepted.
         if (maxEventsBatchCount == 0 && maxEventsBatchSize > 0) {
@@ -255,12 +269,21 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
         }
         // limit max  number of async requests in sequential mode, 0 means "use
         // default limit"
-        int maxConnTotal = sendMode == SendMode.Sequential ? 1 : 0;
+        int maxConnTotal = sendMode == SendMode.Sequential ? 1 : poolMaxConnections;
+
+        // add timeouts for requests
+        IOReactorConfig ioReactorConfig = IOReactorConfig.custom()
+                                                         .setSelectInterval(poolSelectInterval)
+                                                         .setConnectTimeout(poolConnectionTimeout)
+                                                         .setSoTimeout(poolSocketTimeout)
+                                                         .build();
+
         if (! disableCertificateValidation) {
             // create an http client that validates certificates
             httpClient = HttpAsyncClients.custom()
-                    .setMaxConnTotal(maxConnTotal)
-                    .build();
+                                         .setMaxConnTotal(maxConnTotal)
+                                         .setDefaultIOReactorConfig(ioReactorConfig)
+                                         .build();
         } else {
             // create strategy that accepts all certificates
             TrustStrategy acceptingTrustStrategy = new TrustStrategy() {
@@ -274,10 +297,11 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
                 sslContext = SSLContexts.custom().loadTrustMaterial(
                         null, acceptingTrustStrategy).build();
                 httpClient = HttpAsyncClients.custom()
-                        .setMaxConnTotal(maxConnTotal)
-                        .setHostnameVerifier(SSLConnectionSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER)
-                        .setSSLContext(sslContext)
-                        .build();
+                                             .setMaxConnTotal(maxConnTotal)
+                                             .setHostnameVerifier(SSLConnectionSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER)
+                                             .setSSLContext(sslContext)
+                                             .setDefaultIOReactorConfig(ioReactorConfig)
+                                             .build();
             } catch (Exception e) { }
         }
         httpClient.start();

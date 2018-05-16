@@ -110,6 +110,11 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
     private final String SendModeTag = "send_mode";
     private final String MiddlewareTag = "middleware";
 
+    private final String poolSelectIntervalTag = "pool_select_interval";
+    private final String poolSocketTimeoutTag = "pool_socket_timeout";
+    private final String poolConnectionTimeoutTag = "pool_connection_timeout";
+    private final String poolMaxConnectionsTag = "pool_max_connections";
+
     /** HttpEventCollectorLoggingHandler c-or */
     public HttpEventCollectorLoggingHandler() {
         // read configuration settings
@@ -139,6 +144,10 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
         long retriesOnError = getConfigurationNumericProperty(RetriesOnErrorTag, 0);
         String sendMode = getConfigurationProperty(SendModeTag, "sequential");
         String middleware = getConfigurationProperty(MiddlewareTag, "");
+        long poolSelectInterval = getConfigurationNumericProperty(poolSelectIntervalTag, 1000);
+        int poolSocketTimeout = getConfigurationNumericProperty(poolSocketTimeoutTag, 0);
+        int poolConnectionTimeout = getConfigurationNumericProperty(poolConnectionTimeoutTag, 0);
+        int poolMaxConnections = getConfigurationNumericProperty(poolMaxConnectionsTag, 0);
 
         includeLoggerName = getConfigurationBooleanProperty(IncludeLoggerNameConfTag, true);
         includeThreadName = getConfigurationBooleanProperty(IncludeThreadNameConfTag, true);
@@ -146,7 +155,7 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
 
         // delegate all configuration params to event sender
         this.sender = new HttpEventCollectorSender(
-                url, token, delay, batchCount, batchSize, sendMode, metadata);
+                url, token, delay, batchCount, batchSize, sendMode, metadata, poolSelectInterval, poolSocketTimeout, poolConnectionTimeout, poolMaxConnections);
 
         // plug a user middleware
         if (middleware != null && !middleware.isEmpty()) {
@@ -217,7 +226,7 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
         return value;
     }
 
-    private long getConfigurationNumericProperty(
+    private int getConfigurationNumericProperty(
             final String property, long defaultValue) {
         return Integer.parseInt(
                 getConfigurationProperty(property, String.format("%d", defaultValue)));

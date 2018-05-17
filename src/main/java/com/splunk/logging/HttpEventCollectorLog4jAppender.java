@@ -67,6 +67,7 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
                          int poolSocketTimeout,
                          int poolConnectionTimeout,
                          int poolMaxConnections,
+                         int connectionRequestTimeout,
                          String sendMode,
                          String middleware,
                          final String disableCertificateValidation)
@@ -78,17 +79,8 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
         metadata.put(HttpEventCollectorSender.MetadataSourceTag, source != null ? source : "");
         metadata.put(HttpEventCollectorSender.MetadataSourceTypeTag, sourcetype != null ? sourcetype : "");
 
-        this.sender = new HttpEventCollectorSender(url,
-                                                   token,
-                                                   batchInterval,
-                                                   batchCount,
-                                                   batchSize,
-                                                   sendMode,
-                                                   metadata,
-                                                   poolSelectInterval,
-                                                   poolSocketTimeout,
-                                                   poolConnectionTimeout,
-                poolMaxConnections);
+        this.sender = new HttpEventCollectorSender(url, token, batchInterval, batchCount, batchSize, sendMode, metadata,
+                                                   poolSelectInterval, poolSocketTimeout, poolConnectionTimeout, poolMaxConnections, connectionRequestTimeout);
 
         // plug a user middleware
         if (middleware != null && !middleware.isEmpty()) {
@@ -137,6 +129,7 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
             @PluginAttribute(value = "pool_socket_timeout", defaultInt = 0) final int poolSocketTimeout,
             @PluginAttribute(value = "pool_connection_timeout", defaultInt = 0) final int poolConnectionTimeout,
             @PluginAttribute(value = "pool_max_connections", defaultInt = 0) final int poolMaxConnections,
+            @PluginAttribute(value = "connection_request_timeout", defaultInt = 0) final int connectionRequestTimeout,
             @PluginAttribute("send_mode") final String sendMode,
             @PluginAttribute("middleware") final String middleware,
             @PluginAttribute("disableCertificateValidation") final String disableCertificateValidation,
@@ -188,6 +181,7 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
                 poolSocketTimeout,
                 poolConnectionTimeout,
                 poolMaxConnections,
+                connectionRequestTimeout,
                 sendMode,
                 middleware,
                 disableCertificateValidation);

@@ -19,6 +19,7 @@ package com.splunk.logging;
  */
 
 import org.apache.http.HttpResponse;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.concurrent.FutureCallback;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
@@ -42,8 +43,7 @@ import java.util.List;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Locale;
-
-
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * This is an internal helper class that sends logging events to Splunk http event collector.
@@ -60,6 +60,7 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
     private static final String HttpContentType = "application/json; profile=urn:splunk:event:1.0; charset=utf-8";
     private static final String SendModeSequential = "sequential";
     private static final String SendModeSParallel = "parallel";
+    private static final String UTF_8_ENCODING = "utf-8";
 
     /**
      * Sender operation mode. Parallel means that all HTTP requests are
@@ -85,6 +86,7 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
     private final int poolSocketTimeout;
     private final int poolConnectionTimeout;
     private final int poolMaxConnections;
+    private final int connectionRequestTimeout;
     private long maxEventsBatchCount;
     private long maxEventsBatchSize;
     private Dictionary<String, String> metadata;
@@ -105,22 +107,24 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
      * @param maxEventsBatchSize max size of batch
      * @param sendModeStr send mode, "parallel" or "sequential"
      * @param metadata events metadata
-     * @param poolSelectInterval Time interval in msec at which the I/O reactor wakes up to check for timed out sessions and session requests.
-     * @param poolSocketTimeout Socket timeout value in msec for non-blocking I/O operations
-     * @param poolConnectionTimeout  Connect timeout value in msec for non-blocking connection requests
-     * @param poolMaxConnections Maximum total connections value. Used only for sendModeStr="parallel"
+     * @param poolSelectInterval Time interval in msec at which the I/O reactor wakes up to check for timed out sessions and session requests. Default: 1000
+     * @param poolSocketTimeout Socket timeout value in msec for non-blocking I/O operations. 0 == infinite. Default: 0
+     * @param poolConnectionTimeout  Connect timeout value in msec for non-blocking connection requests. 0 == infinite. Default: 0
+     * @param poolMaxConnections Maximum total connections value. Used only for sendModeStr == "parallel". 0 == "use default limit". Default: 0
+     * @param connectionRequestTimeout Timeout in milliseconds used when requesting a connection from the pool. 0 == infinite. Default: 0
      */
     public HttpEventCollectorSender(
             final String Url, final String token,
             long delay, long maxEventsBatchCount, long maxEventsBatchSize,
             String sendModeStr,
-            Dictionary<String, String> metadata, long poolSelectInterval, int poolSocketTimeout, int poolConnectionTimeout, int poolMaxConnections) {
+            Dictionary<String, String> metadata, long poolSelectInterval, int poolSocketTimeout, int poolConnectionTimeout, int poolMaxConnections, int connectionRequestTimeout) {
         this.url = Url + HttpEventCollectorUriPath;
         this.token = token;
         this.poolSelectInterval = poolSelectInterval;
         this.poolSocketTimeout = poolSocketTimeout;
         this.poolConnectionTimeout = poolConnectionTimeout;
         this.poolMaxConnections = poolMaxConnections;
+        this.connectionRequestTimeout = connectionRequestTimeout;
         // when size configuration setting is missing it's treated as "infinity",
         // i.e., any value is accepted.
         if (maxEventsBatchCount == 0 && maxEventsBatchSize > 0) {
@@ -267,8 +271,6 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
             // http client is already started
             return;
         }
-        // limit max  number of async requests in sequential mode, 0 means "use
-        // default limit"
         int maxConnTotal = sendMode == SendMode.Sequential ? 1 : poolMaxConnections;
 
         // add timeouts for requests
@@ -341,19 +343,16 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
     public void postEvents(final List<HttpEventCollectorEventInfo> events,
                            final HttpEventCollectorMiddleware.IHttpSenderCallback callback) {
         startHttpClient(); // make sure http client is started
-        final String encoding = "utf-8";
         // convert events list into a string
         StringBuilder eventsBatchString = new StringBuilder();
         for (HttpEventCollectorEventInfo eventInfo : events)
             eventsBatchString.append(serializeEventInfo(eventInfo));
+
+        String httpEntityContent = eventsBatchString.toString();
+
         // create http request
-        final HttpPost httpPost = new HttpPost(url);
-        httpPost.setHeader(
-                AuthorizationHeaderTag,
-                String.format(AuthorizationHeaderScheme, token));
-        StringEntity entity = new StringEntity(eventsBatchString.toString(), encoding);
-        entity.setContentType(HttpContentType);
-        httpPost.setEntity(entity);
+        final HttpPost httpPost = createHttpPost(httpEntityContent);
+
         httpClient.execute(httpPost, new FutureCallback<HttpResponse>() {
             @Override
             public void completed(HttpResponse response) {
@@ -362,7 +361,7 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
                 // read reply only in case of a server error
                 if (httpStatusCode != 200) {
                     try {
-                        reply = EntityUtils.toString(response.getEntity(), encoding);
+                        reply = EntityUtils.toString(response.getEntity(), UTF_8_ENCODING);
                     } catch (IOException e) {
                         reply = e.getMessage();
                     }
@@ -379,4 +378,25 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
             public void cancelled() {}
         });
     }
+
+    private HttpPost createHttpPost(String httpEntityContent) {
+
+        StringEntity entity = new StringEntity(httpEntityContent, UTF_8_ENCODING);
+        entity.setContentType(HttpContentType);
+
+        RequestConfig requestConfig = RequestConfig.custom()
+                                                   .setConnectTimeout(poolConnectionTimeout)
+                                                   .setSocketTimeout(poolSocketTimeout)
+                                                   .setConnectionRequestTimeout(connectionRequestTimeout)
+                                                   .build();
+
+        final HttpPost httpPost = new HttpPost(url);
+        httpPost.setHeader(AuthorizationHeaderTag, String.format(AuthorizationHeaderScheme, token));
+        httpPost.setEntity(entity);
+        httpPost.setConfig(requestConfig);
+
+        return httpPost;
+
+    }
 }
+;

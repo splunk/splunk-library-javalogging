@@ -114,6 +114,7 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
     private final String poolSocketTimeoutTag = "pool_socket_timeout";
     private final String poolConnectionTimeoutTag = "pool_connection_timeout";
     private final String poolMaxConnectionsTag = "pool_max_connections";
+    private final String connectionRequestTimeoutTag = "connection_request_timeout";
 
     /** HttpEventCollectorLoggingHandler c-or */
     public HttpEventCollectorLoggingHandler() {
@@ -148,6 +149,7 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
         int poolSocketTimeout = getConfigurationNumericProperty(poolSocketTimeoutTag, 0);
         int poolConnectionTimeout = getConfigurationNumericProperty(poolConnectionTimeoutTag, 0);
         int poolMaxConnections = getConfigurationNumericProperty(poolMaxConnectionsTag, 0);
+        int connectionRequestTimeout = getConfigurationNumericProperty(connectionRequestTimeoutTag, 0);
 
         includeLoggerName = getConfigurationBooleanProperty(IncludeLoggerNameConfTag, true);
         includeThreadName = getConfigurationBooleanProperty(IncludeThreadNameConfTag, true);
@@ -155,7 +157,8 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
 
         // delegate all configuration params to event sender
         this.sender = new HttpEventCollectorSender(
-                url, token, delay, batchCount, batchSize, sendMode, metadata, poolSelectInterval, poolSocketTimeout, poolConnectionTimeout, poolMaxConnections);
+                url, token, delay, batchCount, batchSize, sendMode, metadata,
+                poolSelectInterval, poolSocketTimeout, poolConnectionTimeout, poolMaxConnections, connectionRequestTimeout);
 
         // plug a user middleware
         if (middleware != null && !middleware.isEmpty()) {

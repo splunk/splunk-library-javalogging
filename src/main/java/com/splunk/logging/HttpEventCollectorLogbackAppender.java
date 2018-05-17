@@ -50,6 +50,7 @@ public class HttpEventCollectorLogbackAppender extends AppenderBase<ILoggingEven
     private int _poolSocketTimeout;
     private int _poolConnectionTimeout;
     private int _poolMaxConnections;
+    private int _connectionRequestTimeout;
 
 
     @Override
@@ -73,7 +74,7 @@ public class HttpEventCollectorLogbackAppender extends AppenderBase<ILoggingEven
 
         this.sender = new HttpEventCollectorSender(
                 _url, _token, _batchInterval, _batchCount, _batchSize, _sendMode, metadata,
-                _poolSelectInterval, _poolSocketTimeout, _poolConnectionTimeout, _poolMaxConnections);
+                _poolSelectInterval, _poolSocketTimeout, _poolConnectionTimeout, _poolMaxConnections, _connectionRequestTimeout);
 
         // plug a user middleware
         if (_middleware != null && !_middleware.isEmpty()) {
@@ -250,6 +251,11 @@ public class HttpEventCollectorLogbackAppender extends AppenderBase<ILoggingEven
 
     public void setpool_max_connections(String value) {
         _poolMaxConnections = parseInt(value, 0);
+    }
+
+
+    public void setconnection_request_timeout(String value) {
+        _connectionRequestTimeout = parseInt(value, 0);
     }
 
     public String getDisableCertificateValidation() {

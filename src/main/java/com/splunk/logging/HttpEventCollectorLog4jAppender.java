@@ -125,7 +125,7 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
             @PluginAttribute("batch_size_count") final String batchCount,
             @PluginAttribute("batch_interval") final String batchInterval,
             @PluginAttribute("retries_on_error") final String retriesOnError,
-            @PluginAttribute(value = "pool_select_interval", defaultFloat = 1000L) final long poolSelectInterval,
+            @PluginAttribute(value = "pool_select_interval", defaultLong = 1000L) final long poolSelectInterval,
             @PluginAttribute(value = "pool_socket_timeout", defaultInt = 0) final int poolSocketTimeout,
             @PluginAttribute(value = "pool_connection_timeout", defaultInt = 0) final int poolConnectionTimeout,
             @PluginAttribute(value = "pool_max_connections", defaultInt = 0) final int poolMaxConnections,

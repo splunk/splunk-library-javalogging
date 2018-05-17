@@ -48,6 +48,12 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
     private long _batchSize = 0;
     private String _sendMode;
     private long _retriesOnError = 0;
+    private long _poolSelectInterval = 1000L;
+    private int _poolSocketTimeout;
+    private int _poolConnectionTimeout;
+    private int _poolMaxConnections;
+    private int _connectionRequestTimeout;
+
 
     @Override
     public void start() {
@@ -69,7 +75,8 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
             metadata.put(HttpEventCollectorSender.MetadataSourceTypeTag, _sourcetype);
 
         this.sender = new HttpEventCollectorSender(
-                _url, _token, _batchInterval, _batchCount, _batchSize, _sendMode, metadata);
+                _url, _token, _batchInterval, _batchCount, _batchSize, _sendMode, metadata,
+                _poolSelectInterval, _poolSocketTimeout, _poolConnectionTimeout, _poolMaxConnections, _connectionRequestTimeout);
 
         // plug a user middleware
         if (_middleware != null && !_middleware.isEmpty()) {
@@ -255,6 +262,27 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
         _middleware = value;
     }
 
+    public void setpool_select_interval(String value) {
+        _poolSelectInterval = parseLong(value, 1000);
+    }
+
+    public void setpool_socket_timeout(String value) {
+        _poolSocketTimeout = parseInt(value, 0);
+    }
+
+    public void setpool_connection_timeout(String value) {
+        _poolConnectionTimeout = parseInt(value, 0);
+    }
+
+    public void setpool_max_connections(String value) {
+        _poolMaxConnections = parseInt(value, 0);
+    }
+
+
+    public void setconnection_request_timeout(String value) {
+        _connectionRequestTimeout = parseInt(value, 0);
+    }
+
     public String getDisableCertificateValidation() {
         return _disableCertificateValidation;
     }
@@ -262,6 +290,15 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
     private static long parseLong(String string, int defaultValue) {
         try {
             return Long.parseLong(string);
+        }
+        catch (NumberFormatException e ) {
+            return defaultValue;
+        }
+    }
+
+    private static int parseInt(String string, int defaultValue) {
+        try {
+            return Integer.parseInt(string);
         }
         catch (NumberFormatException e ) {
             return defaultValue;

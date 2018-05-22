@@ -195,7 +195,7 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
 
     @Override
     public void stop() {
-        this.sender.flush();
+        this.sender.close();
         super.stop();
     }
 }

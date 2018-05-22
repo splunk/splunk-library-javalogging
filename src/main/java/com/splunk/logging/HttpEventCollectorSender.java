@@ -184,8 +184,12 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
      * Flush all pending events
      */
     public synchronized void flush() {
+        flush(false);
+    }
+
+    public synchronized void flush(boolean close) {
         if (eventsBatch.size() > 0) {
-            postEventsAsync(eventsBatch);
+            postEventsAsync(eventsBatch, close);
         }
         // Clear the batch. A new list should be created because events are
         // sending asynchronously and "previous" instance of eventsBatch object
@@ -197,10 +201,11 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
     /**
      * Close events sender
      */
-    public void close() {
+    void close() {
         if (timer != null)
             timer.cancel();
-        flush();
+        flush(true);
+        super.cancel();
     }
 
     /**
@@ -315,19 +320,28 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
         if (httpClient != null) {
             try {
                 httpClient.close();
-            } catch (IOException e) {}
+            } catch (IOException e) { }
             httpClient = null;
         }
     }
 
     private void postEventsAsync(final List<HttpEventCollectorEventInfo> events) {
-        this.middleware.postEvents(events, this, new HttpEventCollectorMiddleware.IHttpSenderCallback() {
+        postEventsAsync(events, false);
+    }
+
+    private void postEventsAsync(final List<HttpEventCollectorEventInfo> events, final boolean close) {
+        final HttpEventCollectorSender sender = this;
+        this.middleware.postEvents(events,  this, new HttpEventCollectorMiddleware.IHttpSenderCallback() {
+
             @Override
             public void completed(int statusCode, String reply) {
                 if (statusCode != 200) {
                     HttpEventCollectorErrorHandler.error(
                             events,
                             new HttpEventCollectorErrorHandler.ServerErrorException(reply));
+                }
+                if (close) {
+                    sender.stopHttpClient();
                 }
             }
 
@@ -336,6 +350,9 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
                 HttpEventCollectorErrorHandler.error(
                         eventsBatch,
                         new HttpEventCollectorErrorHandler.ServerErrorException(ex.getMessage()));
+                if (close) {
+                    sender.stopHttpClient();
+                }
             }
         });
     }

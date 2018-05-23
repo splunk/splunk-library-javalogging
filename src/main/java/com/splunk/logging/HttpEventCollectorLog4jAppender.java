@@ -116,7 +116,7 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
             @PluginAttribute(HttpEventCollectorSender.MetadataMessageFormatTag) final String messageFormat,
             @PluginAttribute("host") final String host,
             @PluginAttribute("index") final String index,
-            @PluginAttribute("ignoreExceptions") final String ignore,
+            @PluginAttribute(value = "ignoreExceptions", defaultBoolean = true) final String ignoreExceptions,
             @PluginAttribute("batch_size_bytes") final String batchSize,
             @PluginAttribute("batch_size_count") final String batchCount,
             @PluginAttribute("batch_interval") final String batchInterval,
@@ -156,14 +156,14 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
             layout = PatternLayout.createLayout("%m", null, null, Charset.forName("UTF-8"), true, false, null, null);
         }
 
-        final boolean ignoreExceptions = true;
+        final boolean ignoreExceptionsBool = Boolean.getBoolean(ignoreExceptions);
 
         return new HttpEventCollectorLog4jAppender(
                 name, url, token,
                 source, sourcetype, messageFormat, host, index,
                 filter, layout, 
-                includeLoggerName, includeThreadName, includeMDC, includeException, includeMarker,  
-                ignoreExceptions,
+                includeLoggerName, includeThreadName, includeMDC, includeException, includeMarker,
+                ignoreExceptionsBool,
                 parseInt(batchInterval, HttpEventCollectorSender.DefaultBatchInterval),
                 parseInt(batchCount, HttpEventCollectorSender.DefaultBatchCount),
                 parseInt(batchSize, HttpEventCollectorSender.DefaultBatchSize),
@@ -195,7 +195,7 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
 
     @Override
     public void stop() {
-        this.sender.flush();
+        this.sender.close();
         super.stop();
     }
 }

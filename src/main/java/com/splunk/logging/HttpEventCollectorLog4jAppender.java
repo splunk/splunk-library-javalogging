@@ -47,6 +47,8 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
     private HttpEventCollectorLog4jAppender(final String name,
                          final String url,
                          final String token,
+                         final String channel,
+                         final String type,
                          final String source,
                          final String sourcetype,
                          final String messageFormat,
@@ -76,7 +78,7 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
         metadata.put(HttpEventCollectorSender.MetadataSourceTypeTag, sourcetype != null ? sourcetype : "");
         metadata.put(HttpEventCollectorSender.MetadataMessageFormatTag, messageFormat != null ? messageFormat : "");
 
-        this.sender = new HttpEventCollectorSender(url, token, batchInterval, batchCount, batchSize, sendMode, metadata);
+        this.sender = new HttpEventCollectorSender(url, token, channel, type, batchInterval, batchCount, batchSize, sendMode, metadata);
 
         // plug a user middleware
         if (middleware != null && !middleware.isEmpty()) {
@@ -110,6 +112,8 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
             // @formatter:off
             @PluginAttribute("url") final String url,
             @PluginAttribute("token") final String token,
+            @PluginAttribute("channel") final String channel,
+            @PluginAttribute("type") final String type,
             @PluginAttribute("name") final String name,
             @PluginAttribute("source") final String source,
             @PluginAttribute("sourcetype") final String sourcetype,
@@ -159,7 +163,7 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
         final boolean ignoreExceptionsBool = Boolean.getBoolean(ignoreExceptions);
 
         return new HttpEventCollectorLog4jAppender(
-                name, url, token,
+                name, url, token,  channel, type,
                 source, sourcetype, messageFormat, host, index,
                 filter, layout, 
                 includeLoggerName, includeThreadName, includeMDC, includeException, includeMarker,

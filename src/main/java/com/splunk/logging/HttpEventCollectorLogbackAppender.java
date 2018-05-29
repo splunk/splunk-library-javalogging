@@ -42,6 +42,8 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
     private String _index;
     private String _url;
     private String _token;
+    private String _channel;
+    private String _type;
     private String _disableCertificateValidation;
     private String _middleware;
     private long _batchInterval = 0;
@@ -73,7 +75,7 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
             metadata.put(HttpEventCollectorSender.MetadataMessageFormatTag, _messageFormat);
 
         this.sender = new HttpEventCollectorSender(
-                _url, _token, _batchInterval, _batchCount, _batchSize, _sendMode, metadata);
+                _url, _token, _channel, _type, _batchInterval, _batchCount, _batchSize, _sendMode, metadata);
 
         // plug a user middleware
         if (_middleware != null && !_middleware.isEmpty()) {
@@ -155,12 +157,36 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
         this._token = token;
     }
 
+    public void setChannel(String channel) {
+        this._channel = channel;
+    }
+
+    public void setType(String type) {
+        this._type = type;
+    }
+
     public String getToken() {
         return this._token;
     }
 
     public void setLayout(Layout<E> layout) {
         this._layout = layout;
+    }
+
+    public String get_channel() {
+        return _channel;
+    }
+
+    public void set_channel(String _channel) {
+        this._channel = _channel;
+    }
+
+    public String get_type() {
+        return _type;
+    }
+
+    public void set_type(String _type) {
+        this._type = _type;
     }
 
     public Layout<E> getLayout() {

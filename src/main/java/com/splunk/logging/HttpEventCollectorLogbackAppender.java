@@ -157,36 +157,28 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
         this._token = token;
     }
 
+    public String getToken() {
+        return this._token;
+    }
+
     public void setChannel(String channel) {
         this._channel = channel;
+    }
+
+    public String getChannel() {
+        return this._channel;
     }
 
     public void setType(String type) {
         this._type = type;
     }
 
-    public String getToken() {
-        return this._token;
+    public String getType() {
+        return this._type;
     }
 
     public void setLayout(Layout<E> layout) {
         this._layout = layout;
-    }
-
-    public String get_channel() {
-        return _channel;
-    }
-
-    public void set_channel(String _channel) {
-        this._channel = _channel;
-    }
-
-    public String get_type() {
-        return _type;
-    }
-
-    public void set_type(String _type) {
-        this._type = _type;
     }
 
     public Layout<E> getLayout() {

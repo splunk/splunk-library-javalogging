@@ -108,8 +108,8 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
      * @param maxEventsBatchCount max number of events in a batch
      * @param maxEventsBatchSize max size of batch
      * @param metadata events metadata
-     * @param channel
-     * @param type
+     * @param channel unique GUID for the client to send raw events to the server
+     * @param type event data type
      */
     public HttpEventCollectorSender(
             final String Url, final String token, final String channel, final String type,
@@ -387,7 +387,7 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
         httpPost.setHeader(
                 AuthorizationHeaderTag,
                 String.format(AuthorizationHeaderScheme, token));
-        if ("Raw".equalsIgnoreCase(type) && channel != null) {
+        if ("Raw".equalsIgnoreCase(type) && channel != null && !channel.trim().equals("")) {
             httpPost.setHeader(SPLUNKREQUESTCHANNELTag, channel);
         }
         StringEntity entity = new StringEntity(eventsBatchString.toString(), encoding);

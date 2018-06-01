@@ -57,9 +57,11 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
     public static final String MetadataSourceTag = "source";
     public static final String MetadataSourceTypeTag = "sourcetype";
     public static final String MetadataMessageFormatTag = "messageFormat";
+    private static final String SPLUNKREQUESTCHANNELTag = "X-Splunk-Request-Channel";
     private static final String AuthorizationHeaderTag = "Authorization";
     private static final String AuthorizationHeaderScheme = "Splunk %s";
     private static final String HttpEventCollectorUriPath = "/services/collector/event/1.0";
+    private static final String HttpRawCollectorUriPath = "/services/collector/raw";
     private static final String HttpContentType = "application/json; profile=urn:splunk:event:1.0; charset=utf-8";
     private static final String SendModeSequential = "sequential";
     private static final String SendModeSParallel = "parallel";
@@ -84,6 +86,8 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
 
     private String url;
     private String token;
+    private String channel;
+    private String type;
     private long maxEventsBatchCount;
     private long maxEventsBatchSize;
     private Dictionary<String, String> metadata;
@@ -104,14 +108,23 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
      * @param maxEventsBatchCount max number of events in a batch
      * @param maxEventsBatchSize max size of batch
      * @param metadata events metadata
+     * @param channel unique GUID for the client to send raw events to the server
+     * @param type event data type
      */
     public HttpEventCollectorSender(
-            final String Url, final String token,
+            final String Url, final String token, final String channel, final String type,
             long delay, long maxEventsBatchCount, long maxEventsBatchSize,
             String sendModeStr,
             Dictionary<String, String> metadata) {
         this.url = Url + HttpEventCollectorUriPath;
         this.token = token;
+        this.channel = channel;
+        this.type = type;
+
+        if ("Raw".equalsIgnoreCase(type)) {
+            this.url = Url + HttpRawCollectorUriPath;
+        }
+
         // when size configuration setting is missing it's treated as "infinity",
         // i.e., any value is accepted.
         if (maxEventsBatchCount == 0 && maxEventsBatchSize > 0) {
@@ -374,6 +387,9 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
         httpPost.setHeader(
                 AuthorizationHeaderTag,
                 String.format(AuthorizationHeaderScheme, token));
+        if ("Raw".equalsIgnoreCase(type) && channel != null && !channel.trim().equals("")) {
+            httpPost.setHeader(SPLUNKREQUESTCHANNELTag, channel);
+        }
         StringEntity entity = new StringEntity(eventsBatchString.toString(), encoding);
         entity.setContentType(HttpContentType);
         httpPost.setEntity(entity);

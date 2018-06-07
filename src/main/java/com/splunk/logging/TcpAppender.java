@@ -46,7 +46,7 @@ public class TcpAppender extends AppenderBase<ILoggingEvent> implements Runnable
     private InetAddress address;
 
     private Layout<ILoggingEvent> layout;
-    private Future<?> task;
+    private ExecutorService executor;
     private Future<Socket> connectorTask;
 
     private int reconnectionDelay = DEFAULT_RECONNECTION_DELAY;
@@ -252,7 +252,8 @@ public class TcpAppender extends AppenderBase<ILoggingEvent> implements Runnable
         // Dispatch this instance of the appender.
         if (!errorPresent) {
             queue = queueSize <= 0 ? new SynchronousQueue<ILoggingEvent>() : new ArrayBlockingQueue<ILoggingEvent>(queueSize);
-            task = getContext().getExecutorService().submit(this);
+            executor = Executors.newSingleThreadExecutor();
+            executor.execute(this);
         }
 
         super.start();
@@ -264,8 +265,10 @@ public class TcpAppender extends AppenderBase<ILoggingEvent> implements Runnable
             return;
 
         CloseUtil.closeQuietly(socket);
-        task.cancel(true);
-        if(connectorTask != null) {
+        if (executor != null) {
+            executor.shutdownNow();
+        }
+        if (connectorTask != null) {
             connectorTask.cancel(true);
         }
         super.stop();

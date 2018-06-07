@@ -19,6 +19,8 @@ package com.splunk.logging;
  */
 
 import org.apache.http.HttpResponse;
+import org.apache.http.client.config.CookieSpecs;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.concurrent.FutureCallback;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
@@ -30,6 +32,7 @@ import org.apache.http.impl.nio.client.HttpAsyncClients;
 import org.apache.http.util.EntityUtils;
 
 import org.json.simple.JSONObject;
+
 import javax.net.ssl.SSLContext;
 import java.io.IOException;
 import java.io.Serializable;
@@ -53,9 +56,12 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
     public static final String MetadataIndexTag = "index";
     public static final String MetadataSourceTag = "source";
     public static final String MetadataSourceTypeTag = "sourcetype";
+    public static final String MetadataMessageFormatTag = "messageFormat";
+    private static final String SPLUNKREQUESTCHANNELTag = "X-Splunk-Request-Channel";
     private static final String AuthorizationHeaderTag = "Authorization";
     private static final String AuthorizationHeaderScheme = "Splunk %s";
     private static final String HttpEventCollectorUriPath = "/services/collector/event/1.0";
+    private static final String HttpRawCollectorUriPath = "/services/collector/raw";
     private static final String HttpContentType = "application/json; profile=urn:splunk:event:1.0; charset=utf-8";
     private static final String SendModeSequential = "sequential";
     private static final String SendModeSParallel = "parallel";
@@ -70,7 +76,7 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
         Sequential,
         Parallel
     };
-
+    
     /**
      * Recommended default values for events batching.
      */
@@ -80,6 +86,8 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
 
     private String url;
     private String token;
+    private String channel;
+    private String type;
     private long maxEventsBatchCount;
     private long maxEventsBatchSize;
     private Dictionary<String, String> metadata;
@@ -90,6 +98,7 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
     private boolean disableCertificateValidation = false;
     private SendMode sendMode = SendMode.Sequential;
     private HttpEventCollectorMiddleware middleware = new HttpEventCollectorMiddleware();
+    private final MessageFormat messageFormat;
 
     /**
      * Initialize HttpEventCollectorSender
@@ -99,14 +108,23 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
      * @param maxEventsBatchCount max number of events in a batch
      * @param maxEventsBatchSize max size of batch
      * @param metadata events metadata
+     * @param channel unique GUID for the client to send raw events to the server
+     * @param type event data type
      */
     public HttpEventCollectorSender(
-            final String Url, final String token,
+            final String Url, final String token, final String channel, final String type,
             long delay, long maxEventsBatchCount, long maxEventsBatchSize,
             String sendModeStr,
             Dictionary<String, String> metadata) {
         this.url = Url + HttpEventCollectorUriPath;
         this.token = token;
+        this.channel = channel;
+        this.type = type;
+
+        if ("Raw".equalsIgnoreCase(type)) {
+            this.url = Url + HttpRawCollectorUriPath;
+        }
+
         // when size configuration setting is missing it's treated as "infinity",
         // i.e., any value is accepted.
         if (maxEventsBatchCount == 0 && maxEventsBatchSize > 0) {
@@ -117,6 +135,12 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
         this.maxEventsBatchCount = maxEventsBatchCount;
         this.maxEventsBatchSize = maxEventsBatchSize;
         this.metadata = metadata;
+        
+        final String format = metadata.get(MetadataMessageFormatTag);
+        // Get MessageFormat enum from format string. Do this once per instance in constructor to avoid expensive operation in
+        // each event sender call
+        this.messageFormat = MessageFormat.fromFormat(format);
+        
         if (sendModeStr != null) {
             if (sendModeStr.equals(SendModeSequential))
                 this.sendMode = SendMode.Sequential;
@@ -175,8 +199,12 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
      * Flush all pending events
      */
     public synchronized void flush() {
+        flush(false);
+    }
+
+    public synchronized void flush(boolean close) {
         if (eventsBatch.size() > 0) {
-            postEventsAsync(eventsBatch);
+            postEventsAsync(eventsBatch, close);
         }
         // Clear the batch. A new list should be created because events are
         // sending asynchronously and "previous" instance of eventsBatch object
@@ -188,10 +216,11 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
     /**
      * Close events sender
      */
-    public void close() {
+    void close() {
         if (timer != null)
             timer.cancel();
-        flush();
+        flush(true);
+        super.cancel();
     }
 
     /**
@@ -211,8 +240,12 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
     }
 
     @SuppressWarnings("unchecked")
-    private static void putIfPresent(JSONObject collection, String tag, String value) {
-        if (value != null && value.length() > 0) {
+    private static void putIfPresent(JSONObject collection, String tag, Object value) {
+        if (value != null) {
+            if (value instanceof String && ((String) value).length() == 0) {
+                // Do not add blank string
+                return;
+            }
             collection.put(tag, value);
         }
     }
@@ -230,10 +263,14 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
         putIfPresent(event, MetadataIndexTag, metadata.get(MetadataIndexTag));
         putIfPresent(event, MetadataSourceTag, metadata.get(MetadataSourceTag));
         putIfPresent(event, MetadataSourceTypeTag, metadata.get(MetadataSourceTypeTag));
+        
+        // Parse message on the basis of format
+        final Object parsedMessage = this.messageFormat.parse(eventInfo.getMessage());
+        
         // event body
         JSONObject body = new JSONObject();
         putIfPresent(body, "severity", eventInfo.getSeverity());
-        putIfPresent(body, "message", eventInfo.getMessage());
+        putIfPresent(body, "message", parsedMessage);
         putIfPresent(body, "logger", eventInfo.getLoggerName());
         putIfPresent(body, "thread", eventInfo.getThreadName());
         // add an exception record if and only if there is one
@@ -268,6 +305,7 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
         if (! disableCertificateValidation) {
             // create an http client that validates certificates
             httpClient = HttpAsyncClients.custom()
+                    .setDefaultRequestConfig(RequestConfig.custom().setCookieSpec(CookieSpecs.STANDARD).build())
                     .setMaxConnTotal(maxConnTotal)
                     .build();
         } else {
@@ -283,6 +321,7 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
                 sslContext = SSLContexts.custom().loadTrustMaterial(
                         null, acceptingTrustStrategy).build();
                 httpClient = HttpAsyncClients.custom()
+                        .setDefaultRequestConfig(RequestConfig.custom().setCookieSpec(CookieSpecs.STANDARD).build())
                         .setMaxConnTotal(maxConnTotal)
                         .setHostnameVerifier(SSLConnectionSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER)
                         .setSSLContext(sslContext)
@@ -298,19 +337,28 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
         if (httpClient != null) {
             try {
                 httpClient.close();
-            } catch (IOException e) {}
+            } catch (IOException e) { }
             httpClient = null;
         }
     }
 
     private void postEventsAsync(final List<HttpEventCollectorEventInfo> events) {
-        this.middleware.postEvents(events, this, new HttpEventCollectorMiddleware.IHttpSenderCallback() {
+        postEventsAsync(events, false);
+    }
+
+    private void postEventsAsync(final List<HttpEventCollectorEventInfo> events, final boolean close) {
+        final HttpEventCollectorSender sender = this;
+        this.middleware.postEvents(events,  this, new HttpEventCollectorMiddleware.IHttpSenderCallback() {
+
             @Override
             public void completed(int statusCode, String reply) {
                 if (statusCode != 200) {
                     HttpEventCollectorErrorHandler.error(
                             events,
                             new HttpEventCollectorErrorHandler.ServerErrorException(reply));
+                }
+                if (close) {
+                    sender.stopHttpClient();
                 }
             }
 
@@ -319,6 +367,9 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
                 HttpEventCollectorErrorHandler.error(
                         eventsBatch,
                         new HttpEventCollectorErrorHandler.ServerErrorException(ex.getMessage()));
+                if (close) {
+                    sender.stopHttpClient();
+                }
             }
         });
     }
@@ -336,6 +387,9 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
         httpPost.setHeader(
                 AuthorizationHeaderTag,
                 String.format(AuthorizationHeaderScheme, token));
+        if ("Raw".equalsIgnoreCase(type) && channel != null && !channel.trim().equals("")) {
+            httpPost.setHeader(SPLUNKREQUESTCHANNELTag, channel);
+        }
         StringEntity entity = new StringEntity(eventsBatchString.toString(), encoding);
         entity.setContentType(HttpContentType);
         httpPost.setEntity(entity);

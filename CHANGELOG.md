@@ -1,5 +1,12 @@
 # Splunk Logging for Java Changelog
 
+## Version 1.5.4
+* Changed messagedMimeType metadata property to messageFormat
+* Fixes unit tests, and performance issues
+* Fixes issues with log4j
+* Fixes Cookie Expiry date issue [#74](https://github.com/splunk/splunk-library-javalogging/pull/74)
+* Added Raw Endpoint support to HEC [#75](https://github.com/splunk/splunk-library-javalogging/pull/75)
+
 ## Version 1.5.3
 * Add support for Logback access [#54](https://github.com/splunk/splunk-library-javalogging/issues/54)
 * Make more parameters optional for Log4j appender [#47](https://github.com/splunk/splunk-library-javalogging/issues/47)

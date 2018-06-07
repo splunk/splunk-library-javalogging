@@ -37,10 +37,13 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
 
     private String _source;
     private String _sourcetype;
+    private String _messageFormat;
     private String _host;
     private String _index;
     private String _url;
     private String _token;
+    private String _channel;
+    private String _type;
     private String _disableCertificateValidation;
     private String _middleware;
     private long _batchInterval = 0;
@@ -67,9 +70,12 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
 
         if (_sourcetype != null)
             metadata.put(HttpEventCollectorSender.MetadataSourceTypeTag, _sourcetype);
+        
+        if (_messageFormat != null)
+            metadata.put(HttpEventCollectorSender.MetadataMessageFormatTag, _messageFormat);
 
         this.sender = new HttpEventCollectorSender(
-                _url, _token, _batchInterval, _batchCount, _batchSize, _sendMode, metadata);
+                _url, _token, _channel, _type, _batchInterval, _batchCount, _batchSize, _sendMode, metadata);
 
         // plug a user middleware
         if (_middleware != null && !_middleware.isEmpty()) {
@@ -155,6 +161,22 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
         return this._token;
     }
 
+    public void setChannel(String channel) {
+        this._channel = channel;
+    }
+
+    public String getChannel() {
+        return this._channel;
+    }
+
+    public void setType(String type) {
+        this._type = type;
+    }
+
+    public String getType() {
+        return this._type;
+    }
+
     public void setLayout(Layout<E> layout) {
         this._layout = layout;
     }
@@ -209,6 +231,14 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
 
     public String getSourcetype() {
         return this._sourcetype;
+    }
+    
+    public void setMessageFormat(String messageFormat) {
+        this._messageFormat = messageFormat;
+    }
+
+    public String getMessageFormat() {
+        return this._messageFormat;
     }
 
     public void setHost(String host) {

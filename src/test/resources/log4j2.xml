@@ -15,7 +15,7 @@ License for the specific language governing permissions and limitations
 under the License.
 -->
 
-<Configuration status="info" name="example" packages="">
+<Configuration status="info" name="example" packages="com.splunk.logging">
     <!-- Define an appender that writes to a TCP socket. We use Log4J's SocketAppender, which
          is documented at
 
@@ -39,6 +39,7 @@ under the License.
               index=""
               source="splunktest"
               sourcetype="battlecat"
+              messageFormat="text"
               middleware="HttpEventCollectorUnitTestMiddleware"
               batch_size_bytes="0"
               batch_size_count="0"

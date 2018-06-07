@@ -18,6 +18,9 @@ import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.joran.JoranConfigurator;
 import ch.qos.logback.core.joran.spi.JoranException;
 import com.splunk.*;
+
+import org.json.simple.JSONObject;
+import org.json.simple.JSONValue;
 import org.junit.Assert;
 import org.slf4j.*;
 
@@ -25,6 +28,7 @@ import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.util.*;
+import java.util.Map.Entry;
 import java.util.logging.LogManager;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -107,7 +111,17 @@ public class TestUtil {
             indexes.remove(indexName);
         }
 
-        indexes.create(indexName);
+        int retry = 3;
+
+        while (retry > 0) {
+            try {
+                indexes.create(indexName);
+                return;
+            } catch (HttpException e) {
+                retry--;
+                Thread.sleep(1000);
+            }
+        }
     }
 
 
@@ -371,8 +385,14 @@ public class TestUtil {
             int eventCount = 0;
             InputStream resultsStream = null;
             ResultsReaderXml resultsReader = null;
+            final Object parsedObject = JSONValue.parse(msg);
             while (System.currentTimeMillis() - startTime < 30 * 1000)/*wait for up to 30s*/ {
-                resultsStream = service.oneshotSearch("search " + msg);
+                if (parsedObject instanceof JSONObject) {
+                    resultsStream = searchJsonMessageEvent((JSONObject) parsedObject);
+                } else {
+                    resultsStream = service.oneshotSearch("search " + msg);
+                }
+                
                 resultsReader = new ResultsReaderXml(resultsStream);
 
                 //verify has one and only one record return
@@ -389,8 +409,31 @@ public class TestUtil {
             resultsReader.close();
             resultsStream.close();
 
-            Assert.assertTrue(eventCount == 1);
+            Assert.assertEquals("Event search results did not match.", 1, eventCount);
         }
+    }
+
+    /**
+     * Search JSON message event.
+     *
+     * @param jsonObject the JSON event object
+     * @return the input stream linked with the search result
+     */
+    @SuppressWarnings("rawtypes")
+    private static InputStream searchJsonMessageEvent(final JSONObject jsonObject) {
+        String searchQuery = "";
+        boolean firstSearchTerm = true;
+        for (final Object entryObject : jsonObject.entrySet()) {
+            final Entry jsonEntry = (Entry) entryObject;
+             if (firstSearchTerm) {
+                 searchQuery += String.format("search \"message.%s\"=%s", jsonEntry.getKey(), jsonEntry.getValue());
+                 firstSearchTerm = false;
+             } else {
+                 searchQuery += String.format(" | search \"message.%s\"=%s", jsonEntry.getKey(), jsonEntry.getValue());
+             }
+        }
+        
+        return service.oneshotSearch(searchQuery);
     }
 
     public static void verifyEventsSentInOrder(String prefix, int totalEventsCount, String index) throws IOException {
@@ -425,5 +468,25 @@ public class TestUtil {
             assert results.get(i).contains(expect) :
                     String.format("expect: %s, actual: %s", expect, results.get(i));
         }
+    }
+    
+    
+    /**
+     * Builds user input map using specified parameters.
+     *
+     * @param loggerName the logger name
+     * @param token the event collector token
+     * @param sourceType the source type
+     * @return the hash map
+     */
+    public static HashMap<String, String> buildUserInputMap(final String loggerName, final String token, final String sourceType, final String messageFormat) {
+        final HashMap<String, String> userInputs = new HashMap<String, String>();
+        userInputs.put("user_logger_name", loggerName);
+        userInputs.put("user_httpEventCollector_token", token);
+        userInputs.put("user_host", "host.example.com");
+        userInputs.put("user_source", "splunktest");
+        userInputs.put("user_sourcetype", sourceType);
+        userInputs.put("user_messageFormat", messageFormat);
+        return userInputs;
     }
 }

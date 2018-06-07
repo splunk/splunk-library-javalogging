@@ -47,8 +47,11 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
     private HttpEventCollectorLog4jAppender(final String name,
                          final String url,
                          final String token,
+                         final String channel,
+                         final String type,
                          final String source,
                          final String sourcetype,
+                         final String messageFormat,
                          final String host,
                          final String index,
                          final Filter filter,
@@ -73,8 +76,9 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
         metadata.put(HttpEventCollectorSender.MetadataIndexTag, index != null ? index : "");
         metadata.put(HttpEventCollectorSender.MetadataSourceTag, source != null ? source : "");
         metadata.put(HttpEventCollectorSender.MetadataSourceTypeTag, sourcetype != null ? sourcetype : "");
+        metadata.put(HttpEventCollectorSender.MetadataMessageFormatTag, messageFormat != null ? messageFormat : "");
 
-        this.sender = new HttpEventCollectorSender(url, token, batchInterval, batchCount, batchSize, sendMode, metadata);
+        this.sender = new HttpEventCollectorSender(url, token, channel, type, batchInterval, batchCount, batchSize, sendMode, metadata);
 
         // plug a user middleware
         if (middleware != null && !middleware.isEmpty()) {
@@ -108,12 +112,15 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
             // @formatter:off
             @PluginAttribute("url") final String url,
             @PluginAttribute("token") final String token,
+            @PluginAttribute("channel") final String channel,
+            @PluginAttribute("type") final String type,
             @PluginAttribute("name") final String name,
             @PluginAttribute("source") final String source,
             @PluginAttribute("sourcetype") final String sourcetype,
+            @PluginAttribute(HttpEventCollectorSender.MetadataMessageFormatTag) final String messageFormat,
             @PluginAttribute("host") final String host,
             @PluginAttribute("index") final String index,
-            @PluginAttribute("ignoreExceptions") final String ignore,
+            @PluginAttribute(value = "ignoreExceptions", defaultBoolean = true) final String ignoreExceptions,
             @PluginAttribute("batch_size_bytes") final String batchSize,
             @PluginAttribute("batch_size_count") final String batchCount,
             @PluginAttribute("batch_interval") final String batchInterval,
@@ -153,14 +160,14 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
             layout = PatternLayout.createLayout("%m", null, null, Charset.forName("UTF-8"), true, false, null, null);
         }
 
-        final boolean ignoreExceptions = true;
+        final boolean ignoreExceptionsBool = Boolean.getBoolean(ignoreExceptions);
 
         return new HttpEventCollectorLog4jAppender(
-                name, url, token,
-                source, sourcetype, host, index,
+                name, url, token,  channel, type,
+                source, sourcetype, messageFormat, host, index,
                 filter, layout, 
-                includeLoggerName, includeThreadName, includeMDC, includeException, includeMarker,  
-                ignoreExceptions,
+                includeLoggerName, includeThreadName, includeMDC, includeException, includeMarker,
+                ignoreExceptionsBool,
                 parseInt(batchInterval, HttpEventCollectorSender.DefaultBatchInterval),
                 parseInt(batchCount, HttpEventCollectorSender.DefaultBatchCount),
                 parseInt(batchSize, HttpEventCollectorSender.DefaultBatchSize),
@@ -192,7 +199,7 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
 
     @Override
     public void stop() {
-        this.sender.flush();
+        this.sender.close();
         super.stop();
     }
 }

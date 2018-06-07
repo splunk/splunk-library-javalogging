@@ -1,0 +1,5 @@
+Import-Package: \
+    ch.qos.logback.*;resolution:=optional, \
+    org.apache.logging.log4j.*;resolution:=optional, \
+    *
+

@@ -1,6 +1,6 @@
 # Splunk Logging for Java Changelog
 
-## Version 1.5.4
+## Version 1.6.0
 * Changed messagedMimeType metadata property to messageFormat
 * Fixes unit tests, and performance issues
 * Fixes issues with log4j

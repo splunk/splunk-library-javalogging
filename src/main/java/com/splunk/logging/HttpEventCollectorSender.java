@@ -325,12 +325,6 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
           // http client is already started
           return;
         }
-
-      System.out.println("+++     Conn timeout: " + connectionTimeout);
-      System.out.println("+++     Sock timeout: " + socketTimeout);
-      System.out.println("+++     Cnrq timeout: " + connectionRequestTimeout);
-      System.out.println("+++   Max conn total: " + poolMaxConnections);
-      System.out.println("+++  Select interval: " + poolSelectInterval);
         
         int maxConnTotal = sendMode == SendMode.Sequential ? 1 : poolMaxConnections;
     

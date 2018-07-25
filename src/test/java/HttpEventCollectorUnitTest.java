@@ -16,22 +16,23 @@
  * under the License.
  */
 
+import ch.qos.logback.classic.LoggerContext;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.Appender;
+import com.splunk.logging.HttpEventCollectorLogbackAppender;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.net.InetSocketAddress;
 
 import com.splunk.logging.HttpEventCollectorErrorHandler;
 import com.splunk.logging.HttpEventCollectorEventInfo;
+import java.util.Iterator;
 import org.junit.Assert;
 import org.junit.Test;
-import sun.rmi.runtime.Log;
+import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.logging.LogManager;
-import java.util.logging.Logger;
 
 public class HttpEventCollectorUnitTest {
     @Test
@@ -89,6 +90,26 @@ public class HttpEventCollectorUnitTest {
         LOGBACK.error("hello logback");
         LOGBACK.error("hello logback");
         Assert.assertTrue(HttpEventCollectorUnitTestMiddleware.eventsReceived == 3);
+
+        checkLogbackTimeouts(-1, -1, -1, 0, 1000L);
+    }
+
+    @Test
+    public void logback_simple_set_timeouts() throws Exception {
+        HashMap<String, String> userInputs = new HashMap<String, String>();
+        final String loggerName = "splunk.logback";
+        userInputs.put("user_logger_name", loggerName);
+        
+        userInputs.put("user_socket_timeout", "6000");
+        userInputs.put("user_connection_timeout", "12000");
+        userInputs.put("user_connection_request_timeout", "3000");
+        userInputs.put("user_pool_max_connections", "128");
+        userInputs.put("user_pool_select_interval", "5000");
+        
+        TestUtil.resetLogbackConfiguration("logback_template.xml", "logback.xml", userInputs);
+        org.slf4j.Logger LOGBACK = org.slf4j.LoggerFactory.getLogger(loggerName);
+
+        checkLogbackTimeouts(6000, 12000, 3000, 128, 5000L);
     }
 
     @Test
@@ -354,5 +375,41 @@ public class HttpEventCollectorUnitTest {
         } catch(InterruptedException ex) {
             Thread.currentThread().interrupt();
         }
+    }
+    
+    private void checkLogbackTimeouts(int expectedSocketTimeout, int expectedConnectionTimeout,
+        int expectedConnRequestTimeout, int expectedMaxConn, long expectedSelectInterval) {
+        
+        // check if timeout values are properly set on the appender
+        Iterator<Appender<ILoggingEvent>> appenders = ((LoggerContext) LoggerFactory
+            .getILoggerFactory()).getLogger("splunk.logback").iteratorForAppenders();
+
+        Appender<ILoggingEvent> appender = null;
+
+        while (appenders.hasNext()) {
+            Appender<ILoggingEvent> a = appenders.next();
+            if (a instanceof HttpEventCollectorLogbackAppender) {
+                appender = a;
+            }
+        }
+        
+        Assert.assertNotNull(appender);
+
+        int socketTimeout = ((HttpEventCollectorLogbackAppender<ILoggingEvent>) appender)
+            .getsocket_timeout();
+        int connectionTimeout = ((HttpEventCollectorLogbackAppender<ILoggingEvent>)
+            appender).getconnection_timeout();
+        int connRequestTimeout = ((HttpEventCollectorLogbackAppender<ILoggingEvent>)
+            appender).getconnection_request_timeout();
+        int maxConnections = ((HttpEventCollectorLogbackAppender<ILoggingEvent>)
+            appender).getpool_max_connections();
+        long selectInterval = ((HttpEventCollectorLogbackAppender<ILoggingEvent>)
+            appender).getpool_select_interval();
+
+        Assert.assertEquals(expectedSocketTimeout, socketTimeout);
+        Assert.assertEquals(expectedConnectionTimeout, connectionTimeout);
+        Assert.assertEquals(expectedConnRequestTimeout, connRequestTimeout);
+        Assert.assertEquals(expectedMaxConn, maxConnections);
+        Assert.assertEquals(expectedSelectInterval, selectInterval);
     }
 }

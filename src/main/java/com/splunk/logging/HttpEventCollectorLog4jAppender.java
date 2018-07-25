@@ -66,19 +66,26 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
                          long batchCount,
                          long batchSize,
                          long retriesOnError,
+                         int socketTimeout,
+                         int connectionTimeout,
+                         int connectionRequestTimeout,
+                         int poolMaxConnections,
+                         long poolSelectInterval,
                          String sendMode,
                          String middleware,
                          final String disableCertificateValidation)
     {
         super(name, filter, layout, ignoreExceptions);
-        Dictionary<String, String> metadata = new Hashtable<String, String>();
+        Dictionary<String, String> metadata = new Hashtable<>();
         metadata.put(HttpEventCollectorSender.MetadataHostTag, host != null ? host : "");
         metadata.put(HttpEventCollectorSender.MetadataIndexTag, index != null ? index : "");
         metadata.put(HttpEventCollectorSender.MetadataSourceTag, source != null ? source : "");
         metadata.put(HttpEventCollectorSender.MetadataSourceTypeTag, sourcetype != null ? sourcetype : "");
         metadata.put(HttpEventCollectorSender.MetadataMessageFormatTag, messageFormat != null ? messageFormat : "");
 
-        this.sender = new HttpEventCollectorSender(url, token, channel, type, batchInterval, batchCount, batchSize, sendMode, metadata);
+        this.sender = new HttpEventCollectorSender(url, token, channel, type, batchInterval, 
+            batchCount, batchSize, socketTimeout, connectionTimeout, connectionRequestTimeout, 
+            poolMaxConnections, poolSelectInterval, sendMode, metadata);
 
         // plug a user middleware
         if (middleware != null && !middleware.isEmpty()) {
@@ -125,6 +132,11 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
             @PluginAttribute("batch_size_count") final String batchCount,
             @PluginAttribute("batch_interval") final String batchInterval,
             @PluginAttribute("retries_on_error") final String retriesOnError,
+            @PluginAttribute(value = "socket_timeout", defaultInt =  -1) final int socketTimeout,
+            @PluginAttribute(value = "connection_timeout", defaultInt = -1) final int connectionTimeout,
+            @PluginAttribute(value = "connection_request_timeout", defaultInt = -1) final int connectionRequestTimeout,
+            @PluginAttribute(value = "pool_select_interval", defaultLong = 1000L) final long poolSelectInterval,
+            @PluginAttribute(value = "pool_max_connections", defaultInt = 0) final int poolMaxConnections,
             @PluginAttribute("send_mode") final String sendMode,
             @PluginAttribute("middleware") final String middleware,
             @PluginAttribute("disableCertificateValidation") final String disableCertificateValidation,
@@ -172,6 +184,11 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
                 parseInt(batchCount, HttpEventCollectorSender.DefaultBatchCount),
                 parseInt(batchSize, HttpEventCollectorSender.DefaultBatchSize),
                 parseInt(retriesOnError, 0),
+                socketTimeout,
+                connectionTimeout,
+                connectionRequestTimeout,
+                poolMaxConnections,
+                poolSelectInterval,
                 sendMode,
                 middleware,
                 disableCertificateValidation);

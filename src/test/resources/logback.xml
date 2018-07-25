@@ -59,6 +59,11 @@ under the License.
         <sourcetype>battlecat</sourcetype>
         <messageFormat>text</messageFormat>
         <middleware>HttpEventCollectorUnitTestMiddleware</middleware>
+        <socket_timeout>6000</socket_timeout>
+        <connection_timeout>12000</connection_timeout>
+        <connection_request_timeout>3000</connection_request_timeout>
+        <pool_max_connections>128</pool_max_connections>
+        <pool_select_interval>5000</pool_select_interval>
         <layout class="ch.qos.logback.classic.PatternLayout">
             <pattern>%msg</pattern>
         </layout>

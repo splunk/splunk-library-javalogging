@@ -17,7 +17,11 @@
         <send_mode>%user_send_mode%</send_mode>
         <send_mode>%user_send_mode%</send_mode>
         <middleware>%user_middleware%</middleware>
-
+        <socket_timeout>%user_socket_timeout%</socket_timeout>
+        <connection_timeout>%user_connection_timeout%</connection_timeout>
+        <connection_request_timeout>%user_connection_request_timeout%</connection_request_timeout>
+        <pool_max_connections>%user_pool_max_connections%</pool_max_connections>
+        <pool_select_interval>%user_pool_select_interval%</pool_select_interval>
         <layout class="ch.qos.logback.classic.PatternLayout">
             <pattern>%msg</pattern>
         </layout>

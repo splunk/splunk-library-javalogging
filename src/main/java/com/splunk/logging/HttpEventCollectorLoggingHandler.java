@@ -109,6 +109,11 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
     private final String UrlConfTag = "url";
     private final String SendModeTag = "send_mode";
     private final String MiddlewareTag = "middleware";
+    private final String SocketTimeoutTag = "socket_timeout";
+    private final String ConnectionTimeoutTag = "connection_timeout";
+    private final String ConncetionRequestTimeoutTag = "connection_request_timeout";
+    private final String PoolMaxConnectionsTag = "pool_max_connections";
+    private final String PoolSelectIntervalTag = "pool_select_interval";
 
     /** HttpEventCollectorLoggingHandler c-or */
     public HttpEventCollectorLoggingHandler() {
@@ -153,10 +158,18 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
         includeLoggerName = getConfigurationBooleanProperty(IncludeLoggerNameConfTag, true);
         includeThreadName = getConfigurationBooleanProperty(IncludeThreadNameConfTag, true);
         includeException = getConfigurationBooleanProperty(IncludeExceptionConfTag, true);
+        
+        int socketTimeout = (int)getConfigurationNumericProperty(SocketTimeoutTag, -1);
+        int connectionTimeout = (int)getConfigurationNumericProperty(ConnectionTimeoutTag, -1);
+        int connectionRequestTimeout = (int)getConfigurationNumericProperty(ConncetionRequestTimeoutTag, -1);
+        int poolMaxConnections = (int)getConfigurationNumericProperty(PoolMaxConnectionsTag, 0);
+        long poolSelectInterval = getConfigurationNumericProperty(PoolSelectIntervalTag, 1000L);
 
         // delegate all configuration params to event sender
         this.sender = new HttpEventCollectorSender(
-                url, token, channel, type, delay, batchCount, batchSize, sendMode, metadata);
+                url, token, channel, type, delay, batchCount, batchSize, socketTimeout, 
+                connectionTimeout, connectionRequestTimeout, poolMaxConnections, 
+                poolSelectInterval, sendMode, metadata);
 
         // plug a user middleware
         if (middleware != null && !middleware.isEmpty()) {

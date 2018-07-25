@@ -18,45 +18,44 @@ package com.splunk.logging;
  * under the License.
  */
 
+import java.io.IOException;
+import java.io.Serializable;
+import java.security.cert.X509Certificate;
+import java.util.Dictionary;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
+import javax.net.ssl.SSLContext;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.config.CookieSpecs;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.concurrent.FutureCallback;
-import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
-import org.apache.http.conn.ssl.SSLContexts;
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.conn.ssl.TrustStrategy;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
 import org.apache.http.impl.nio.client.HttpAsyncClients;
+import org.apache.http.impl.nio.reactor.IOReactorConfig;
+import org.apache.http.ssl.SSLContexts;
 import org.apache.http.util.EntityUtils;
-
 import org.json.simple.JSONObject;
-
-import javax.net.ssl.SSLContext;
-import java.io.IOException;
-import java.io.Serializable;
-import java.security.cert.X509Certificate;
-import java.util.Dictionary;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.List;
-import java.util.LinkedList;
-import java.util.Map;
-import java.util.Locale;
-
-
 
 /**
  * This is an internal helper class that sends logging events to Splunk http event collector.
  */
 final class HttpEventCollectorSender extends TimerTask implements HttpEventCollectorMiddleware.IHttpSender {
-    public static final String MetadataTimeTag = "time";
-    public static final String MetadataHostTag = "host";
-    public static final String MetadataIndexTag = "index";
-    public static final String MetadataSourceTag = "source";
-    public static final String MetadataSourceTypeTag = "sourcetype";
-    public static final String MetadataMessageFormatTag = "messageFormat";
+  
+    static final String MetadataTimeTag = "time";
+    static final String MetadataHostTag = "host";
+    static final String MetadataIndexTag = "index";
+    static final String MetadataSourceTag = "source";
+    static final String MetadataSourceTypeTag = "sourcetype";
+    static final String MetadataMessageFormatTag = "messageFormat";
+    
     private static final String SPLUNKREQUESTCHANNELTag = "X-Splunk-Request-Channel";
     private static final String AuthorizationHeaderTag = "Authorization";
     private static final String AuthorizationHeaderScheme = "Splunk %s";
@@ -92,8 +91,20 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
     private long maxEventsBatchSize;
     private Dictionary<String, String> metadata;
     private Timer timer;
-    private List<HttpEventCollectorEventInfo> eventsBatch = new LinkedList<HttpEventCollectorEventInfo>();
+    private List<HttpEventCollectorEventInfo> eventsBatch = new LinkedList<>();
     private long eventsBatchSize = 0; // estimated total size of events batch
+  
+    /**
+     * Timeout values for the http connection. Time values are in milliseconds.
+     */
+    private int connectionTimeout;
+    private int socketTimeout;
+    private int connectionRequestTimeout;
+    private int poolMaxConnections;
+    private long poolSelectInterval;
+    
+    
+    
     private CloseableHttpAsyncClient httpClient;
     private boolean disableCertificateValidation = false;
     private SendMode sendMode = SendMode.Sequential;
@@ -104,22 +115,36 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
      * Initialize HttpEventCollectorSender
      * @param Url http event collector input server
      * @param token application token
+     * @param channel unique GUID for the client to send raw events to the server
+     * @param type event data type
      * @param delay batching delay
      * @param maxEventsBatchCount max number of events in a batch
      * @param maxEventsBatchSize max size of batch
+     * @param socketTimeout 
+     * @param connectionTimeout 
+     * @param connectionRequestTimeout 
+     * @param poolMaxConnections 
+     * @param poolSelectInterval 
+     * @param sendModeStr 
      * @param metadata events metadata
-     * @param channel unique GUID for the client to send raw events to the server
-     * @param type event data type
      */
     public HttpEventCollectorSender(
-            final String Url, final String token, final String channel, final String type,
-            long delay, long maxEventsBatchCount, long maxEventsBatchSize,
-            String sendModeStr,
-            Dictionary<String, String> metadata) {
+        final String Url, final String token, final String channel, final String type,
+        long delay, long maxEventsBatchCount, long maxEventsBatchSize,
+        int socketTimeout, int connectionTimeout, int connectionRequestTimeout, 
+        int poolMaxConnections, long poolSelectInterval,
+        String sendModeStr,
+        Dictionary<String, String> metadata) {
+      
         this.url = Url + HttpEventCollectorUriPath;
         this.token = token;
         this.channel = channel;
         this.type = type;
+        this.socketTimeout = socketTimeout;
+        this.connectionTimeout = connectionTimeout;
+        this.connectionRequestTimeout = connectionRequestTimeout;
+        this.poolMaxConnections = poolMaxConnections;
+        this.poolSelectInterval = poolSelectInterval;
 
         if ("Raw".equalsIgnoreCase(type)) {
             this.url = Url + HttpRawCollectorUriPath;
@@ -295,38 +320,60 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
     }
 
     private void startHttpClient() {
+      
         if (httpClient != null) {
-            // http client is already started
-            return;
+          // http client is already started
+          return;
         }
-        // limit max  number of async requests in sequential mode, 0 means "use
-        // default limit"
-        int maxConnTotal = sendMode == SendMode.Sequential ? 1 : 0;
-        if (! disableCertificateValidation) {
-            // create an http client that validates certificates
-            httpClient = HttpAsyncClients.custom()
-                    .setDefaultRequestConfig(RequestConfig.custom().setCookieSpec(CookieSpecs.STANDARD).build())
-                    .setMaxConnTotal(maxConnTotal)
-                    .build();
+
+      System.out.println("+++     Conn timeout: " + connectionTimeout);
+      System.out.println("+++     Sock timeout: " + socketTimeout);
+      System.out.println("+++     Cnrq timeout: " + connectionRequestTimeout);
+      System.out.println("+++   Max conn total: " + poolMaxConnections);
+      System.out.println("+++  Select interval: " + poolSelectInterval);
+        
+        int maxConnTotal = sendMode == SendMode.Sequential ? 1 : poolMaxConnections;
+    
+        RequestConfig requestConfig = RequestConfig.custom()
+            .setCookieSpec(CookieSpecs.STANDARD)
+            .setSocketTimeout(socketTimeout)
+            .setConnectTimeout(connectionTimeout)
+            .setConnectionRequestTimeout(connectionRequestTimeout)
+            .build();
+        
+        IOReactorConfig ioReactorConfig = IOReactorConfig.custom()
+            .setConnectTimeout(connectionTimeout)
+            .setSoTimeout(socketTimeout)
+            .setSelectInterval(poolSelectInterval).build();
+    
+        if (!disableCertificateValidation) {
+          // create an http client that validates certificates
+          httpClient = HttpAsyncClients.custom()
+              .setDefaultIOReactorConfig(ioReactorConfig)
+              .setDefaultRequestConfig(requestConfig)
+              .setDefaultIOReactorConfig(ioReactorConfig)
+              .setMaxConnTotal(maxConnTotal)
+              .build();
         } else {
-            // create strategy that accepts all certificates
-            TrustStrategy acceptingTrustStrategy = new TrustStrategy() {
-                public boolean isTrusted(X509Certificate[] certificate,
-                                         String type) {
-                    return true;
-                }
-            };
-            SSLContext sslContext = null;
-            try {
-                sslContext = SSLContexts.custom().loadTrustMaterial(
-                        null, acceptingTrustStrategy).build();
-                httpClient = HttpAsyncClients.custom()
-                        .setDefaultRequestConfig(RequestConfig.custom().setCookieSpec(CookieSpecs.STANDARD).build())
-                        .setMaxConnTotal(maxConnTotal)
-                        .setHostnameVerifier(SSLConnectionSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER)
-                        .setSSLContext(sslContext)
-                        .build();
-            } catch (Exception e) { }
+          // create strategy that accepts all certificates
+          TrustStrategy acceptingTrustStrategy = new TrustStrategy() {
+            public boolean isTrusted(X509Certificate[] certificate, String type) {
+              return true;
+            }
+          };
+          SSLContext sslContext = null;
+          try {
+            sslContext = SSLContexts.custom().loadTrustMaterial(
+                null, acceptingTrustStrategy).build();
+    
+            httpClient = HttpAsyncClients.custom()
+                .setDefaultIOReactorConfig(ioReactorConfig)
+                .setDefaultRequestConfig(requestConfig)
+                .setMaxConnTotal(maxConnTotal)
+                .setSSLHostnameVerifier(NoopHostnameVerifier.INSTANCE)
+                .setSSLContext(sslContext)
+                .build();
+          } catch (Exception e) { }
         }
         httpClient.start();
     }

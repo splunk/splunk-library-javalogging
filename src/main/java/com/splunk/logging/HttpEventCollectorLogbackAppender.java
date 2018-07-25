@@ -51,6 +51,11 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
     private long _batchSize = 0;
     private String _sendMode;
     private long _retriesOnError = 0;
+    private int _socketTimeout = -1;
+    private int _connectionTimeout = -1;
+    private long _poolSelectInterval = 1000L;
+    private int _poolMaxConnections;
+    private int _connectionRequestTimeout = -1;
 
     @Override
     public void start() {
@@ -58,7 +63,7 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
             return;
 
         // init events sender
-        Dictionary<String, String> metadata = new Hashtable<String, String>();
+        Dictionary<String, String> metadata = new Hashtable<>();
         if (_host != null)
             metadata.put(HttpEventCollectorSender.MetadataHostTag, _host);
 
@@ -74,8 +79,9 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
         if (_messageFormat != null)
             metadata.put(HttpEventCollectorSender.MetadataMessageFormatTag, _messageFormat);
 
-        this.sender = new HttpEventCollectorSender(
-                _url, _token, _channel, _type, _batchInterval, _batchCount, _batchSize, _sendMode, metadata);
+        this.sender = new HttpEventCollectorSender(_url, _token, _channel, _type, _batchInterval,
+            _batchCount, _batchSize, _socketTimeout, _connectionTimeout, _connectionRequestTimeout, 
+            _poolMaxConnections, _poolSelectInterval, _sendMode, metadata);
 
         // plug a user middleware
         if (_middleware != null && !_middleware.isEmpty()) {
@@ -287,6 +293,46 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
 
     public String getDisableCertificateValidation() {
         return _disableCertificateValidation;
+    }
+
+    public int getsocket_timeout() {
+        return _socketTimeout;
+    }
+
+    public void setsocket_timeout(int _socketTimeout) {
+        this._socketTimeout = _socketTimeout;
+    }
+
+    public int getconnection_timeout() {
+        return _connectionTimeout;
+    }
+
+    public void setconnection_timeout(int _connectionTimeout) {
+        this._connectionTimeout = _connectionTimeout;
+    }
+
+    public long getpool_select_interval() {
+        return _poolSelectInterval;
+    }
+
+    public void setpool_select_interval(long _poolSelectInterval) {
+        this._poolSelectInterval = _poolSelectInterval;
+    }
+
+    public int getpool_max_connections() {
+        return _poolMaxConnections;
+    }
+
+    public void setpool_max_connections(int _poolMaxConnections) {
+        this._poolMaxConnections = _poolMaxConnections;
+    }
+
+    public int getconnection_request_timeout() {
+        return _connectionRequestTimeout;
+    }
+
+    public void setconnection_request_timeout(int _connectionRequestTimeout) {
+        this._connectionRequestTimeout = _connectionRequestTimeout;
     }
 
     private static long parseLong(String string, int defaultValue) {

@@ -43,6 +43,7 @@ public class HttpEventCollectorUnitTest {
         userInputs.put("user_middleware", "HttpEventCollectorUnitTestMiddleware");
         userInputs.put("user_batch_size_count", "1");
         userInputs.put("user_batch_size_bytes", "0");
+        userInputs.put("user_eventBodySerializer", "DoesNotExistButShouldNotCrashTest");
         TestUtil.resetLog4j2Configuration("log4j2_template.xml", "log4j2.xml", userInputs);
         org.apache.logging.log4j.Logger LOG4J = org.apache.logging.log4j.LogManager.getLogger(loggerName);
 
@@ -71,6 +72,7 @@ public class HttpEventCollectorUnitTest {
         userInputs.put("user_logger_name", loggerName);
         userInputs.put("user_httpEventCollector_token", "11111111-2222-3333-4444-555555555555");
         userInputs.put("user_middleware", "HttpEventCollectorUnitTestMiddleware");
+        userInputs.put("user_eventBodySerializer", "DoesNotExistButShouldNotCrashTest");
         TestUtil.resetLogbackConfiguration("logback_template.xml", "logback.xml", userInputs);
         org.slf4j.Logger LOGBACK = org.slf4j.LoggerFactory.getLogger(loggerName);
 
@@ -101,7 +103,8 @@ public class HttpEventCollectorUnitTest {
             "com.splunk.logging.HttpEventCollectorLoggingHandler.batch_size_count=0\n" +
             "com.splunk.logging.HttpEventCollectorLoggingHandler.batch_size_bytes=0\n" +
             "com.splunk.logging.HttpEventCollectorLoggingHandler.batch_interval=0\n" +
-            "com.splunk.logging.HttpEventCollectorLoggingHandler.middleware=HttpEventCollectorUnitTestMiddleware\n"
+            "com.splunk.logging.HttpEventCollectorLoggingHandler.middleware=HttpEventCollectorUnitTestMiddleware\n" +
+            "com.splunk.logging.HttpEventCollectorLoggingHandler.eventBodySerializer=DoesNotExistButShouldNotCrashTest\n"
         );
 
         // send 3 events

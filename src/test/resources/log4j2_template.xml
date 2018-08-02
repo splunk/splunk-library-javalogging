@@ -16,6 +16,7 @@
               disableCertificateValidation="true"
               send_mode="%user_send_mode%"
               middleware="%user_middleware%"
+              eventBodySerializer="%user_eventBodySerializer%"
                 >
 
             <PatternLayout pattern="%m"/>

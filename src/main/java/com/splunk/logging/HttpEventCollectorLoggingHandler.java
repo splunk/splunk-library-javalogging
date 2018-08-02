@@ -149,6 +149,7 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
         long retriesOnError = getConfigurationNumericProperty(RetriesOnErrorTag, 0);
         String sendMode = getConfigurationProperty(SendModeTag, "sequential");
         String middleware = getConfigurationProperty(MiddlewareTag, "");
+        String eventBodySerializer = getConfigurationProperty("eventBodySerializer", "");
 
         includeLoggerName = getConfigurationBooleanProperty(IncludeLoggerNameConfTag, true);
         includeThreadName = getConfigurationBooleanProperty(IncludeThreadNameConfTag, true);
@@ -162,7 +163,13 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
         if (middleware != null && !middleware.isEmpty()) {
             try {
                 this.sender.addMiddleware((HttpEventCollectorMiddleware.HttpSenderMiddleware)(Class.forName(middleware).newInstance()));
-            } catch (Exception e) {}
+            } catch (Exception ignored) {}
+        }
+
+        if (eventBodySerializer != null && !eventBodySerializer.isEmpty()) {
+            try {
+                this.sender.setEventBodySerializer((EventBodySerializer) Class.forName(eventBodySerializer).newInstance());
+            } catch (final Exception ignored) {}
         }
 
         // plug retries middleware

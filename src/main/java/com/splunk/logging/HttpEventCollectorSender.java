@@ -270,13 +270,13 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
         putIfPresent(event, MetadataSourceTypeTag, metadata.get(MetadataSourceTypeTag));
 
         // Parse message on the basis of format
-        final String parsedMessage = this.messageFormat.parse(eventInfo.getMessage()).toString();
+        final Object parsedMessage = this.messageFormat.parse(eventInfo.getMessage());
 
         if (eventBodySerializer == null) {
             eventBodySerializer = new EventBodySerializer.Default();
         }
 
-        event.put("event", eventBodySerializer.serializeEventBody(eventInfo, parsedMessage));
+        event.put("event", eventBodySerializer.serializeEventBodyAsJson(eventInfo, parsedMessage));
         return event.toString();
     }
 

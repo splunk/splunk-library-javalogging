@@ -464,7 +464,7 @@ public final class HttpEventCollector_JavaLoggingTest {
         final JSONObject jsonObject = new JSONObject();
         jsonObject.put("transactionId", "11");
         jsonObject.put("userId", "21");
-        jsonObject.put("eventTimestap", timeMillsec);
+        jsonObject.put("eventTimestamp", timeMillsec);
 
         final Logger logger = Logger.getLogger(loggerName);
 

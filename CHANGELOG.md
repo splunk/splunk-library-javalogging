@@ -1,5 +1,9 @@
 # Splunk Logging for Java Changelog
 
+## Version 1.6.1
+
+* TcpAppender performance improvement, prevents 100% CPU usage [#85](https://github.com/splunk/splunk-library-javalogging/pull/85).
+
 ## Version 1.6.0
 * Changed messagedMimeType metadata property to messageFormat
 * Fixes unit tests, and performance issues

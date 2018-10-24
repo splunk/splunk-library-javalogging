@@ -1,6 +1,6 @@
 # Splunk Logging for Java
 
-#### Version 1.6.0
+#### Version 1.6.1
 
 This project provides utilities to easily log data using Splunk's recommended 
 best practices to any supported logger, using any of the three major Java 

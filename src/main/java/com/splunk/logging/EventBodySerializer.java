@@ -11,15 +11,10 @@ public interface EventBodySerializer {
         Object formattedMessage
     );
 
-    JSONObject serializeEventBodyAsJson(
-            HttpEventCollectorEventInfo eventInfo,
-            Object formattedMessage
-    );
-
     class Default implements EventBodySerializer {
 
         @Override
-        public JSONObject serializeEventBodyAsJson(
+        public String serializeEventBody(
                 final HttpEventCollectorEventInfo eventInfo,
                 final Object formattedMessage
         ) {
@@ -45,16 +40,7 @@ public interface EventBodySerializer {
                 putIfPresent(body, "marker", marker.toString());
             }
 
-            return body;
-        }
-
-        @Override
-        public String serializeEventBody(
-            final HttpEventCollectorEventInfo eventInfo,
-            final Object formattedMessage
-        ) {
-
-            return this.serializeEventBodyAsJson(eventInfo,formattedMessage).toString();
+            return body.toString();
         }
 
         private void putIfPresent(final JSONObject obj, String tag, Object value) {

@@ -276,7 +276,7 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
             eventBodySerializer = new EventBodySerializer.Default();
         }
 
-        event.put("event", eventBodySerializer.serializeEventBodyAsJson(eventInfo, parsedMessage));
+        event.put("event", eventBodySerializer.serializeEventBody(eventInfo, parsedMessage));
         return event.toString();
     }
 

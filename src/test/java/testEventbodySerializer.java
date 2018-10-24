@@ -28,7 +28,7 @@ import java.util.List;
 import java.util.logging.Logger;
 
 // Implement the interface of EventBodySerializer for testing
-public class testEventBodySerializer implements EventBodySerializer {
+public class TestEventBodySerializer implements EventBodySerializer {
 
     @Override
     public String serializeEventBody(

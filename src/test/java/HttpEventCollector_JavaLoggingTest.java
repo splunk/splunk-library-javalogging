@@ -462,7 +462,7 @@ public final class HttpEventCollector_JavaLoggingTest {
         HashMap<String, String> userInputs = new HashMap<String, String>();
         userInputs.put("user_httpEventCollector_token", token);
         userInputs.put("user_logger_name", loggerName);
-        userInputs.put("user_eventBodySerializer", "testEventBodySerializer");
+        userInputs.put("user_eventBodySerializer", "TestEventBodySerializer");
 
         TestUtil.resetJavaLoggingConfiguration("logging_template.properties", "logging.properties", userInputs);
 

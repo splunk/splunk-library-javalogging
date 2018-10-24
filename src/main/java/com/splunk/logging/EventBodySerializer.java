@@ -7,8 +7,8 @@ import org.json.simple.JSONObject;
 public interface EventBodySerializer {
 
     String serializeEventBody(
-        HttpEventCollectorEventInfo eventInfo,
-        Object formattedMessage
+            HttpEventCollectorEventInfo eventInfo,
+            Object formattedMessage
     );
 
     class Default implements EventBodySerializer {
@@ -19,35 +19,28 @@ public interface EventBodySerializer {
                 final Object formattedMessage
         ) {
             final JSONObject body = new JSONObject();
-            putIfPresent(body, "severity", eventInfo.getSeverity());
-            putIfPresent(body, "message", formattedMessage);
-            putIfPresent(body, "logger", eventInfo.getLoggerName());
-            putIfPresent(body, "thread", eventInfo.getThreadName());
+            HttpEventCollectorSender.putIfPresent(body, "severity", eventInfo.getSeverity());
+            HttpEventCollectorSender.putIfPresent(body, "message", formattedMessage);
+            HttpEventCollectorSender.putIfPresent(body, "logger", eventInfo.getLoggerName());
+            HttpEventCollectorSender.putIfPresent(body, "thread", eventInfo.getThreadName());
             // add an exception record if and only if there is one
             // in practice, the message also has the exception information attached
             if (eventInfo.getExceptionMessage() != null) {
-                putIfPresent(body, "exception", eventInfo.getExceptionMessage());
+                HttpEventCollectorSender.putIfPresent(body, "exception", eventInfo.getExceptionMessage());
             }
 
             // add properties if and only if there are any
-            final Map<String,String> props = eventInfo.getProperties();
+            final Map<String, String> props = eventInfo.getProperties();
             if (props != null && !props.isEmpty()) {
                 body.put("properties", props);
             }
             // add marker if and only if there is one
             final Serializable marker = eventInfo.getMarker();
             if (marker != null) {
-                putIfPresent(body, "marker", marker.toString());
+                HttpEventCollectorSender.putIfPresent(body, "marker", marker.toString());
             }
 
             return body.toString();
-        }
-
-        private void putIfPresent(final JSONObject obj, String tag, Object value) {
-            if (value != null && value instanceof String && ((String) value).isEmpty()) {
-                return;
-            }
-            obj.put(tag, value);
         }
     }
 }

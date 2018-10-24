@@ -245,7 +245,7 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
     }
 
     @SuppressWarnings("unchecked")
-    private static void putIfPresent(JSONObject collection, String tag, Object value) {
+    public static void putIfPresent(JSONObject collection, String tag, Object value) {
         if (value != null) {
             if (value instanceof String && ((String) value).length() == 0) {
                 // Do not add blank string

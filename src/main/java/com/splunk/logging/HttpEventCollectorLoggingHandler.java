@@ -169,7 +169,10 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
         if (eventBodySerializer != null && !eventBodySerializer.isEmpty()) {
             try {
                 this.sender.setEventBodySerializer((EventBodySerializer) Class.forName(eventBodySerializer).newInstance());
-            } catch (final Exception ignored) {}
+            } catch (final Exception ex) {
+                //output error msg but not fail, it will default to use the default EventBodySerializer
+                System.out.println(ex);
+            }
         }
 
         // plug retries middleware

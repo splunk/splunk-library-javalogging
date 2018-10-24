@@ -50,7 +50,7 @@ import java.util.Locale;
 /**
  * This is an internal helper class that sends logging events to Splunk http event collector.
  */
-final class HttpEventCollectorSender extends TimerTask implements HttpEventCollectorMiddleware.IHttpSender {
+public class HttpEventCollectorSender extends TimerTask implements HttpEventCollectorMiddleware.IHttpSender {
     public static final String MetadataTimeTag = "time";
     public static final String MetadataHostTag = "host";
     public static final String MetadataIndexTag = "index";
@@ -99,6 +99,7 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
     private SendMode sendMode = SendMode.Sequential;
     private HttpEventCollectorMiddleware middleware = new HttpEventCollectorMiddleware();
     private final MessageFormat messageFormat;
+    private EventBodySerializer eventBodySerializer;
 
     /**
      * Initialize HttpEventCollectorSender
@@ -135,12 +136,12 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
         this.maxEventsBatchCount = maxEventsBatchCount;
         this.maxEventsBatchSize = maxEventsBatchSize;
         this.metadata = metadata;
-        
+
         final String format = metadata.get(MetadataMessageFormatTag);
         // Get MessageFormat enum from format string. Do this once per instance in constructor to avoid expensive operation in
         // each event sender call
         this.messageFormat = MessageFormat.fromFormat(format);
-        
+
         if (sendModeStr != null) {
             if (sendModeStr.equals(SendModeSequential))
                 this.sendMode = SendMode.Sequential;
@@ -239,8 +240,12 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
         disableCertificateValidation = true;
     }
 
+    public void setEventBodySerializer(EventBodySerializer eventBodySerializer) {
+        this.eventBodySerializer = eventBodySerializer;
+    }
+
     @SuppressWarnings("unchecked")
-    private static void putIfPresent(JSONObject collection, String tag, Object value) {
+    public static void putIfPresent(JSONObject collection, String tag, Object value) {
         if (value != null) {
             if (value instanceof String && ((String) value).length() == 0) {
                 // Do not add blank string
@@ -263,34 +268,15 @@ final class HttpEventCollectorSender extends TimerTask implements HttpEventColle
         putIfPresent(event, MetadataIndexTag, metadata.get(MetadataIndexTag));
         putIfPresent(event, MetadataSourceTag, metadata.get(MetadataSourceTag));
         putIfPresent(event, MetadataSourceTypeTag, metadata.get(MetadataSourceTypeTag));
-        
+
         // Parse message on the basis of format
         final Object parsedMessage = this.messageFormat.parse(eventInfo.getMessage());
-        
-        // event body
-        JSONObject body = new JSONObject();
-        putIfPresent(body, "severity", eventInfo.getSeverity());
-        putIfPresent(body, "message", parsedMessage);
-        putIfPresent(body, "logger", eventInfo.getLoggerName());
-        putIfPresent(body, "thread", eventInfo.getThreadName());
-        // add an exception record if and only if there is one
-        // in practice, the message also has the exception information attached
-        if (eventInfo.getExceptionMessage() != null) {
-            putIfPresent(body, "exception", eventInfo.getExceptionMessage());
+
+        if (eventBodySerializer == null) {
+            eventBodySerializer = new EventBodySerializer.Default();
         }
 
-        // add properties if and only if there are any
-        final Map<String,String> props = eventInfo.getProperties();
-        if (props != null && !props.isEmpty()) {
-            body.put("properties", props);
-        }
-        // add marker if and only if there is one
-        final Serializable marker = eventInfo.getMarker();
-        if (marker != null) {
-            putIfPresent(body, "marker", marker.toString());
-        }
-        // join event and body
-        event.put("event", body);
+        event.put("event", eventBodySerializer.serializeEventBody(eventInfo, parsedMessage));
         return event.toString();
     }
 

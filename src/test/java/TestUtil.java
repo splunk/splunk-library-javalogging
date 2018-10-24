@@ -377,7 +377,7 @@ public class TestUtil {
     /*
     verify each of the message in msgs appeared and appeared only once in splunk
      */
-    public static void verifyEventsSentToSplunk(List<String> msgs) throws IOException {
+    public static void verifyEventsSentToSplunk(List<String> msgs) throws IOException, InterruptedException {
         connectToSplunk();
 
         for (String msg : msgs) {
@@ -392,7 +392,7 @@ public class TestUtil {
                 } else {
                     resultsStream = service.oneshotSearch("search " + msg);
                 }
-                
+
                 resultsReader = new ResultsReaderXml(resultsStream);
 
                 //verify has one and only one record return
@@ -404,6 +404,8 @@ public class TestUtil {
 
                 if (eventCount > 0)
                     break;
+
+                Thread.sleep(5000);
             }
 
             resultsReader.close();
@@ -425,14 +427,14 @@ public class TestUtil {
         boolean firstSearchTerm = true;
         for (final Object entryObject : jsonObject.entrySet()) {
             final Entry jsonEntry = (Entry) entryObject;
-             if (firstSearchTerm) {
-                 searchQuery += String.format("search \"message.%s\"=%s", jsonEntry.getKey(), jsonEntry.getValue());
-                 firstSearchTerm = false;
-             } else {
-                 searchQuery += String.format(" | search \"message.%s\"=%s", jsonEntry.getKey(), jsonEntry.getValue());
-             }
+            if (firstSearchTerm) {
+                searchQuery += String.format("search \"message.%s\"=%s", jsonEntry.getKey(), jsonEntry.getValue());
+                firstSearchTerm = false;
+            } else {
+                searchQuery += String.format(" | search \"message.%s\"=%s", jsonEntry.getKey(), jsonEntry.getValue());
+            }
         }
-        
+
         return service.oneshotSearch(searchQuery);
     }
 

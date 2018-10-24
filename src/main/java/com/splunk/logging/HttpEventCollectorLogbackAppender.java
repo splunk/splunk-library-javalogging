@@ -46,6 +46,7 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
     private String _type;
     private String _disableCertificateValidation;
     private String _middleware;
+    private String _eventBodySerializer;
     private long _batchInterval = 0;
     private long _batchCount = 0;
     private long _batchSize = 0;
@@ -81,7 +82,13 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
         if (_middleware != null && !_middleware.isEmpty()) {
             try {
                 this.sender.addMiddleware((HttpEventCollectorMiddleware.HttpSenderMiddleware)(Class.forName(_middleware).newInstance()));
-            } catch (Exception e) {}
+            } catch (Exception ignored) {}
+        }
+
+        if (_eventBodySerializer != null && !_eventBodySerializer.isEmpty()) {
+            try {
+                this.sender.setEventBodySerializer((EventBodySerializer) Class.forName(_eventBodySerializer).newInstance());
+            } catch (final Exception ignored) {}
         }
 
         // plug resend middleware
@@ -120,7 +127,7 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
         }
 
         MarkerConverter c = new MarkerConverter();
-        if (event != null && started) {
+        if (this.started) {
             this.sender.send(
                     event.getLevel().toString(),
                     _layout.doLayout((E) event),
@@ -257,6 +264,10 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
         return this._index;
     }
 
+    public String getEventBodySerializer() {
+        return _eventBodySerializer;
+    }
+
     public void setDisableCertificateValidation(String disableCertificateValidation) {
         this._disableCertificateValidation = disableCertificateValidation;
     }
@@ -287,6 +298,10 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
 
     public String getDisableCertificateValidation() {
         return _disableCertificateValidation;
+    }
+
+    public void setEventBodySerializer(String eventBodySerializer) {
+        this._eventBodySerializer = eventBodySerializer;
     }
 
     private static long parseLong(String string, int defaultValue) {

@@ -16,9 +16,11 @@
 
 import java.util.*;
 
+import com.splunk.logging.EventBodySerializer;
 import com.splunk.logging.HttpEventCollectorErrorHandler;
 import com.splunk.logging.HttpEventCollectorEventInfo;
 
+import com.splunk.logging.HttpEventCollectorSender;
 import org.json.simple.JSONObject;
 import org.junit.Assert;
 import org.junit.Test;
@@ -32,7 +34,7 @@ public final class HttpEventCollector_JavaLoggingTest {
     List<HttpEventCollectorErrorHandler.ServerErrorException> logEx = new ArrayList<HttpEventCollectorErrorHandler.ServerErrorException>();
 
     /**
-     * sending a message via httplogging using log4j2 to splunk
+     * sending a message via httplogging using java.logging to splunk
      */
     @Test
     public void canSendEventUsingJavaLogging() throws Exception {
@@ -58,7 +60,7 @@ public final class HttpEventCollector_JavaLoggingTest {
     }
 
     /**
-     * sending a message via httplogging using log4j2 to splunk
+     * sending a message via httplogging using java.logging to splunk
      */
     @Test
     public void canSendEventUsingJavaLoggingWithOptions() throws Exception {
@@ -86,7 +88,7 @@ public final class HttpEventCollector_JavaLoggingTest {
     }
 
     /**
-     * sending batched message via httplogging to splunk
+     * sending batched message via http java.logging to splunk
      */
     @Test
     public void sendBatchedEventsUsingJavaLogging() throws Exception {
@@ -132,7 +134,7 @@ public final class HttpEventCollector_JavaLoggingTest {
         loggerName = "splunkBatchLoggerCount";
         userInputs.clear();
         userInputs.put("user_httpEventCollector_token", token);
-        userInputs.put("user_batch_interval","0");
+        userInputs.put("user_batch_interval", "0");
         userInputs.put("user_batch_size_count", "5");
         userInputs.put("user_logger_name", loggerName);
         userInputs.put("user_host", "host.example.com");
@@ -188,7 +190,7 @@ public final class HttpEventCollector_JavaLoggingTest {
         String loggerName = "splunkBatchLoggerSize";
         HashMap<String, String> userInputs = new HashMap<String, String>();
         userInputs.put("user_httpEventCollector_token", token);
-        userInputs.put("user_batch_interval","0");
+        userInputs.put("user_batch_interval", "0");
         userInputs.put("user_batch_size_bytes", "500");
         userInputs.put("user_logger_name", loggerName);
         userInputs.put("user_host", "host.example.com");
@@ -332,7 +334,7 @@ public final class HttpEventCollector_JavaLoggingTest {
                 break;
             Thread.sleep(1000);
         }
-        
+
         // Enable httpEventCollector endpoint
         TestUtil.enableHttpEventCollector();
 
@@ -400,7 +402,7 @@ public final class HttpEventCollector_JavaLoggingTest {
     @Test
     public void eventsIsIndexedInOrderOfSent() throws Exception {
         TestUtil.enableHttpEventCollector();
-        String indexName="httpevents_in_order_jl";
+        String indexName = "httpevents_in_order_jl";
         TestUtil.createIndex(indexName);
         String token = TestUtil.createHttpEventCollectorToken(httpEventCollectorName);
 
@@ -418,9 +420,9 @@ public final class HttpEventCollector_JavaLoggingTest {
         List<String> msgs = new ArrayList<String>();
         Date date = new Date();
         int totalEventsCount = 1000;
-        String prefix="javalogging multiple events";
+        String prefix = "javalogging multiple events";
         for (int i = 0; i < totalEventsCount; i++) {
-            String jsonMsg = String.format("%s %s", prefix,i);
+            String jsonMsg = String.format("%s %s", prefix, i);
             logger.info(jsonMsg);
             msgs.add(jsonMsg);
         }
@@ -447,6 +449,35 @@ public final class HttpEventCollector_JavaLoggingTest {
         canSendJsonEventUsingUtilLoggerWithSourceType("battlecat_test");
     }
 
+    /**
+     * sending a message using user-defined EventBodySerializer through java.logging to splunk
+     */
+    @Test
+    public void canSendEventUsingJavaLoggingWithUserEventBodySerializer() throws Exception {
+        TestUtil.enableHttpEventCollector();
+
+        String token = TestUtil.createHttpEventCollectorToken(httpEventCollectorName);
+
+        String loggerName = "splunkLoggerBodySerializer";
+        HashMap<String, String> userInputs = new HashMap<String, String>();
+        userInputs.put("user_httpEventCollector_token", token);
+        userInputs.put("user_logger_name", loggerName);
+        userInputs.put("user_eventBodySerializer", "TestEventBodySerializer");
+
+        TestUtil.resetJavaLoggingConfiguration("logging_template.properties", "logging.properties", userInputs);
+
+        Date date = new Date();
+        String jsonMsg = String.format("EventDate:%s, EventMsg:test event for java logging With User EventBodySerializer", date.toString());
+
+        Logger logger = Logger.getLogger(loggerName);
+        logger.info(jsonMsg);
+
+        TestUtil.verifyOneAndOnlyOneEventSentToSplunk("user-prefix:" + jsonMsg);
+
+        TestUtil.deleteHttpEventCollectorToken(httpEventCollectorName);
+    }
+
+
     @SuppressWarnings("unchecked")
     private void canSendJsonEventUsingUtilLoggerWithSourceType(final String sourceType) throws Exception {
         final String token = TestUtil.createHttpEventCollectorToken(httpEventCollectorName);
@@ -464,7 +495,7 @@ public final class HttpEventCollector_JavaLoggingTest {
         final JSONObject jsonObject = new JSONObject();
         jsonObject.put("transactionId", "11");
         jsonObject.put("userId", "21");
-        jsonObject.put("eventTimestap", timeMillsec);
+        jsonObject.put("eventTimestamp", timeMillsec);
 
         final Logger logger = Logger.getLogger(loggerName);
 
@@ -483,5 +514,4 @@ public final class HttpEventCollector_JavaLoggingTest {
         TestUtil.verifyEventsSentToSplunk(msgs);
         TestUtil.deleteHttpEventCollectorToken(httpEventCollectorName);
     }
-    
 }

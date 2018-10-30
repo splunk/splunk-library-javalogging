@@ -1,5 +1,11 @@
 # Splunk Logging for Java Changelog
 
+## Version 1.6.2
+
+*  Add support to allow users to define their own event body serializer for HTTP event adapter: Simply create a class implementing `com.splunk.logging.EventBodySerializer`, 
+and add the full class name as a property (`eventBodySerializer`) to the adapter. 
+Default will be a JSON event body containing message, severity, and other properties. [#86](https://github.com/splunk/splunk-library-javalogging/pull/86).
+
 ## Version 1.6.1
 
 * TcpAppender performance improvement, prevents 100% CPU usage [#85](https://github.com/splunk/splunk-library-javalogging/pull/85).

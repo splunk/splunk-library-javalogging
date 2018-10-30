@@ -1,6 +1,6 @@
 # Splunk Logging for Java
 
-#### Version 1.6.1
+#### Version 1.6.2
 
 This project provides utilities to easily log data using Splunk's recommended 
 best practices to any supported logger, using any of the three major Java 
@@ -83,6 +83,8 @@ LOGGER.info("hello world");
 
 #### Message Format
 An event message format could be configured for HTTP event appender in logging framework configuration. It could have one of the two possible values - text, json. It is an optional property with default value as 'text'. Message format 'json' is used where the event message could be in json format.
+
+It is also possible to use a custom event body serializer for the HTTP event adapter, to format the logging event however you please. Simply create a class implementing `com.splunk.logging.EventBodySerializer`, and add the full class name as a property (`eventBodySerializer`) to the adapter. Default will be a JSON event body containing message, severity, and other properties.
 
 For more information, see http://dev.splunk.com/view/SP-CAAAE2K.
 

@@ -30,7 +30,6 @@ enum MessageFormat {
      * 
      * 
      * @param message the message string
-     * @param format the message format
      * 
      * @return parsed message object based on format
      */

@@ -21,9 +21,9 @@ package com.splunk.logging;
 import java.util.List;
 
 /**
- * @brief Splunk http event collector middleware implementation.
+ * Splunk http event collector middleware implementation.
  *
- * @details
+ * details
  * A user application can utilize HttpEventCollectorMiddleware to customize the behavior
  * of sending events to Splunk. A user application plugs middleware components to
  * the HttpEventCollectorSender by calling addMiddleware method.

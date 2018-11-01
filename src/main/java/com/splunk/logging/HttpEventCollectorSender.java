@@ -163,8 +163,7 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
     }
 
     /**
-     * Send a single logging event
-     * @note in case of batching the event isn't sent immediately
+     * Send a single logging event in case of batching the event isn't sent immediately
      * @param severity event severity level (info, warning, etc.)
      * @param message event text
      */
@@ -188,8 +187,7 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
     }
 
     /**
-     * Send a single logging event with message only
-     * @note in case of batching the event isn't sent immediately
+     * Send a single logging event with message only in case of batching the event isn't sent immediately
      * @param message event text
      */
     public synchronized void send(final String message) {

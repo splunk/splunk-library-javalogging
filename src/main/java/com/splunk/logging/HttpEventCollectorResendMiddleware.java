@@ -21,9 +21,9 @@ package com.splunk.logging;
 import java.util.List;
 
 /**
- * @brief Splunk http event collector resend middleware.
+ * Splunk http event collector resend middleware.
  *
- * @details
+ * details
  * HTTP event collector middleware plug in that implements a simple resend policy.
  * When HTTP post reply isn't an application error it tries to resend the data.
  * An exponentially growing delay is used to prevent server overflow.

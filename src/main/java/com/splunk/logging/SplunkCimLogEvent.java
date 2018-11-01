@@ -57,8 +57,8 @@ public class SplunkCimLogEvent {
     private LinkedHashMap<String, Object> entries;
 
     /**
-     * @param eventName
-     * @param eventID
+     * @param eventName event name
+     * @param eventID event ID
      */
     public SplunkCimLogEvent(String eventName, String eventID) {
         entries = new LinkedHashMap<String, Object>();
@@ -73,8 +73,8 @@ public class SplunkCimLogEvent {
      *
      * For logging exceptions, consider using <tt>addThrowableWithStacktrace</tt> instead.
      *
-     * @param key
-     * @param value
+     * @param key key
+     * @param value value
      */
     public void addField(String key, Object value) {
         entries.put(key, value);

@@ -23,9 +23,8 @@ import org.json.simple.parser.JSONParser;
 import java.util.List;
 
 /**
- * @brief Splunk http event collector error handler.
+ * Splunk http event collector error handler.
  *
- * @details
  * A user application can utilize HttpEventCollectorErrorHandler in order to detect errors
  * caused by network connection and/or Splunk server.
  *

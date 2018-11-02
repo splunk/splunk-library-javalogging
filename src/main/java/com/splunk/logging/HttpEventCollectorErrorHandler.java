@@ -46,7 +46,7 @@ public class HttpEventCollectorErrorHandler {
 
         /**
          * Create an exception with server error reply
-         * @param serverReply
+         * @param serverReply server reply
          */
         public ServerErrorException(final String serverReply) {
             reply = serverReply;
@@ -95,7 +95,7 @@ public class HttpEventCollectorErrorHandler {
 
     /**
      * Register error callbacks
-     * @param callback
+     * @param callback ErrorCallback
      */
     public static void onError(ErrorCallback callback) {
         errorCallback = callback;
@@ -103,7 +103,7 @@ public class HttpEventCollectorErrorHandler {
 
     /**
      * Report an exception
-     * @param data
+     * @param data eventdata
      * @param ex is an exception thrown by posting or processing data
      */
     public static void error(final List<HttpEventCollectorEventInfo> data, final Exception ex) {

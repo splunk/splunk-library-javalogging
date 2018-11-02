@@ -19,9 +19,9 @@ package com.splunk.logging;
  */
 
 /**
- * @brief A handler for java.util.logging that works with Splunk http event collector.
+ * A handler for java.util.logging that works with Splunk http event collector.
  *
- * @details
+ * details
  * This is a Splunk custom java.util.logging handler that intercepts logging
  * information and forwards it to a Splunk server through http event collector.
  * @todo - link to http event collector documentation
@@ -212,7 +212,7 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
 
     /**
      * java.util.logging data handler close callback
-     * @throws SecurityException
+     * @throws SecurityException throw security exception
      */
     @Override
     public void close() throws SecurityException {

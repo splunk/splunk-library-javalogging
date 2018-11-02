@@ -38,6 +38,11 @@ public class HttpEventCollectorEventInfo {
      * Create a new HttpEventCollectorEventInfo container
      * @param severity of event
      * @param message is an event content
+     * @param logger_name name of the logger
+     * @param thread_name name of the thread
+     * @param properties additional properties for this event
+     * @param exception_message text of an exception to log
+     * @param marker event marker
      */
     public HttpEventCollectorEventInfo(
             final String severity,

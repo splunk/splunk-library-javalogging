@@ -23,7 +23,6 @@ import java.util.List;
 /**
  * Splunk http event collector middleware implementation.
  *
- * details
  * A user application can utilize HttpEventCollectorMiddleware to customize the behavior
  * of sending events to Splunk. A user application plugs middleware components to
  * the HttpEventCollectorSender by calling addMiddleware method.

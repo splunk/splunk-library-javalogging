@@ -25,7 +25,6 @@ import java.util.List;
 /**
  * Splunk http event collector error handler.
  *
- * details
  * A user application can utilize HttpEventCollectorErrorHandler in order to detect errors
  * caused by network connection and/or Splunk server.
  *

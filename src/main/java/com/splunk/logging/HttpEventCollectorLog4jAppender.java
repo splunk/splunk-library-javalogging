@@ -33,7 +33,7 @@ import org.apache.logging.log4j.core.config.plugins.PluginFactory;
 /**
  * Splunk Http Appender.
  */
-@Plugin(name = "Http", category = "Core", elementType = "appender", printObject = true)
+@Plugin(name = "SplunkHttp", category = "Core", elementType = "appender", printObject = true)
 @SuppressWarnings("serial")
 public final class HttpEventCollectorLog4jAppender extends AbstractAppender
 {

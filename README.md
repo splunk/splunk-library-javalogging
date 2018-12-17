@@ -18,23 +18,23 @@ Splunk logging for Java provides:
 
 ## Documentation and resources
 
-* For more information about installing and using Splunk logging for Java, see: 
+* For more information about installing and using Splunk logging for Java, see 
   [Overview of Splunk logging for Java](http://dev.splunk.com/goto/sdk-slj).
 
-* For API reference documentation: 
-  [Splunk logging for Java Reference](https://docs.splunk.com/DocumentationStatic/JavaLogging/1.6.2/index.html).
+* For reference documentation, see the 
+  [Splunk logging for Java API reference](https://docs.splunk.com/DocumentationStatic/JavaLogging/1.6.2/index.html).
 
-* For all things developer with Splunk: 
+* For all things developer with Splunk, see the 
   [Splunk Developer Portal](http://dev.splunk.com).
 
-* For more about about Splunk in general, see: 
+* For more about about Splunk in general, see 
   [Splunk>Docs](http://docs.splunk.com/Documentation/Splunk).
 
 ## License
 
 Splunk logging for Java is licensed under the Apache License 2.0.
 
-See the LICENSE file for details.
+See the [LICENSE file](/license.md) for details.
 
 ## Contributions
 

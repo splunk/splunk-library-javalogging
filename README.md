@@ -44,8 +44,6 @@ command:
 
     git clone https://github.com/splunk/splunk-library-javalogging.git
     
-To make a code contribution, see the [Open Source](http://dev.splunk.com/view/opensource/SP-CAAAEDM) page for more information.
-
 ## Support
 
 The Splunk logging for Java is community-supported.

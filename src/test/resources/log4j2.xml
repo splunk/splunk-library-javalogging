@@ -32,7 +32,7 @@ under the License.
             <PatternLayout pattern="%p: %m%n" charset="UTF-8"/>
         </Socket>
         
-        <Http name="http-input"
+        <SplunkHttp name="http-input"
               url="http://localhost:5555/services/collector/event/1.0"
               token="11111111-2222-3333-4444-555555555555"
               host=""
@@ -46,7 +46,7 @@ under the License.
               batch_interval="0"
               disableCertificateValidation="true">
             <PatternLayout pattern="%m"/>
-        </Http>
+        </SplunkHttp>
     </Appenders>
     <!-- Define a logger named 'splunk.logger' which writes to the socket appender we defined above. -->
     <Loggers>

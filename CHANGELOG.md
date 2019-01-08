@@ -1,5 +1,10 @@
 # Splunk Logging for Java Changelog
 
+## Version 1.7.0
+
+* Change HttpEventCollectorLogbackAppender stop method to call this.sender.close()  [#93](https://github.com/splunk/splunk-library-javalogging/pull/93).
+* Rename 'Http' plugin name for HttpEventCollectorLog4jAppender to 'SplunkHttp' [#92](https://github.com/splunk/splunk-library-javalogging/pull/92).
+
 ## Version 1.6.2
 
 *  Add support to allow users to define their own event body serializer for HTTP event adapter: Simply create a class implementing `com.splunk.logging.EventBodySerializer`, 

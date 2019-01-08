@@ -107,7 +107,7 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
     public void stop() {
         if (!started)
             return;
-        this.sender.flush();
+        this.sender.close();
         super.stop();
     }
 

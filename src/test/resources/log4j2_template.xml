@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration status="info" name="example" packages="com.splunk.logging">
     <Appenders>
-        <Http
+        <SplunkHttp
               name="httpconf"
               url="%scheme%://%host%:8088"
               token="%user_httpEventCollector_token%"
@@ -20,7 +20,7 @@
                 >
 
             <PatternLayout pattern="%m"/>
-        </Http>
+        </SplunkHttp>
 
     </Appenders>
 

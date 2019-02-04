@@ -17,21 +17,16 @@
  */
 
 import java.io.IOException;
-import java.io.OutputStream;
-import java.net.InetSocketAddress;
 
 import com.splunk.logging.HttpEventCollectorErrorHandler;
 import com.splunk.logging.HttpEventCollectorEventInfo;
 import org.junit.Assert;
 import org.junit.Test;
-import sun.rmi.runtime.Log;
 
 import java.io.ByteArrayInputStream;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.logging.LogManager;
-import java.util.logging.Logger;
 
 public class HttpEventCollectorUnitTest {
     @Test

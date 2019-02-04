@@ -37,14 +37,8 @@ import javax.net.ssl.SSLContext;
 import java.io.IOException;
 import java.io.Serializable;
 import java.security.cert.X509Certificate;
-import java.util.Dictionary;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.List;
-import java.util.LinkedList;
-import java.util.Map;
-import java.util.Locale;
-
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 
 /**
@@ -84,20 +78,20 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
     public static final int DefaultBatchSize = 10 * 1024; // 10KB
     public static final int DefaultBatchCount = 10; // 10 events
 
-    private String url;
-    private String token;
-    private String channel;
-    private String type;
-    private long maxEventsBatchCount;
-    private long maxEventsBatchSize;
-    private Dictionary<String, String> metadata;
+    private final String url;
+    private final String token;
+    private final String channel;
+    private final String type;
+    private final long maxEventsBatchCount;
+    private final long maxEventsBatchSize;
+    private final ConcurrentHashMap<String, String> metadata;
     private Timer timer;
     private List<HttpEventCollectorEventInfo> eventsBatch = new LinkedList<HttpEventCollectorEventInfo>();
     private long eventsBatchSize = 0; // estimated total size of events batch
     private CloseableHttpAsyncClient httpClient;
     private boolean disableCertificateValidation = false;
-    private SendMode sendMode = SendMode.Sequential;
-    private HttpEventCollectorMiddleware middleware = new HttpEventCollectorMiddleware();
+    private final SendMode sendMode;
+    private final HttpEventCollectorMiddleware middleware = new HttpEventCollectorMiddleware();
     private final MessageFormat messageFormat;
     private EventBodySerializer eventBodySerializer;
 
@@ -116,15 +110,15 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
             final String Url, final String token, final String channel, final String type,
             long delay, long maxEventsBatchCount, long maxEventsBatchSize,
             String sendModeStr,
-            Dictionary<String, String> metadata) {
-        this.url = Url + HttpEventCollectorUriPath;
+            ConcurrentHashMap<String, String> metadata) {
+        if ("Raw".equalsIgnoreCase(type)) {
+            this.url = Url + HttpRawCollectorUriPath;
+        } else {
+            this.url = Url + HttpEventCollectorUriPath;
+        }
         this.token = token;
         this.channel = channel;
         this.type = type;
-
-        if ("Raw".equalsIgnoreCase(type)) {
-            this.url = Url + HttpRawCollectorUriPath;
-        }
 
         // when size configuration setting is missing it's treated as "infinity",
         // i.e., any value is accepted.
@@ -149,6 +143,8 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
                 this.sendMode = SendMode.Parallel;
             else
                 throw new IllegalArgumentException("Unknown send mode: " + sendModeStr);
+        } else {
+            this.sendMode = SendMode.Sequential;
         }
 
         if (delay > 0) {

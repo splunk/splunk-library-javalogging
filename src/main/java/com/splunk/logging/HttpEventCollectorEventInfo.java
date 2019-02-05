@@ -25,7 +25,7 @@ import java.util.Map;
  * Container for Splunk http event collector event data
  */
 public class HttpEventCollectorEventInfo {
-    private double time; // time in fractional seconds since "unix epoch" format
+    private final double time; // time in fractional seconds since "unix epoch" format
     private final String severity;
     private final String message;
     private final String logger_name;

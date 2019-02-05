@@ -37,7 +37,6 @@ import javax.net.ssl.SSLContext;
 import java.io.IOException;
 import java.io.Serializable;
 import java.security.cert.X509Certificate;
-import java.util.Dictionary;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.List;
@@ -84,14 +83,14 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
     public static final int DefaultBatchSize = 10 * 1024; // 10KB
     public static final int DefaultBatchCount = 10; // 10 events
 
-    private String url;
-    private String token;
-    private String channel;
-    private String type;
-    private long maxEventsBatchCount;
-    private long maxEventsBatchSize;
-    private Dictionary<String, String> metadata;
-    private Timer timer;
+    private final String url;
+    private final String token;
+    private final String channel;
+    private final String type;
+    private final long maxEventsBatchCount;
+    private final long maxEventsBatchSize;
+    private final Map<String, String> metadata;
+    private final Timer timer;
     private List<HttpEventCollectorEventInfo> eventsBatch = new LinkedList<HttpEventCollectorEventInfo>();
     private long eventsBatchSize = 0; // estimated total size of events batch
     private CloseableHttpAsyncClient httpClient;
@@ -116,15 +115,15 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
             final String Url, final String token, final String channel, final String type,
             long delay, long maxEventsBatchCount, long maxEventsBatchSize,
             String sendModeStr,
-            Dictionary<String, String> metadata) {
-        this.url = Url + HttpEventCollectorUriPath;
+            Map<String, String> metadata) {
+        if ("Raw".equalsIgnoreCase(type)) {
+            this.url = Url + HttpRawCollectorUriPath;
+        } else {
+            this.url = Url + HttpEventCollectorUriPath;
+        }
         this.token = token;
         this.channel = channel;
         this.type = type;
-
-        if ("Raw".equalsIgnoreCase(type)) {
-            this.url = Url + HttpRawCollectorUriPath;
-        }
 
         // when size configuration setting is missing it's treated as "infinity",
         // i.e., any value is accepted.
@@ -155,6 +154,8 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
             // start heartbeat timer
             timer = new Timer();
             timer.scheduleAtFixedRate(this, delay, delay);
+        } else {
+            timer = null;
         }
     }
 

@@ -20,9 +20,7 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.AppenderBase;
 import ch.qos.logback.core.Layout;
 
-import java.util.Collections;
-import java.util.Dictionary;
-import java.util.Hashtable;
+import java.util.*;
 
 /**
  * Logback Appender which writes its events to Splunk http event collector rest endpoint.
@@ -59,7 +57,7 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
             return;
 
         // init events sender
-        Dictionary<String, String> metadata = new Hashtable<String, String>();
+        Map<String, String> metadata = new HashMap<String, String>();
         if (_host != null)
             metadata.put(HttpEventCollectorSender.MetadataHostTag, _host);
 

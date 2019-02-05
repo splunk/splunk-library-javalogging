@@ -80,9 +80,7 @@ package com.splunk.logging;
  * com.splunk.logging.HttpEventCollectorLoggingHandler.send_mode=sequential
  */
 
-import java.util.Dictionary;
-import java.util.Hashtable;
-import java.util.Locale;
+import java.util.*;
 import java.util.logging.Handler;
 import java.util.logging.LogManager;
 import java.util.logging.LogRecord;
@@ -113,7 +111,7 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
     /** HttpEventCollectorLoggingHandler c-or */
     public HttpEventCollectorLoggingHandler() {
         // read configuration settings
-        Dictionary<String, String> metadata = new Hashtable<String, String>();
+        Map<String, String> metadata = new HashMap<String, String>();
         metadata.put(HttpEventCollectorSender.MetadataHostTag,
                 getConfigurationProperty(HttpEventCollectorSender.MetadataHostTag, ""));
 

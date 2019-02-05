@@ -17,8 +17,8 @@ package com.splunk.logging;
 
 import java.io.Serializable;
 import java.nio.charset.Charset;
-import java.util.Dictionary;
-import java.util.Hashtable;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.logging.log4j.core.appender.AbstractAppender;
 import org.apache.logging.log4j.core.Filter;
@@ -72,7 +72,7 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
                          final String eventBodySerializer)
     {
         super(name, filter, layout, ignoreExceptions);
-        Dictionary<String, String> metadata = new Hashtable<String, String>();
+        Map<String, String> metadata = new HashMap<String, String>();
         metadata.put(HttpEventCollectorSender.MetadataHostTag, host != null ? host : "");
         metadata.put(HttpEventCollectorSender.MetadataIndexTag, index != null ? index : "");
         metadata.put(HttpEventCollectorSender.MetadataSourceTag, source != null ? source : "");

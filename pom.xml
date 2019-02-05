@@ -161,6 +161,17 @@
         </repository>
     </repositories>
 
+    <dependencyManagement>
+        <dependencies>
+            <!-- json-simple-1.1.1 from splunk-java-logging does not define scope test -->
+            <dependency>
+                <groupId>junit</groupId>
+                <artifactId>junit</artifactId>
+                <scope>test</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
     <dependencies>
         <dependency>
             <groupId>junit</groupId>

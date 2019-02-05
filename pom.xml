@@ -230,10 +230,12 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- gson dependency not declared in splunk 1.5 module -->
         <dependency>
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
             <version>2.2.4</version>
+            <scope>test</scope>
         </dependency>
 
         <dependency>

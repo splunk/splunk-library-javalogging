@@ -19,6 +19,7 @@ import ch.qos.logback.classic.joran.JoranConfigurator;
 import ch.qos.logback.core.joran.spi.JoranException;
 import com.splunk.*;
 
+import org.apache.commons.io.FileUtils;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
 import org.junit.Assert;
@@ -26,7 +27,6 @@ import org.slf4j.*;
 
 import java.io.*;
 import java.nio.charset.Charset;
-import java.nio.file.Files;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.logging.LogManager;
@@ -54,7 +54,7 @@ public class TestUtil {
 
             //update serviceArgs with customer splunk host info
             String splunkhostfile = System.getProperty("user.home") + File.separator + ".splunkrc";
-            List<String> lines = Files.readAllLines(new File(splunkhostfile).toPath(), Charset.defaultCharset());
+            List<String> lines = FileUtils.readLines(new File(splunkhostfile), Charset.defaultCharset());
             for (String line : lines) {
                 if (line.toLowerCase().contains("host=")) {
                     serviceArgs.setHost(line.split("=")[1]);
@@ -234,7 +234,7 @@ public class TestUtil {
         getSplunkHostInfo();
 
         String configFileDir = TestUtil.class.getProtectionDomain().getCodeSource().getLocation().getPath();
-        List<String> lines = Files.readAllLines(new File(configFileDir, configFileTemplate).toPath(), Charset.defaultCharset());
+        List<String> lines = FileUtils.readLines(new File(configFileDir, configFileTemplate), Charset.defaultCharset());
         for (int i = 0; i < lines.size(); i++) {
             if (lines.get(i).contains("%host%")) {
                 lines.set(i, lines.get(i).replace("%host%", serviceArgs.host));

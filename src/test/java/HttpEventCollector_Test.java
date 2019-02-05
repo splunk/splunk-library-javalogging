@@ -30,7 +30,6 @@ import java.util.*;
 import java.lang.reflect.*;
 
 import com.splunk.*;
-import org.slf4j.*;
 
 public class HttpEventCollector_Test {
     public static void addPath(String s) throws Exception {

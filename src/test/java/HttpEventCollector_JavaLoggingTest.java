@@ -16,11 +16,9 @@
 
 import java.util.*;
 
-import com.splunk.logging.EventBodySerializer;
 import com.splunk.logging.HttpEventCollectorErrorHandler;
 import com.splunk.logging.HttpEventCollectorEventInfo;
 
-import com.splunk.logging.HttpEventCollectorSender;
 import org.json.simple.JSONObject;
 import org.junit.Assert;
 import org.junit.Test;

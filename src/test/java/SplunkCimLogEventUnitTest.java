@@ -18,8 +18,6 @@ import com.splunk.logging.SplunkCimLogEvent;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Check that SplunkCimLogEvent produces what we expect it to.

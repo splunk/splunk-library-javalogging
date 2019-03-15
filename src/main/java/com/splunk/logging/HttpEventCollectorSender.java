@@ -204,7 +204,9 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
     public synchronized void flush(boolean close) {
         if (eventsBatch.size() > 0) {
             postEventsAsync(eventsBatch, close);
-        }
+        } else if (close) {
+                this.stopHttpClient();
+            }
         // Clear the batch. A new list should be created because events are
         // sending asynchronously and "previous" instance of eventsBatch object
         // is still in use.

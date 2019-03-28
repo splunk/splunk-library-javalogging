@@ -29,8 +29,7 @@ Splunk and system requirements, see
 
 #### Java 
 
-You'll need Java version 7 or higher, which you can download from the
-[Oracle web site](https://www.oracle.com/technetwork/java/index.html).
+You'll need Java version 7 or higher, from [OpenJDK](https://openjdk.java.net) or [Oracle](https://www.oracle.com/technetwork/java).
 
 ## Documentation and resources
 

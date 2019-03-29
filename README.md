@@ -1,6 +1,6 @@
 # Splunk Logging for Java
 
-#### Version 1.7.1
+#### Version 1.7.2
 
 Splunk logging for Java enables you to log events to HTTP Event Collector or to a TCP input on a Splunk Enterprise instance within your Java applications. You can use three major Java logging frameworks: [Logback](http://logback.qos.ch), [Log4j 2](http://logging.apache.org/log4j/2.x/), and [java.util.logging](https://docs.oracle.com/javase/7/docs/api/java/util/logging/package-summary.html). Splunk logging for Java is also enabled for [Simple Logging Facade for Java (SLF4J)](http://www.slf4j.org).
 
@@ -18,16 +18,16 @@ Splunk logging for Java provides:
 
 ## Documentation and resources
 
-* For more information about installing and using Splunk logging for Java, see 
+* For more information about installing and using Splunk logging for Java, see
   [Overview of Splunk logging for Java](http://dev.splunk.com/goto/sdk-slj).
 
-* For reference documentation, see the 
+* For reference documentation, see the
   [Splunk logging for Java API reference](https://docs.splunk.com/DocumentationStatic/JavaLogging/1.6.2/index.html).
 
-* For all things developer with Splunk, see the 
+* For all things developer with Splunk, see the
   [Splunk Developer Portal](http://dev.splunk.com).
 
-* For more about about Splunk in general, see 
+* For more about about Splunk in general, see
   [Splunk>Docs](http://docs.splunk.com/Documentation/Splunk).
 
 ## License
@@ -38,12 +38,12 @@ See the [LICENSE file](/license.md) for details.
 
 ## Contributions
 
-[Get the Splunk Java Logging Framework from GitHub](https://github.com/splunk/splunk-library-javalogging) 
-and clone the resources to your computer. For example, use the following 
-command: 
+[Get the Splunk Java Logging Framework from GitHub](https://github.com/splunk/splunk-library-javalogging)
+and clone the resources to your computer. For example, use the following
+command:
 
     git clone https://github.com/splunk/splunk-library-javalogging.git
-    
+
 ## Support
 
 The Splunk logging for Java is community-supported.

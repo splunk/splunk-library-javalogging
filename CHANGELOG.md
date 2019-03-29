@@ -1,5 +1,9 @@
 # Splunk Logging for Java Changelog
 
+## Version 1.7.2
+
+* Closing httpclient properly on logback shutdown [#112](https://github.com/splunk/splunk-library-javalogging/pull/112).
+
 ## Version 1.7.1
 
 * Change HttpEventCollectorLogbackAppender stop method to call this.sender.close()  [#93](https://github.com/splunk/splunk-library-javalogging/pull/93).
@@ -11,8 +15,8 @@
 
 ## Version 1.6.2
 
-*  Add support to allow users to define their own event body serializer for HTTP event adapter: Simply create a class implementing `com.splunk.logging.EventBodySerializer`, 
-and add the full class name as a property (`eventBodySerializer`) to the adapter. 
+*  Add support to allow users to define their own event body serializer for HTTP event adapter: Simply create a class implementing `com.splunk.logging.EventBodySerializer`,
+and add the full class name as a property (`eventBodySerializer`) to the adapter.
 Default will be a JSON event body containing message, severity, and other properties. [#86](https://github.com/splunk/splunk-library-javalogging/pull/86).
 
 ## Version 1.6.1

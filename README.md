@@ -16,6 +16,21 @@ Splunk logging for Java provides:
 
 * Support for batching events (sent to HTTP Event Collector only).</li>
 
+### Requirements
+
+Here's what you need to get going with Splunk logging for Java.
+
+#### Splunk
+
+If you haven't already installed Splunk, download it
+[here](http://www.splunk.com/download). For more about installing and running
+Splunk and system requirements, see
+[Installing & Running Splunk](http://dev.splunk.com/view/SP-CAAADRV). Splunk logging for Java is tested with Splunk Enterprise 7.0 and 7.2.
+
+#### Java 
+
+You'll need Java version 7 or higher, from [OpenJDK](https://openjdk.java.net) or [Oracle](https://www.oracle.com/technetwork/java).
+
 ## Documentation and resources
 
 * For more information about installing and using Splunk logging for Java, see

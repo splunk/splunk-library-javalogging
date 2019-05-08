@@ -18,14 +18,13 @@ Splunk logging for Java provides:
 
 ### Requirements
 
-Here's what you need to get going with the Splunk SDK for Java.
+Here's what you need to get going with Splunk logging for Java.
 
 #### Splunk
 
 If you haven't already installed Splunk, download it
 [here](http://www.splunk.com/download). For more about installing and running
-Splunk and system requirements, see
-[Installing & Running Splunk](http://dev.splunk.com/view/SP-CAAADRV).
+Splunk and system requirements, see [Installing & Running Splunk](http://dev.splunk.com/view/SP-CAAADRV). Splunk logging for Java is tested with Splunk Enterprise 7.0 and 7.2.
 
 #### Java 
 

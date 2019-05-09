@@ -307,6 +307,7 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
                 sslContext = SSLContexts.custom().loadTrustMaterial(
                         null, acceptingTrustStrategy).build();
                 httpClient = HttpAsyncClients.custom()
+                        .useSystemProperties()
                         .setDefaultRequestConfig(RequestConfig.custom().setCookieSpec(CookieSpecs.STANDARD).build())
                         .setMaxConnTotal(maxConnTotal)
                         .setHostnameVerifier(SSLConnectionSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER)

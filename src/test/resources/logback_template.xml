@@ -18,6 +18,8 @@
         <send_mode>%user_send_mode%</send_mode>
         <middleware>%user_middleware%</middleware>
         <eventBodySerializer>%user_eventBodySerializer%</eventBodySerializer>
+        <httpProxyHost>%user_httpProxyHost%</httpProxyHost>
+        <httpProxyPort>%user_httpProxyPort%</httpProxyPort>
 
         <layout class="ch.qos.logback.classic.PatternLayout">
             <pattern>%msg</pattern>

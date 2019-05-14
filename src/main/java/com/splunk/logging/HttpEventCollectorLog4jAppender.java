@@ -20,6 +20,7 @@ import java.nio.charset.Charset;
 import java.util.Dictionary;
 import java.util.Hashtable;
 
+import org.apache.http.HttpHost;
 import org.apache.logging.log4j.core.appender.AbstractAppender;
 import org.apache.logging.log4j.core.Filter;
 import org.apache.logging.log4j.core.Layout;
@@ -69,7 +70,8 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
                          String sendMode,
                          String middleware,
                          final String disableCertificateValidation,
-                         final String eventBodySerializer)
+                         final String eventBodySerializer,
+                         HttpHost proxyHost)
     {
         super(name, filter, layout, ignoreExceptions);
         Dictionary<String, String> metadata = new Hashtable<String, String>();
@@ -79,7 +81,7 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
         metadata.put(HttpEventCollectorSender.MetadataSourceTypeTag, sourcetype != null ? sourcetype : "");
         metadata.put(HttpEventCollectorSender.MetadataMessageFormatTag, messageFormat != null ? messageFormat : "");
 
-        this.sender = new HttpEventCollectorSender(url, token, channel, type, batchInterval, batchCount, batchSize, sendMode, metadata);
+        this.sender = new HttpEventCollectorSender(url, token, channel, type, batchInterval, batchCount, batchSize, sendMode, metadata, proxyHost);
 
         // plug a user middleware
         if (middleware != null && !middleware.isEmpty()) {
@@ -136,6 +138,8 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
             @PluginAttribute("middleware") final String middleware,
             @PluginAttribute("disableCertificateValidation") final String disableCertificateValidation,
             @PluginAttribute("eventBodySerializer") final String eventBodySerializer,
+            @PluginAttribute("httpProxyHost") final String httpProxyHost,
+            @PluginAttribute("httpProxyPort") final int httpProxyPort,
             @PluginAttribute(value = "includeLoggerName", defaultBoolean = true) final boolean includeLoggerName,
             @PluginAttribute(value = "includeThreadName", defaultBoolean = true) final boolean includeThreadName,
             @PluginAttribute(value = "includeMDC", defaultBoolean = true) final boolean includeMDC,
@@ -170,6 +174,12 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
 
         final boolean ignoreExceptionsBool = Boolean.getBoolean(ignoreExceptions);
 
+        // create proxy host if required
+        HttpHost proxyHost = null;
+        if (httpProxyHost != null && !httpProxyHost.isEmpty() && httpProxyPort != 0) {
+            proxyHost = new HttpHost(httpProxyHost, httpProxyPort, "http");
+        }
+
         return new HttpEventCollectorLog4jAppender(
                 name, url, token,  channel, type,
                 source, sourcetype, messageFormat, host, index,
@@ -183,7 +193,8 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
                 sendMode,
                 middleware,
                 disableCertificateValidation,
-                eventBodySerializer
+                eventBodySerializer,
+                proxyHost
         );
     }
 

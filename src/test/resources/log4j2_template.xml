@@ -17,6 +17,8 @@
               send_mode="%user_send_mode%"
               middleware="%user_middleware%"
               eventBodySerializer="%user_eventBodySerializer%"
+              httpProxyHost="%user_httpProxyHost%"
+              httpProxyPort="%user_httpProxyPort%"
                 >
 
             <PatternLayout pattern="%m"/>

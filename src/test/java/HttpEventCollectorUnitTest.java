@@ -17,21 +17,20 @@
  */
 
 import java.io.IOException;
-import java.io.OutputStream;
-import java.net.InetSocketAddress;
 
 import com.splunk.logging.HttpEventCollectorErrorHandler;
 import com.splunk.logging.HttpEventCollectorEventInfo;
+import org.apache.logging.log4j.core.Appender;
+import org.apache.logging.log4j.core.LoggerContext;
+import org.apache.logging.log4j.core.config.Configuration;
 import org.junit.Assert;
 import org.junit.Test;
-import sun.rmi.runtime.Log;
 
 import java.io.ByteArrayInputStream;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.LogManager;
-import java.util.logging.Logger;
 
 public class HttpEventCollectorUnitTest {
     @Test
@@ -44,6 +43,8 @@ public class HttpEventCollectorUnitTest {
         userInputs.put("user_batch_size_count", "1");
         userInputs.put("user_batch_size_bytes", "0");
         userInputs.put("user_eventBodySerializer", "DoesNotExistButShouldNotCrashTest");
+        userInputs.put("user_httpProxyHost", "example.com");
+        userInputs.put("user_httpProxyPort", "5000");
         TestUtil.resetLog4j2Configuration("log4j2_template.xml", "log4j2.xml", userInputs);
         org.apache.logging.log4j.Logger LOG4J = org.apache.logging.log4j.LogManager.getLogger(loggerName);
 
@@ -73,6 +74,8 @@ public class HttpEventCollectorUnitTest {
         userInputs.put("user_httpEventCollector_token", "11111111-2222-3333-4444-555555555555");
         userInputs.put("user_middleware", "HttpEventCollectorUnitTestMiddleware");
         userInputs.put("user_eventBodySerializer", "DoesNotExistButShouldNotCrashTest");
+        userInputs.put("user_httpProxyHost", "example.com");
+        userInputs.put("user_httpProxyPort", "5000");
         TestUtil.resetLogbackConfiguration("logback_template.xml", "logback.xml", userInputs);
         org.slf4j.Logger LOGBACK = org.slf4j.LoggerFactory.getLogger(loggerName);
 
@@ -104,7 +107,9 @@ public class HttpEventCollectorUnitTest {
             "com.splunk.logging.HttpEventCollectorLoggingHandler.batch_size_bytes=0\n" +
             "com.splunk.logging.HttpEventCollectorLoggingHandler.batch_interval=0\n" +
             "com.splunk.logging.HttpEventCollectorLoggingHandler.middleware=HttpEventCollectorUnitTestMiddleware\n" +
-            "com.splunk.logging.HttpEventCollectorLoggingHandler.eventBodySerializer=DoesNotExistButShouldNotCrashTest\n"
+            "com.splunk.logging.HttpEventCollectorLoggingHandler.eventBodySerializer=DoesNotExistButShouldNotCrashTest\n" +
+            "com.splunk.logging.HttpEventCollectorLoggingHandler.httpProxyHost=example.com\n" +
+            "com.splunk.logging.HttpEventCollectorLoggingHandler.httpProxyPort=5000\n"
         );
 
         // send 3 events

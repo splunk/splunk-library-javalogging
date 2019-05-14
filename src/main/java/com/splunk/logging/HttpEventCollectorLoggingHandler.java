@@ -78,7 +78,13 @@ package com.splunk.logging;
  * "sequential mode" that guarantees preserving events order. In
  * "sequential mode" performance of sending events to the server is lower.
  * com.splunk.logging.HttpEventCollectorLoggingHandler.send_mode=sequential
+ *
+ * # Http Proxy
+ * com.splunk.logging.HttpEventCollectorLoggingHandler.http_proxy_host=example.com
+ * com.splunk.logging.HttpEventCollectorLoggingHandler.http_proxy_port=5000
  */
+
+import org.apache.http.HttpHost;
 
 import java.util.Dictionary;
 import java.util.Hashtable;
@@ -109,6 +115,9 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
     private final String UrlConfTag = "url";
     private final String SendModeTag = "send_mode";
     private final String MiddlewareTag = "middleware";
+
+    private final String HttpProxyHost = "http_proxy_host";
+    private final String HttpProxyPort = "http_proxy_port";
 
     /** HttpEventCollectorLoggingHandler c-or */
     public HttpEventCollectorLoggingHandler() {
@@ -151,13 +160,23 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
         String middleware = getConfigurationProperty(MiddlewareTag, "");
         String eventBodySerializer = getConfigurationProperty("eventBodySerializer", "");
 
+        // proxy properties
+        String httpProxyHost = getConfigurationProperty(HttpProxyHost, "");
+        Long httpProxyPort = getConfigurationNumericProperty(HttpProxyPort, 0);
+
         includeLoggerName = getConfigurationBooleanProperty(IncludeLoggerNameConfTag, true);
         includeThreadName = getConfigurationBooleanProperty(IncludeThreadNameConfTag, true);
         includeException = getConfigurationBooleanProperty(IncludeExceptionConfTag, true);
 
+        // create proxy host if required
+        HttpHost proxyHost = null;
+        if (httpProxyHost != null && !httpProxyHost.isEmpty() && httpProxyPort != 0) {
+            proxyHost = new HttpHost(httpProxyHost, httpProxyPort.intValue(), "http");
+        }
+
         // delegate all configuration params to event sender
         this.sender = new HttpEventCollectorSender(
-                url, token, channel, type, delay, batchCount, batchSize, sendMode, metadata);
+                url, token, channel, type, delay, batchCount, batchSize, sendMode, metadata, proxyHost);
 
         // plug a user middleware
         if (middleware != null && !middleware.isEmpty()) {

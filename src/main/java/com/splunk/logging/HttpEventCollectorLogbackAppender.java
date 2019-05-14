@@ -19,8 +19,8 @@ import ch.qos.logback.classic.pattern.MarkerConverter;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.AppenderBase;
 import ch.qos.logback.core.Layout;
+import org.apache.http.HttpHost;
 
-import java.util.Collections;
 import java.util.Dictionary;
 import java.util.Hashtable;
 
@@ -52,6 +52,8 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
     private long _batchSize = 0;
     private String _sendMode;
     private long _retriesOnError = 0;
+    private String _httpProxyHost;
+    private int _httpProxyPort;
 
     @Override
     public void start() {
@@ -75,8 +77,14 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
         if (_messageFormat != null)
             metadata.put(HttpEventCollectorSender.MetadataMessageFormatTag, _messageFormat);
 
+        // create proxy host if required
+        HttpHost proxyHost = null;
+        if (_httpProxyHost != null && !_httpProxyHost.isEmpty() && _httpProxyPort != 0) {
+            proxyHost = new HttpHost(_httpProxyHost, _httpProxyPort);
+        }
+
         this.sender = new HttpEventCollectorSender(
-                _url, _token, _channel, _type, _batchInterval, _batchCount, _batchSize, _sendMode, metadata);
+                _url, _token, _channel, _type, _batchInterval, _batchCount, _batchSize, _sendMode, metadata, proxyHost);
 
         // plug a user middleware
         if (_middleware != null && !_middleware.isEmpty()) {
@@ -303,6 +311,10 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
     public void setEventBodySerializer(String eventBodySerializer) {
         this._eventBodySerializer = eventBodySerializer;
     }
+
+    public void setHttpProxyHost(String httpProxyHost) { this._httpProxyHost = httpProxyHost; }
+
+    public void setHttpProxyPort(int httpProxyPort) { this._httpProxyPort = httpProxyPort; }
 
     private static long parseLong(String string, int defaultValue) {
         try {

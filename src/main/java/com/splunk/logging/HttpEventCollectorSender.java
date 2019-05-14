@@ -18,6 +18,7 @@ package com.splunk.logging;
  * under the License.
  */
 
+import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.config.CookieSpecs;
 import org.apache.http.client.config.RequestConfig;
@@ -28,6 +29,7 @@ import org.apache.http.conn.ssl.SSLContexts;
 import org.apache.http.conn.ssl.TrustStrategy;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
+import org.apache.http.impl.nio.client.HttpAsyncClientBuilder;
 import org.apache.http.impl.nio.client.HttpAsyncClients;
 import org.apache.http.util.EntityUtils;
 
@@ -100,6 +102,7 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
     private HttpEventCollectorMiddleware middleware = new HttpEventCollectorMiddleware();
     private final MessageFormat messageFormat;
     private EventBodySerializer eventBodySerializer;
+    private HttpHost proxyHost;
 
     /**
      * Initialize HttpEventCollectorSender
@@ -111,16 +114,24 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
      * @param metadata events metadata
      * @param channel unique GUID for the client to send raw events to the server
      * @param type event data type
+     * @param proxyHost HttpHost to use as a proxy
      */
     public HttpEventCollectorSender(
-            final String Url, final String token, final String channel, final String type,
-            long delay, long maxEventsBatchCount, long maxEventsBatchSize,
+            final String Url,
+            final String token,
+            final String channel,
+            final String type,
+            long delay,
+            long maxEventsBatchCount,
+            long maxEventsBatchSize,
             String sendModeStr,
-            Dictionary<String, String> metadata) {
+            Dictionary<String, String> metadata,
+            HttpHost proxyHost) {
         this.url = Url + HttpEventCollectorUriPath;
         this.token = token;
         this.channel = channel;
         this.type = type;
+        this.proxyHost = proxyHost;
 
         if ("Raw".equalsIgnoreCase(type)) {
             this.url = Url + HttpRawCollectorUriPath;
@@ -288,12 +299,19 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
         // limit max  number of async requests in sequential mode, 0 means "use
         // default limit"
         int maxConnTotal = sendMode == SendMode.Sequential ? 1 : 0;
+
+        HttpAsyncClientBuilder httpAsyncClientBuilder = HttpAsyncClients
+            .custom()
+            .setDefaultRequestConfig(RequestConfig.custom().setCookieSpec(CookieSpecs.STANDARD).build())
+            .setMaxConnTotal(maxConnTotal);
+        if(proxyHost != null) {
+            // set the proxy if required
+            httpAsyncClientBuilder.setProxy(proxyHost);
+        }
         if (! disableCertificateValidation) {
             // create an http client that validates certificates
-            httpClient = HttpAsyncClients.custom()
-                    .setDefaultRequestConfig(RequestConfig.custom().setCookieSpec(CookieSpecs.STANDARD).build())
+            httpClient = httpAsyncClientBuilder
                     .useSystemProperties()
-                    .setMaxConnTotal(maxConnTotal)
                     .build();
         } else {
             // create strategy that accepts all certificates
@@ -307,9 +325,7 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
             try {
                 sslContext = SSLContexts.custom().loadTrustMaterial(
                         null, acceptingTrustStrategy).build();
-                httpClient = HttpAsyncClients.custom()
-                        .setDefaultRequestConfig(RequestConfig.custom().setCookieSpec(CookieSpecs.STANDARD).build())
-                        .setMaxConnTotal(maxConnTotal)
+                httpClient = httpAsyncClientBuilder
                         .setHostnameVerifier(SSLConnectionSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER)
                         .setSSLContext(sslContext)
                         .build();

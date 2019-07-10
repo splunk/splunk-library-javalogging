@@ -77,13 +77,15 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
         Sequential,
         Parallel
     };
-    
+
     /**
      * Recommended default values for events batching.
      */
     public static final int DefaultBatchInterval = 10 * 1000; // 10 seconds
     public static final int DefaultBatchSize = 10 * 1024; // 10KB
     public static final int DefaultBatchCount = 10; // 10 events
+
+    private static HttpClientBuilderFactory httpClientBuilderFactory = new HttpClientBuilderFactory();
 
     private String url;
     private String token;
@@ -281,6 +283,10 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
         return event.toString();
     }
 
+    protected CloseableHttpAsyncClient getHttpClient() {
+        return httpClient;
+    }
+
     private void startHttpClient() {
         if (httpClient != null) {
             // http client is already started
@@ -291,7 +297,7 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
         int maxConnTotal = sendMode == SendMode.Sequential ? 1 : 0;
         if (! disableCertificateValidation) {
             // create an http client that validates certificates
-            httpClient = newHttpClientBuilder()
+            httpClient = httpClientBuilderFactory.newHttpClientBuilder()
                     .setDefaultRequestConfig(RequestConfig.custom().setCookieSpec(CookieSpecs.STANDARD).build())
                     .setMaxConnTotal(maxConnTotal)
                     .build();
@@ -307,7 +313,7 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
             try {
                 sslContext = SSLContexts.custom().loadTrustMaterial(
                         null, acceptingTrustStrategy).build();
-                httpClient = newHttpClientBuilder()
+                httpClient = httpClientBuilderFactory.newHttpClientBuilder()
                         .setDefaultRequestConfig(RequestConfig.custom().setCookieSpec(CookieSpecs.STANDARD).build())
                         .setMaxConnTotal(maxConnTotal)
                         .setHostnameVerifier(SSLConnectionSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER)
@@ -316,10 +322,6 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
             } catch (Exception e) { }
         }
         httpClient.start();
-    }
-
-    protected HttpAsyncClientBuilder newHttpClientBuilder() {
-        return HttpAsyncClients.custom();
     }
 
     // Currently we never close http client. This method is added for symmetry
@@ -409,4 +411,22 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
             public void cancelled() {}
         });
     }
+
+    public static HttpClientBuilderFactory getHttpClientBuilderFactory() {
+        return httpClientBuilderFactory;
+    }
+
+    public static void setHttpClientBuilderFactory( HttpClientBuilderFactory aHttpClientBuilderFactory ) {
+        httpClientBuilderFactory = aHttpClientBuilderFactory;
+    }
+
+    /**
+     * Overridable factory class for creating a HttpClientBuilder.
+     */
+    public static class HttpClientBuilderFactory {
+        public HttpAsyncClientBuilder newHttpClientBuilder() {
+            return HttpAsyncClients.custom();
+        }
+    }
+
 }

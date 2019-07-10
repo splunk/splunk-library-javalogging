@@ -28,6 +28,7 @@ import org.apache.http.conn.ssl.SSLContexts;
 import org.apache.http.conn.ssl.TrustStrategy;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
+import org.apache.http.impl.nio.client.HttpAsyncClientBuilder;
 import org.apache.http.impl.nio.client.HttpAsyncClients;
 import org.apache.http.util.EntityUtils;
 
@@ -290,7 +291,7 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
         int maxConnTotal = sendMode == SendMode.Sequential ? 1 : 0;
         if (! disableCertificateValidation) {
             // create an http client that validates certificates
-            httpClient = HttpAsyncClients.custom()
+            httpClient = newHttpClientBuilder()
                     .setDefaultRequestConfig(RequestConfig.custom().setCookieSpec(CookieSpecs.STANDARD).build())
                     .setMaxConnTotal(maxConnTotal)
                     .build();
@@ -306,7 +307,7 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
             try {
                 sslContext = SSLContexts.custom().loadTrustMaterial(
                         null, acceptingTrustStrategy).build();
-                httpClient = HttpAsyncClients.custom()
+                httpClient = newHttpClientBuilder()
                         .setDefaultRequestConfig(RequestConfig.custom().setCookieSpec(CookieSpecs.STANDARD).build())
                         .setMaxConnTotal(maxConnTotal)
                         .setHostnameVerifier(SSLConnectionSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER)
@@ -315,6 +316,10 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
             } catch (Exception e) { }
         }
         httpClient.start();
+    }
+
+    protected HttpAsyncClientBuilder newHttpClientBuilder() {
+        return HttpAsyncClients.custom();
     }
 
     // Currently we never close http client. This method is added for symmetry

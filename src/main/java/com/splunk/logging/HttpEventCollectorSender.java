@@ -292,6 +292,7 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
             // create an http client that validates certificates
             httpClient = HttpAsyncClients.custom()
                     .setDefaultRequestConfig(RequestConfig.custom().setCookieSpec(CookieSpecs.STANDARD).build())
+                    .useSystemProperties()
                     .setMaxConnTotal(maxConnTotal)
                     .build();
         } else {

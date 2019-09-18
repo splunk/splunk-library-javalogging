@@ -114,7 +114,9 @@ public class SplunkCimLogEvent {
             sb.append(elements[depth].toString());
         }
 
-        addField(THROWABLE_STACKTRACE_ELEMENTS, sb.toString());
+        if (stacktraceDepth > 0) {
+            addField(THROWABLE_STACKTRACE_ELEMENTS, sb.toString());
+        }
     }
 
     private static final Pattern DOUBLE_QUOTE = Pattern.compile("\"");

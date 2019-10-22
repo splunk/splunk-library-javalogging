@@ -131,7 +131,7 @@ public class SplunkCimLogEvent {
             } else {
                 first = false;
             }
-            String value = entries.get(key).toString();
+            String value = String.valueOf(entries.get(key));
 
             // Escape any " that appear in the key or value.
             key = DOUBLE_QUOTE.matcher(key).replaceAll("\\\\\"");

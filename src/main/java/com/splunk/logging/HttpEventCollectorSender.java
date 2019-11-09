@@ -100,6 +100,7 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
     private HttpEventCollectorMiddleware middleware = new HttpEventCollectorMiddleware();
     private final MessageFormat messageFormat;
     private EventBodySerializer eventBodySerializer;
+    private EventHeaderSerializer eventHeaderSerializer;
 
     /**
      * Initialize HttpEventCollectorSender
@@ -244,6 +245,10 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
         this.eventBodySerializer = eventBodySerializer;
     }
 
+    public void setEventHeaderSerializer(EventHeaderSerializer eventHeaderSerializer) {
+        this.eventHeaderSerializer = eventHeaderSerializer;
+    }
+
     @SuppressWarnings("unchecked")
     public static void putIfPresent(JSONObject collection, String tag, Object value) {
         if (value != null) {
@@ -261,13 +266,10 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
         //
         // cf: http://dev.splunk.com/view/event-collector/SP-CAAAE6P
         //
-        JSONObject event = new JSONObject();
-        // event timestamp and metadata
-        putIfPresent(event, MetadataTimeTag, String.format(Locale.US, "%.3f", eventInfo.getTime()));
-        putIfPresent(event, MetadataHostTag, metadata.get(MetadataHostTag));
-        putIfPresent(event, MetadataIndexTag, metadata.get(MetadataIndexTag));
-        putIfPresent(event, MetadataSourceTag, metadata.get(MetadataSourceTag));
-        putIfPresent(event, MetadataSourceTypeTag, metadata.get(MetadataSourceTypeTag));
+        if (eventHeaderSerializer == null) {
+            eventHeaderSerializer = new EventHeaderSerializer.Default();
+        }
+        JSONObject event = eventHeaderSerializer.serializeEventHeader(eventInfo, metadata);
 
         // Parse message on the basis of format
         final Object parsedMessage = this.messageFormat.parse(eventInfo.getMessage());

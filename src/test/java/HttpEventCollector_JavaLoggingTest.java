@@ -477,6 +477,33 @@ public final class HttpEventCollector_JavaLoggingTest {
         TestUtil.deleteHttpEventCollectorToken(httpEventCollectorName);
     }
 
+    /**
+     * sending a message using user-defined EventBodySerializer through java.logging to splunk
+     */
+    @Test
+    public void canSendEventUsingJavaLoggingWithUserEventHeaderSerializer() throws Exception {
+        TestUtil.enableHttpEventCollector();
+        String indexName = "httpevent_user_header";
+        TestUtil.createIndex(indexName);
+
+        String token = TestUtil.createHttpEventCollectorToken(httpEventCollectorName);
+
+        String loggerName = "splunkLoggerHaderSerializer";
+        HashMap<String, String> userInputs = new HashMap<String, String>();
+        userInputs.put("user_httpEventCollector_token", token);
+        userInputs.put("user_logger_name", loggerName);
+        userInputs.put("user_eventHeaderSerializer", "TestHeaderBodySerializer");
+
+        TestUtil.resetJavaLoggingConfiguration("logging_template.properties", "logging.properties", userInputs);
+
+        String jsonMsg = String.format("Index:%s", indexName);
+
+        Logger logger = Logger.getLogger(loggerName);
+        logger.info(jsonMsg);
+
+        TestUtil.verifyOneAndOnlyOneEventSentToSplunk("index=" + indexName );
+        TestUtil.deleteHttpEventCollectorToken(httpEventCollectorName);
+    }
 
     @SuppressWarnings("unchecked")
     private void canSendJsonEventUsingUtilLoggerWithSourceType(final String sourceType) throws Exception {

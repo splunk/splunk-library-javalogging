@@ -69,7 +69,8 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
                          String sendMode,
                          String middleware,
                          final String disableCertificateValidation,
-                         final String eventBodySerializer)
+                         final String eventBodySerializer,
+                         final String eventHeaderSerializer)
     {
         super(name, filter, layout, ignoreExceptions);
         Dictionary<String, String> metadata = new Hashtable<String, String>();
@@ -91,6 +92,12 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
         if (eventBodySerializer != null && !eventBodySerializer.isEmpty()) {
             try {
                 this.sender.setEventBodySerializer((EventBodySerializer) Class.forName(eventBodySerializer).newInstance());
+            } catch (final Exception ignored) {}
+        }
+
+        if (eventHeaderSerializer != null && !eventHeaderSerializer.isEmpty()) {
+            try {
+                this.sender.setEventHeaderSerializer((EventHeaderSerializer) Class.forName(eventHeaderSerializer).newInstance());
             } catch (final Exception ignored) {}
         }
 
@@ -136,6 +143,7 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
             @PluginAttribute("middleware") final String middleware,
             @PluginAttribute("disableCertificateValidation") final String disableCertificateValidation,
             @PluginAttribute("eventBodySerializer") final String eventBodySerializer,
+            @PluginAttribute("eventHeaderSerializer") final String eventHeaderSerializer,
             @PluginAttribute(value = "includeLoggerName", defaultBoolean = true) final boolean includeLoggerName,
             @PluginAttribute(value = "includeThreadName", defaultBoolean = true) final boolean includeThreadName,
             @PluginAttribute(value = "includeMDC", defaultBoolean = true) final boolean includeMDC,
@@ -183,7 +191,8 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
                 sendMode,
                 middleware,
                 disableCertificateValidation,
-                eventBodySerializer
+                eventBodySerializer,
+                eventHeaderSerializer
         );
     }
 

@@ -150,6 +150,7 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
         String sendMode = getConfigurationProperty(SendModeTag, "sequential");
         String middleware = getConfigurationProperty(MiddlewareTag, "");
         String eventBodySerializer = getConfigurationProperty("eventBodySerializer", "");
+        String eventHeaderSerializer = getConfigurationProperty("eventHeaderSerializer", "");
 
         includeLoggerName = getConfigurationBooleanProperty(IncludeLoggerNameConfTag, true);
         includeThreadName = getConfigurationBooleanProperty(IncludeThreadNameConfTag, true);
@@ -171,6 +172,15 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
                 this.sender.setEventBodySerializer((EventBodySerializer) Class.forName(eventBodySerializer).newInstance());
             } catch (final Exception ex) {
                 //output error msg but not fail, it will default to use the default EventBodySerializer
+                System.out.println(ex);
+            }
+        }
+
+        if (eventHeaderSerializer != null && !eventHeaderSerializer.isEmpty()) {
+            try {
+                this.sender.setEventHeaderSerializer((EventHeaderSerializer) Class.forName(eventHeaderSerializer).newInstance());
+            } catch (final Exception ex) {
+                //output error msg but not fail, it will default to use the default EventHeaderSerializer
                 System.out.println(ex);
             }
         }

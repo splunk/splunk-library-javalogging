@@ -34,12 +34,9 @@ public class TestEventHeaderSerializer implements EventHeaderSerializer {
 
         HttpEventCollectorSender.putIfPresent(event, HttpEventCollectorSender.MetadataTimeTag, String.format(Locale.US, "%.3f", eventInfo.getTime()));
         HttpEventCollectorSender.putIfPresent(event, HttpEventCollectorSender.MetadataHostTag, metadata.get(HttpEventCollectorSender.MetadataHostTag));
+        HttpEventCollectorSender.putIfPresent(event, HttpEventCollectorSender.MetadataIndexTag, "user-prefix:" + metadata.get(HttpEventCollectorSender.MetadataIndexTag));
         HttpEventCollectorSender.putIfPresent(event, HttpEventCollectorSender.MetadataSourceTag, metadata.get(HttpEventCollectorSender.MetadataSourceTag));
         HttpEventCollectorSender.putIfPresent(event, HttpEventCollectorSender.MetadataSourceTypeTag, metadata.get(HttpEventCollectorSender.MetadataSourceTypeTag));
-
-        String index = eventInfo.getMessage();
-        index = index.substring(index.indexOf(':') + 1);
-        HttpEventCollectorSender.putIfPresent(event, HttpEventCollectorSender.MetadataIndexTag, index);
 
         return event;
     }

@@ -478,13 +478,13 @@ public final class HttpEventCollector_JavaLoggingTest {
     }
 
     /**
-     * sending a message using user-defined EventBodySerializer through java.logging to splunk
+     * sending a message using user-defined EventHeaderSerializer through java.logging to splunk
      */
     @Test
     public void canSendEventUsingJavaLoggingWithUserEventHeaderSerializer() throws Exception {
         TestUtil.enableHttpEventCollector();
-        String indexName = "httpevent_user_header";
-        TestUtil.createIndex(indexName);
+        String indexName = "httpevent_index";
+        TestUtil.createIndex("user-prefix:" + indexName);
 
         String token = TestUtil.createHttpEventCollectorToken(httpEventCollectorName);
 
@@ -492,16 +492,16 @@ public final class HttpEventCollector_JavaLoggingTest {
         HashMap<String, String> userInputs = new HashMap<String, String>();
         userInputs.put("user_httpEventCollector_token", token);
         userInputs.put("user_logger_name", loggerName);
-        userInputs.put("user_eventHeaderSerializer", "TestHeaderBodySerializer");
+        userInputs.put("user_index", indexName);
+        userInputs.put("user_eventHeaderSerializer", "TestEventHeaderSerializer");
 
         TestUtil.resetJavaLoggingConfiguration("logging_template.properties", "logging.properties", userInputs);
 
-        String jsonMsg = String.format("Index:%s", indexName);
-
         Logger logger = Logger.getLogger(loggerName);
-        logger.info(jsonMsg);
+        String prefix = "user message";
+        logger.info(prefix + " 0");
 
-        TestUtil.verifyOneAndOnlyOneEventSentToSplunk("index=" + indexName );
+        TestUtil.verifyEventsSentInOrder(prefix, 1, "user-prefix:" + indexName);
         TestUtil.deleteHttpEventCollectorToken(httpEventCollectorName);
     }
 

@@ -482,27 +482,27 @@ public final class HttpEventCollector_JavaLoggingTest {
      */
     @Test
     public void canSendEventUsingJavaLoggingWithUserEventHeaderSerializer() throws Exception {
-        TestUtil.enableHttpEventCollector();
-        String indexName = "httpevent_index";
-        TestUtil.createIndex("user-prefix:" + indexName);
+		TestUtil.enableHttpEventCollector();
 
-        String token = TestUtil.createHttpEventCollectorToken(httpEventCollectorName);
+		String token = TestUtil.createHttpEventCollectorToken(httpEventCollectorName);
 
-        String loggerName = "splunkLoggerHaderSerializer";
-        HashMap<String, String> userInputs = new HashMap<String, String>();
-        userInputs.put("user_httpEventCollector_token", token);
-        userInputs.put("user_logger_name", loggerName);
-        userInputs.put("user_index", indexName);
-        userInputs.put("user_eventHeaderSerializer", "TestEventHeaderSerializer");
+		String loggerName = "splunkLoggerHeaderSerializer";
+		HashMap<String, String> userInputs = new HashMap<String, String>();
+		userInputs.put("user_httpEventCollector_token", token);
+		userInputs.put("user_logger_name", loggerName);
+		userInputs.put("user_eventHeaderSerializer", "TestEventHeaderSerializer");
 
-        TestUtil.resetJavaLoggingConfiguration("logging_template.properties", "logging.properties", userInputs);
+		TestUtil.resetJavaLoggingConfiguration("logging_template.properties", "logging.properties", userInputs);
 
-        Logger logger = Logger.getLogger(loggerName);
-        String prefix = "user message";
-        logger.info(prefix + " 0");
+		Date date = new Date();
+		String jsonMsg = String.format("EventDate:%s, EventMsg:test event for java logging With User EventHeaderSerializer", date.toString());
 
-        TestUtil.verifyEventsSentInOrder(prefix, 1, "user-prefix:" + indexName);
-        TestUtil.deleteHttpEventCollectorToken(httpEventCollectorName);
+		Logger logger = Logger.getLogger(loggerName);
+		logger.info(jsonMsg);
+
+		TestUtil.verifyOneAndOnlyOneEventSentToSplunk("source=user_source");
+
+		TestUtil.deleteHttpEventCollectorToken(httpEventCollectorName);
     }
 
     @SuppressWarnings("unchecked")

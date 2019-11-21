@@ -18,8 +18,9 @@ package com.splunk.logging;
  * under the License.
  */
 
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+
 import java.util.List;
 
 /**
@@ -50,12 +51,11 @@ public class HttpEventCollectorErrorHandler {
          */
         public ServerErrorException(final String serverReply) {
             reply = serverReply;
-            JSONParser jsonParser = new JSONParser();
             try {
                 // read server reply
-                JSONObject json = (JSONObject)jsonParser.parse(serverReply);
-                errorCode = (Long)json.get("code");
-                errorText = (String)json.get("text");
+                JsonObject json = JsonParser.parseString(serverReply).getAsJsonObject();
+                errorCode = json.get("code").getAsLong();
+                errorText = json.get("text").getAsString();
             } catch (Exception e) {
                 errorText = e.getMessage();
             }

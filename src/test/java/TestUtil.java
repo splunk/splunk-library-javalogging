@@ -17,15 +17,15 @@
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.joran.JoranConfigurator;
 import ch.qos.logback.core.joran.spi.JoranException;
+import com.google.gson.*;
 import com.splunk.*;
 
-import org.json.simple.JSONObject;
-import org.json.simple.JSONValue;
 import org.junit.Assert;
 import org.slf4j.*;
 
 import java.io.*;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.*;
 import java.util.Map.Entry;
@@ -135,7 +135,7 @@ public class TestUtil {
         enableHttpEventCollector();
 
         //create an httpEventCollector
-        Map args = new HashMap();
+        Map<String, Object> args = new HashMap<>();
         args.put("name", httpEventCollectorName);
         args.put("description", "test http event collector");
 
@@ -146,9 +146,9 @@ public class TestUtil {
         assert msg.getStatus() == 201;
 
         //get httpEventCollector token
-        args = new HashMap();
+        args = new HashMap<>();
         ResponseMessage response = service.get(httpEventCollectorTokenEndpointPath + "/" + httpEventCollectorName, args);
-        BufferedReader reader = new BufferedReader(new InputStreamReader(response.getContent(), "UTF-8"));
+        BufferedReader reader = new BufferedReader(new InputStreamReader(response.getContent(), StandardCharsets.UTF_8));
         String token = "";
         while (true) {
             String line = reader.readLine();
@@ -385,10 +385,15 @@ public class TestUtil {
             int eventCount = 0;
             InputStream resultsStream = null;
             ResultsReaderXml resultsReader = null;
-            final Object parsedObject = JSONValue.parse(msg);
+            Object parsedObject;
+            try {
+                parsedObject = JsonParser.parseString(msg);
+            } catch (JsonSyntaxException e) {
+                parsedObject = msg;
+            }
             while (System.currentTimeMillis() - startTime < 30 * 1000)/*wait for up to 30s*/ {
-                if (parsedObject instanceof JSONObject) {
-                    resultsStream = searchJsonMessageEvent((JSONObject) parsedObject);
+                if (parsedObject instanceof JsonObject) {
+                    resultsStream = searchJsonMessageEvent((JsonObject) parsedObject);
                 } else {
                     resultsStream = service.oneshotSearch("search " + msg);
                 }
@@ -422,20 +427,21 @@ public class TestUtil {
      * @return the input stream linked with the search result
      */
     @SuppressWarnings("rawtypes")
-    private static InputStream searchJsonMessageEvent(final JSONObject jsonObject) {
-        String searchQuery = "";
+    private static InputStream searchJsonMessageEvent(final JsonObject jsonObject) {
+        StringBuilder searchQuery = new StringBuilder();
         boolean firstSearchTerm = true;
         for (final Object entryObject : jsonObject.entrySet()) {
             final Entry jsonEntry = (Entry) entryObject;
             if (firstSearchTerm) {
-                searchQuery += String.format("search \"message.%s\"=%s", jsonEntry.getKey(), jsonEntry.getValue());
+                searchQuery.append(String.format("search \"message.%s\"=%s", jsonEntry.getKey(), jsonEntry.getValue()));
                 firstSearchTerm = false;
             } else {
-                searchQuery += String.format(" | search \"message.%s\"=%s", jsonEntry.getKey(), jsonEntry.getValue());
+                searchQuery.append(String.format(" | search \"message.%s\"=%s", jsonEntry.getKey(), jsonEntry.getValue()));
             }
         }
+        System.err.println(searchQuery.toString());
 
-        return service.oneshotSearch(searchQuery);
+        return service.oneshotSearch(searchQuery.toString());
     }
 
     public static void verifyEventsSentInOrder(String prefix, int totalEventsCount, String index) throws IOException {

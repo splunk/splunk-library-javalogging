@@ -15,17 +15,7 @@
  */
 
 import com.splunk.logging.EventBodySerializer;
-import com.splunk.logging.HttpEventCollectorErrorHandler;
 import com.splunk.logging.HttpEventCollectorEventInfo;
-import org.json.simple.JSONObject;
-import org.junit.Assert;
-import org.junit.Test;
-
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.logging.Logger;
 
 // Implement the interface of EventBodySerializer for testing
 public class TestEventBodySerializer implements EventBodySerializer {

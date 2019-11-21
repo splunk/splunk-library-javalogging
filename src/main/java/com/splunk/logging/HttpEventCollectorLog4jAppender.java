@@ -17,10 +17,11 @@ package com.splunk.logging;
 
 import java.io.Serializable;
 import java.nio.charset.Charset;
-import java.util.Dictionary;
-import java.util.Hashtable;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import com.splunk.logging.hec.MetadataTags;
 import org.apache.logging.log4j.core.appender.AbstractAppender;
 import org.apache.logging.log4j.core.Filter;
 import org.apache.logging.log4j.core.Layout;
@@ -73,12 +74,12 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
                          final String eventBodySerializer)
     {
         super(name, filter, layout, ignoreExceptions);
-        Dictionary<String, String> metadata = new Hashtable<String, String>();
-        metadata.put(HttpEventCollectorSender.MetadataHostTag, host != null ? host : "");
-        metadata.put(HttpEventCollectorSender.MetadataIndexTag, index != null ? index : "");
-        metadata.put(HttpEventCollectorSender.MetadataSourceTag, source != null ? source : "");
-        metadata.put(HttpEventCollectorSender.MetadataSourceTypeTag, sourcetype != null ? sourcetype : "");
-        metadata.put(HttpEventCollectorSender.MetadataMessageFormatTag, messageFormat != null ? messageFormat : "");
+        Map<String, String> metadata = new HashMap<>();
+        metadata.put(MetadataTags.HOST, host != null ? host : "");
+        metadata.put(MetadataTags.INDEX, index != null ? index : "");
+        metadata.put(MetadataTags.SOURCE, source != null ? source : "");
+        metadata.put(MetadataTags.SOURCETYPE, sourcetype != null ? sourcetype : "");
+        metadata.put(MetadataTags.MESSAGEFORMAT, messageFormat != null ? messageFormat : "");
 
         this.sender = new HttpEventCollectorSender(url, token, channel, type, batchInterval, batchCount, batchSize, sendMode, metadata);
 
@@ -125,7 +126,7 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
             @PluginAttribute("name") final String name,
             @PluginAttribute("source") final String source,
             @PluginAttribute("sourcetype") final String sourcetype,
-            @PluginAttribute(HttpEventCollectorSender.MetadataMessageFormatTag) final String messageFormat,
+            @PluginAttribute("messageFormat") final String messageFormat,
             @PluginAttribute("host") final String host,
             @PluginAttribute("index") final String index,
             @PluginAttribute(value = "ignoreExceptions", defaultBoolean = true) final String ignoreExceptions,

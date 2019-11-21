@@ -80,9 +80,9 @@ package com.splunk.logging;
  * com.splunk.logging.HttpEventCollectorLoggingHandler.send_mode=sequential
  */
 
-import java.util.Dictionary;
-import java.util.Hashtable;
-import java.util.Locale;
+import com.splunk.logging.hec.MetadataTags;
+
+import java.util.*;
 import java.util.logging.Handler;
 import java.util.logging.LogManager;
 import java.util.logging.LogRecord;
@@ -113,22 +113,22 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
     /** HttpEventCollectorLoggingHandler c-or */
     public HttpEventCollectorLoggingHandler() {
         // read configuration settings
-        Dictionary<String, String> metadata = new Hashtable<String, String>();
-        metadata.put(HttpEventCollectorSender.MetadataHostTag,
-                getConfigurationProperty(HttpEventCollectorSender.MetadataHostTag, ""));
+        Map<String, String> metadata = new HashMap<>();
+        metadata.put(MetadataTags.HOST,
+                getConfigurationProperty(MetadataTags.HOST, ""));
 
-        metadata.put(HttpEventCollectorSender.MetadataIndexTag,
-                getConfigurationProperty(HttpEventCollectorSender.MetadataIndexTag, ""));
+        metadata.put(MetadataTags.INDEX,
+                getConfigurationProperty(MetadataTags.INDEX, ""));
 
-        metadata.put(HttpEventCollectorSender.MetadataSourceTag,
-                getConfigurationProperty(HttpEventCollectorSender.MetadataSourceTag, ""));
+        metadata.put(MetadataTags.SOURCE,
+                getConfigurationProperty(MetadataTags.SOURCE, ""));
 
-        metadata.put(HttpEventCollectorSender.MetadataSourceTypeTag,
-                getConfigurationProperty(HttpEventCollectorSender.MetadataSourceTypeTag, ""));
+        metadata.put(MetadataTags.SOURCETYPE,
+                getConfigurationProperty(MetadataTags.SOURCETYPE, ""));
         
         // Extract message format value
-        metadata.put(HttpEventCollectorSender.MetadataMessageFormatTag,
-            getConfigurationProperty(HttpEventCollectorSender.MetadataMessageFormatTag, ""));
+        metadata.put(MetadataTags.MESSAGEFORMAT,
+            getConfigurationProperty(MetadataTags.MESSAGEFORMAT, ""));
 
         // http event collector endpoint properties
         String url = getConfigurationProperty(UrlConfTag, null);

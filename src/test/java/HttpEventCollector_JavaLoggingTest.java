@@ -16,13 +16,12 @@
 
 import java.util.*;
 
-import com.splunk.logging.EventBodySerializer;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import com.splunk.logging.HttpEventCollectorErrorHandler;
 import com.splunk.logging.HttpEventCollectorEventInfo;
 
-import com.splunk.logging.HttpEventCollectorSender;
 import org.apache.commons.lang3.StringUtils;
-import org.json.simple.JSONObject;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -493,21 +492,21 @@ public final class HttpEventCollector_JavaLoggingTest {
 
         final long timeMillsec = new Date().getTime();
 
-        final JSONObject jsonObject = new JSONObject();
-        jsonObject.put("transactionId", "11");
-        jsonObject.put("userId", "21");
-        jsonObject.put("eventTimestamp", timeMillsec);
+        final JsonObject jsonObject = new JsonObject();
+        jsonObject.add("transactionId", new JsonPrimitive("11"));
+        jsonObject.add("userId", new JsonPrimitive("21"));
+        jsonObject.add("eventTimestamp", new JsonPrimitive(timeMillsec));
 
         final Logger logger = Logger.getLogger(loggerName);
 
         // Test with a json event message
-        jsonObject.put("severity", "info");
+        jsonObject.add("severity", new JsonPrimitive("info"));
         final String infoJson = jsonObject.toString();
         logger.info(infoJson);
         msgs.add(infoJson);
 
         // Test with a text event message
-        jsonObject.put("severity", "info");
+        jsonObject.add("severity", new JsonPrimitive("info"));
         final String infoText = String.format("{EventTimestamp:%s, EventMsg:'this is a text info for java util logger}", timeMillsec);
         logger.info(infoText);
         msgs.add(infoText);

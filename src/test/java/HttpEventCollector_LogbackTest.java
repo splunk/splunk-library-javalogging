@@ -16,11 +16,12 @@
 
 import java.util.*;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import com.splunk.logging.HttpEventCollectorErrorHandler;
 import com.splunk.logging.HttpEventCollectorEventInfo;
 
 import org.apache.commons.lang3.StringUtils;
-import org.json.simple.JSONObject;
 import org.junit.Assert;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -390,30 +391,30 @@ public final class HttpEventCollector_LogbackTest {
 
         TestUtil.resetLogbackConfiguration("logback_template.xml", "logback.xml", userInputs);
 
-        final List<String> msgs = new ArrayList<String>();
+        final List<String> msgs = new ArrayList<>();
 
         final long timeMillsec = new Date().getTime();
 
-        final JSONObject jsonObject = new JSONObject();
-        jsonObject.put("transactionId", "11");
-        jsonObject.put("userId", "21");
-        jsonObject.put("eventTimestamp", timeMillsec);
+        final JsonObject jsonObject = new JsonObject();
+        jsonObject.add("transactionId", new JsonPrimitive("11"));
+        jsonObject.add("userId", new JsonPrimitive("21"));
+        jsonObject.add("eventTimestamp", new JsonPrimitive(timeMillsec));
 
         final Logger logger = LoggerFactory.getLogger(loggerName);
 
         // Test with a json event message
-        jsonObject.put("severity", "info");
+        jsonObject.add("severity", new JsonPrimitive("info"));
         final String infoJson = jsonObject.toString();
         logger.info(infoJson);
         msgs.add(infoJson);
 
-        jsonObject.put("severity", "error");
+        jsonObject.add("severity", new JsonPrimitive("error"));
         final String errorJson = jsonObject.toString();
         logger.error(errorJson);
         msgs.add(errorJson);
 
         // Test with a text event message
-        jsonObject.put("severity", "debug");
+        jsonObject.add("severity", new JsonPrimitive("debug"));
         final String debugText = String.format("{EventTimestamp:%s, EventMsg:'this is a test debug for Logback Test}", timeMillsec);
         logger.debug(debugText);
         msgs.add(debugText);

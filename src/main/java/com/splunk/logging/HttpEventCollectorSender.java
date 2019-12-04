@@ -301,7 +301,7 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
 
             try {
                 // install the all-trusting trust manager
-                final SSLContext sslContext = SSLContext.getInstance("SSL");
+                final SSLContext sslContext = SSLContext.getInstance("TLSv1.2");
                 sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
                 // create an ssl socket factory with the all-trusting manager
                 final SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();

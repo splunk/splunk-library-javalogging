@@ -320,7 +320,7 @@ public final class HttpEventCollector_LogbackTest {
         Assert.assertEquals(1, errors.size());
 
         System.out.println(logEx.toString());
-        if (!(logEx.toString().contains("Connection refused") || logEx.toString().contains("Connection closed")))
+        if (!(logEx.toString().contains("Failed to connect to")))
             Assert.fail(String.format("Unexpected error message '%s'", logEx.toString()));
     }
 

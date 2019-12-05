@@ -363,11 +363,13 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
                 String reply = "";
                 int httpStatusCode = response.code();
                 // read reply only in case of a server error
-                if (httpStatusCode != 200 && response.body() != null) {
-                    try {
-                        reply = response.body().string();
-                    } catch (IOException e) {
-                        reply = e.getMessage();
+                try (ResponseBody body = response.body()) {
+                    if (httpStatusCode != 200 && body != null) {
+                        try {
+                            reply = body.string();
+                        } catch (IOException e) {
+                            reply = e.getMessage();
+                        }
                     }
                 }
                 callback.completed(httpStatusCode, reply);

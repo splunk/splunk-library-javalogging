@@ -20,6 +20,7 @@ import java.util.*;
 import com.splunk.logging.HttpEventCollectorErrorHandler;
 import com.splunk.logging.HttpEventCollectorEventInfo;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.core.LoggerContext;
 import org.json.simple.JSONObject;
 import org.junit.Assert;
@@ -328,7 +329,7 @@ public final class HttpEventCollector_Log4j2Test {
         Assert.assertTrue(errors.size() >= 1);
 
         System.out.println(logEx.toString());
-        if (!(logEx.toString().contains("Failed to connect to")))
+        if (!StringUtils.containsAny(logEx.toString(), "Failed to connect to", "Remote host terminated the handshake", "Connection reset"))
             Assert.fail(String.format("Unexpected error message '%s'", logEx.toString()));
     }
 

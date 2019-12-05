@@ -272,7 +272,7 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
         // limit max  number of async requests in sequential mode
         if (sendMode == SendMode.Sequential) {
             Dispatcher dispatcher = new Dispatcher();
-            dispatcher.setMaxRequestsPerHost(1);
+            dispatcher.setMaxRequests(1);
             builder.dispatcher(dispatcher);
         }
 

@@ -206,7 +206,7 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
     void close() {
         if (timer != null)
             timer.cancel();
-        flush(true);
+        flush();
         super.cancel();
     }
 

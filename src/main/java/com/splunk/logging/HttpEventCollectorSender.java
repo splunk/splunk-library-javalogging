@@ -192,6 +192,9 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
 
     @Deprecated
     public synchronized void flush(boolean close) {
+        if (close) {
+            stopHttpClient();
+        }
         flush();
     }
 
@@ -202,6 +205,7 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
         if (timer != null)
             timer.cancel();
         flush();
+        stopHttpClient();
         super.cancel();
     }
 
@@ -259,6 +263,13 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
 
         event.put("event", eventBodySerializer.serializeEventBody(eventInfo, parsedMessage));
         return event.toString();
+    }
+
+    private void stopHttpClient() {
+        if (httpClient != null) {
+            httpClient.dispatcher().executorService().shutdown();
+            httpClient = null;
+        }
     }
 
     private void startHttpClient() {

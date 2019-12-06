@@ -37,6 +37,19 @@
                         </configuration>
                     </plugin>
                     <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-source-plugin</artifactId>
+                        <version>3.1.0</version>
+                        <executions>
+                            <execution>
+                                <id>attach-sources</id>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
                         <groupId>biz.aQute.bnd</groupId>
                         <artifactId>bnd-maven-plugin</artifactId>
                         <version>3.5.0</version>
@@ -205,18 +218,6 @@
             <version>2.12.1</version>
         </dependency>
 
-<!--        <dependency>-->
-<!--            <groupId>com.googlecode.json-simple</groupId>-->
-<!--            <artifactId>json-simple</artifactId>-->
-<!--            <version>1.1.1</version>-->
-<!--        </dependency>-->
-        <!-- Switch to below or embrace gson, also in deps -->
-<!--        <dependency>-->
-<!--            <groupId>com.github.cliftonlabs</groupId>-->
-<!--            <artifactId>json-simple</artifactId>-->
-<!--            <version>3.1.0</version>-->
-<!--        </dependency>-->
-
         <dependency>
             <groupId>com.splunk</groupId>
             <artifactId>splunk</artifactId>
@@ -248,6 +249,30 @@
                     <source>8</source>
                     <target>8</target>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>attach-javadocs</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

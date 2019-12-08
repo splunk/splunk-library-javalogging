@@ -168,17 +168,12 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
      * @param message event text
      */
     public synchronized void send(
-            final String severity,
-            final String message,
-            final String logger_name,
-            final String thread_name,
-            Map<String, String> properties,
-            final String exception_message,
-            Serializable marker
+        
+            final String message
     ) {
         // create event info container and add it to the batch
         HttpEventCollectorEventInfo eventInfo =
-                new HttpEventCollectorEventInfo(severity, message, logger_name, thread_name, properties, exception_message, marker);
+                new HttpEventCollectorEventInfo(message);
         eventsBatch.add(eventInfo);
         eventsBatchSize += severity.length() + message.length();
         if (eventsBatch.size() >= maxEventsBatchCount || eventsBatchSize > maxEventsBatchSize) {

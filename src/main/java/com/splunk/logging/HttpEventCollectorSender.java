@@ -190,12 +190,11 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
         eventsBatchSize = 0;
     }
 
-    @Deprecated
     public synchronized void flush(boolean close) {
+        flush();
         if (close) {
             stopHttpClient();
         }
-        flush();
     }
 
     /**

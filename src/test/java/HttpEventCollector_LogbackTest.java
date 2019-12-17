@@ -19,6 +19,7 @@ import java.util.*;
 import com.splunk.logging.HttpEventCollectorErrorHandler;
 import com.splunk.logging.HttpEventCollectorEventInfo;
 
+import org.apache.commons.lang3.StringUtils;
 import org.json.simple.JSONObject;
 import org.junit.Assert;
 import org.junit.Test;
@@ -320,7 +321,7 @@ public final class HttpEventCollector_LogbackTest {
         Assert.assertEquals(1, errors.size());
 
         System.out.println(logEx.toString());
-        if (!(logEx.toString().contains("Connection refused") || logEx.toString().contains("Connection closed")))
+        if (!StringUtils.containsAny(logEx.toString(), "Failed to connect to", "Remote host terminated the handshake", "Connection reset"))
             Assert.fail(String.format("Unexpected error message '%s'", logEx.toString()));
     }
 

@@ -19,6 +19,7 @@ import java.io.Serializable;
 import java.nio.charset.Charset;
 import java.util.Dictionary;
 import java.util.Hashtable;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.logging.log4j.core.appender.AbstractAppender;
 import org.apache.logging.log4j.core.Filter;
@@ -208,8 +209,8 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
     }
 
     @Override
-    public void stop() {
+    public boolean stop(long timeout, TimeUnit timeUnit) {
         this.sender.close();
-        super.stop();
+        return super.stop(timeout, timeUnit);
     }
 }

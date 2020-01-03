@@ -43,7 +43,7 @@ public class HttpEventCollectorErrorHandler {
     public static class ServerErrorException extends Exception {
         private String reply;
         private long errorCode = -1;
-        private String errorText = "unknown error";
+        private String errorText;
 
         /**
          * Create an exception with server error reply
@@ -81,6 +81,12 @@ public class HttpEventCollectorErrorHandler {
         public String getErrorText() {
             return errorText;
         }
+
+        @Override
+        public String getMessage() {
+            return getErrorText();
+        }
+
 
         @Override public String toString() {
             return getReply();

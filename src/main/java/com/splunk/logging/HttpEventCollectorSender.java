@@ -238,38 +238,6 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
         }
     }
 
-//    private String serializeEventInfo(HttpEventCollectorEventInfo eventInfo) {
-////        // create event json content
-////        //
-////        // cf: http://dev.splunk.com/view/event-collector/SP-CAAAE6P
-////        //
-////        JsonObject event = new JsonObject();
-////        // event timestamp and metadata
-////        putIfPresent(event, MetadataTimeTag, String.format(Locale.US, "%.3f", eventInfo.getTime()));
-////        putIfPresent(event, MetadataHostTag, metadata.get(MetadataHostTag));
-////        putIfPresent(event, MetadataIndexTag, metadata.get(MetadataIndexTag));
-////        putIfPresent(event, MetadataSourceTag, metadata.get(MetadataSourceTag));
-////        putIfPresent(event, MetadataSourceTypeTag, metadata.get(MetadataSourceTypeTag));
-////
-////        // Parse message on the basis of format
-////        final Object parsedMessage = this.messageFormat.parse(eventInfo.getMessage());
-////
-////        JsonElement eventBody;
-////        if (eventBodySerializer != null) {
-////            eventBody = new JsonPrimitive(eventBodySerializer.serializeEventBody(eventInfo, parsedMessage));
-////        } else {
-////            eventBody = gson.toJsonTree(eventInfo);
-////        }
-////
-////        // FIXME: need test to ensure this fixes string in json problem
-////        // FIXME: rename fields in output JSON to match prior object structure
-////        event.add("event", eventBody);
-////        System.err.println(event.toString());
-////        return event.toString();
-//        String evt = gson.toJson(eventInfo);
-//        System.err.println(evt);
-//        return evt;
-//    }
 
     private void stopHttpClient() {
         if (httpClient != null) {

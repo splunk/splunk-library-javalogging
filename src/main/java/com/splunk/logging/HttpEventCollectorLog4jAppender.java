@@ -17,6 +17,7 @@ package com.splunk.logging;
 
 import java.io.Serializable;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -25,6 +26,7 @@ import com.splunk.logging.hec.MetadataTags;
 import org.apache.logging.log4j.core.appender.AbstractAppender;
 import org.apache.logging.log4j.core.Filter;
 import org.apache.logging.log4j.core.Layout;
+import org.apache.logging.log4j.core.config.Property;
 import org.apache.logging.log4j.core.layout.PatternLayout;
 import org.apache.logging.log4j.core.LogEvent;
 import org.apache.logging.log4j.core.config.plugins.Plugin;
@@ -73,7 +75,7 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
                          final String disableCertificateValidation,
                          final String eventBodySerializer)
     {
-        super(name, filter, layout, ignoreExceptions);
+        super(name, filter, layout, ignoreExceptions, Property.EMPTY_ARRAY);
         Map<String, String> metadata = new HashMap<>();
         metadata.put(MetadataTags.HOST, host != null ? host : "");
         metadata.put(MetadataTags.INDEX, index != null ? index : "");
@@ -167,7 +169,12 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
 
         if (layout == null)
         {
-            layout = PatternLayout.createLayout("%m", null, null, null, Charset.forName("UTF-8"), true, false, null, null);
+            layout = PatternLayout.newBuilder()
+                    .withPattern("%m")
+                    .withCharset(StandardCharsets.UTF_8)
+                    .withAlwaysWriteExceptions(true)
+                    .withNoConsoleNoAnsi(false)
+                    .build();
         }
 
         final boolean ignoreExceptionsBool = Boolean.getBoolean(ignoreExceptions);
@@ -203,7 +210,7 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
                 getLayout().toSerializable(event).toString(),
                 includeLoggerName ? event.getLoggerName() : null,
                 includeThreadName ? event.getThreadName() : null,
-                includeMDC ? event.getContextMap() : null,
+                includeMDC ? event.getContextData().toMap() : null,
                 (!includeException || event.getThrown() == null) ? null : event.getThrown().getMessage(),
                 includeMarker ? event.getMarker() : null
         );

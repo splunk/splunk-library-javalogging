@@ -18,9 +18,11 @@ package com.splunk.logging;
  * under the License.
  */
 
+import com.google.gson.*;
+import com.splunk.logging.hec.MetadataTags;
+import com.splunk.logging.serialization.EventInfoTypeAdapter;
+import com.splunk.logging.serialization.HecJsonSerializer;
 import okhttp3.*;
-
-import org.json.simple.JSONObject;
 
 import javax.net.ssl.*;
 import java.io.IOException;
@@ -33,12 +35,6 @@ import java.util.*;
  * This is an internal helper class that sends logging events to Splunk http event collector.
  */
 public class HttpEventCollectorSender extends TimerTask implements HttpEventCollectorMiddleware.IHttpSender {
-    public static final String MetadataTimeTag = "time";
-    public static final String MetadataHostTag = "host";
-    public static final String MetadataIndexTag = "index";
-    public static final String MetadataSourceTag = "source";
-    public static final String MetadataSourceTypeTag = "sourcetype";
-    public static final String MetadataMessageFormatTag = "messageFormat";
     private static final String SPLUNKREQUESTCHANNELTag = "X-Splunk-Request-Channel";
     private static final String AuthorizationHeaderTag = "Authorization";
     private static final String AuthorizationHeaderScheme = "Splunk %s";
@@ -47,6 +43,12 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
     private static final String HttpContentType = "application/json; profile=urn:splunk:event:1.0; charset=utf-8";
     private static final String SendModeSequential = "sequential";
     private static final String SendModeSParallel = "parallel";
+    private static final Gson gson = new GsonBuilder()
+            .registerTypeAdapter(HttpEventCollectorEventInfo.class, new EventInfoTypeAdapter())
+            .create();
+
+    private final HecJsonSerializer serializer;
+
 
     /**
      * Sender operation mode. Parallel means that all HTTP requests are
@@ -72,7 +74,6 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
     private String type;
     private long maxEventsBatchCount;
     private long maxEventsBatchSize;
-    private Dictionary<String, String> metadata;
     private Timer timer;
     private List<HttpEventCollectorEventInfo> eventsBatch = new LinkedList<HttpEventCollectorEventInfo>();
     private long eventsBatchSize = 0; // estimated total size of events batch
@@ -81,7 +82,6 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
     private SendMode sendMode = SendMode.Sequential;
     private HttpEventCollectorMiddleware middleware = new HttpEventCollectorMiddleware();
     private final MessageFormat messageFormat;
-    private EventBodySerializer eventBodySerializer;
 
     /**
      * Initialize HttpEventCollectorSender
@@ -98,7 +98,7 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
             final String Url, final String token, final String channel, final String type,
             long delay, long maxEventsBatchCount, long maxEventsBatchSize,
             String sendModeStr,
-            Dictionary<String, String> metadata) {
+            Map<String, String> metadata) {
         this.url = Url + HttpEventCollectorUriPath;
         this.token = token;
         this.channel = channel;
@@ -117,9 +117,9 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
         }
         this.maxEventsBatchCount = maxEventsBatchCount;
         this.maxEventsBatchSize = maxEventsBatchSize;
-        this.metadata = metadata;
 
-        final String format = metadata.get(MetadataMessageFormatTag);
+        serializer = new HecJsonSerializer(metadata);
+        final String format = metadata.get(MetadataTags.MESSAGEFORMAT);
         // Get MessageFormat enum from format string. Do this once per instance in constructor to avoid expensive operation in
         // each event sender call
         this.messageFormat = MessageFormat.fromFormat(format);
@@ -186,7 +186,7 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
         // Clear the batch. A new list should be created because events are
         // sending asynchronously and "previous" instance of eventsBatch object
         // is still in use.
-        eventsBatch = new LinkedList<HttpEventCollectorEventInfo>();
+        eventsBatch = new LinkedList<>();
         eventsBatchSize = 0;
     }
 
@@ -225,44 +225,19 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
     }
 
     public void setEventBodySerializer(EventBodySerializer eventBodySerializer) {
-        this.eventBodySerializer = eventBodySerializer;
+        serializer.setEventBodySerializer(eventBodySerializer);
     }
 
-    @SuppressWarnings("unchecked")
-    public static void putIfPresent(JSONObject collection, String tag, Object value) {
+    public static void putIfPresent(JsonObject collection, String tag, Object value) {
         if (value != null) {
             if (value instanceof String && ((String) value).length() == 0) {
                 // Do not add blank string
                 return;
             }
-            collection.put(tag, value);
+            collection.add(tag, gson.toJsonTree(value));
         }
     }
 
-    @SuppressWarnings("unchecked")
-    private String serializeEventInfo(HttpEventCollectorEventInfo eventInfo) {
-        // create event json content
-        //
-        // cf: http://dev.splunk.com/view/event-collector/SP-CAAAE6P
-        //
-        JSONObject event = new JSONObject();
-        // event timestamp and metadata
-        putIfPresent(event, MetadataTimeTag, String.format(Locale.US, "%.3f", eventInfo.getTime()));
-        putIfPresent(event, MetadataHostTag, metadata.get(MetadataHostTag));
-        putIfPresent(event, MetadataIndexTag, metadata.get(MetadataIndexTag));
-        putIfPresent(event, MetadataSourceTag, metadata.get(MetadataSourceTag));
-        putIfPresent(event, MetadataSourceTypeTag, metadata.get(MetadataSourceTypeTag));
-
-        // Parse message on the basis of format
-        final Object parsedMessage = this.messageFormat.parse(eventInfo.getMessage());
-
-        if (eventBodySerializer == null) {
-            eventBodySerializer = new EventBodySerializer.Default();
-        }
-
-        event.put("event", eventBodySerializer.serializeEventBody(eventInfo, parsedMessage));
-        return event.toString();
-    }
 
     private void stopHttpClient() {
         if (httpClient != null) {
@@ -350,8 +325,9 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
         startHttpClient(); // make sure http client is started
         // convert events list into a string
         StringBuilder eventsBatchString = new StringBuilder();
-        for (HttpEventCollectorEventInfo eventInfo : events)
-            eventsBatchString.append(serializeEventInfo(eventInfo));
+        for (HttpEventCollectorEventInfo eventInfo : events) {
+            eventsBatchString.append(serializer.serialize(eventInfo));
+        }
         // create http request
         Request.Builder requestBldr = new Request.Builder()
                 .url(url)

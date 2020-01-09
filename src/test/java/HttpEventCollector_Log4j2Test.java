@@ -17,12 +17,13 @@
 import java.io.*;
 import java.util.*;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import com.splunk.logging.HttpEventCollectorErrorHandler;
 import com.splunk.logging.HttpEventCollectorEventInfo;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.core.LoggerContext;
-import org.json.simple.JSONObject;
 import org.junit.Assert;
 import org.junit.Test;
 import org.apache.logging.log4j.Logger;
@@ -30,7 +31,7 @@ import org.apache.logging.log4j.Logger;
 public final class HttpEventCollector_Log4j2Test {
     private String httpEventCollectorName = "Log4j2Test";
     List<List<HttpEventCollectorEventInfo>> errors = new ArrayList<List<HttpEventCollectorEventInfo>>();
-    List<HttpEventCollectorErrorHandler.ServerErrorException> logEx = new ArrayList<HttpEventCollectorErrorHandler.ServerErrorException>();
+    List<HttpEventCollectorErrorHandler.ServerErrorException> logEx = new ArrayList<>();
 
     /**
      * sending a message via httplogging using log4j2 to splunk
@@ -403,13 +404,13 @@ public final class HttpEventCollector_Log4j2Test {
 
         final long timeMillsec = new Date().getTime();
 
-        final JSONObject jsonObject = new JSONObject();
-        jsonObject.put("transactionId", "11");
-        jsonObject.put("userId", "21");
-        jsonObject.put("eventTimestap", timeMillsec);
+        final JsonObject jsonObject = new JsonObject();
+        jsonObject.add("transactionId", new JsonPrimitive("11"));
+        jsonObject.add("userId", new JsonPrimitive("21"));
+        jsonObject.add("eventTimestamp", new JsonPrimitive(timeMillsec));
 
         // Test with a json event message
-        jsonObject.put("severity", "info");
+        jsonObject.add("severity", new JsonPrimitive("info"));
         final String infoJson = jsonObject.toString();
         logger.info(infoJson);
         msgs.add(infoJson);

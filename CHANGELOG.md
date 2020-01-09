@@ -1,5 +1,12 @@
 # Splunk Logging for Java Changelog
 
+## Version 1.8.0
+
+* Update JSON serialization- message property should not be encoded as a string
+* Changed underlying HTTP client to OkHttp. This change should decrease memory
+  usage and increase performance.
+* Updated Gradle build plugins to latest versions
+
 ## Version 1.7.3
 
 * Update Log4j dependency version to 2.10.0 [#114](https://github.com/splunk/splunk-library-javalogging/pull/114).

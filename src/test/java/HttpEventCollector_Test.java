@@ -100,17 +100,16 @@ public class HttpEventCollector_Test {
         LogToSplunk(true);
     }
 
-    public  static volatile boolean exceptionWasRaised = false;
+    public  boolean exceptionWasRaised = false;
+    private String message = null;
+    private List<HttpEventCollectorEventInfo> data = null;
     @Test
     public void TryToLogToSplunkWithDisabledHttpEventCollector() throws Exception {
-        HttpEventCollectorErrorHandler.onError(new HttpEventCollectorErrorHandler.ErrorCallback() {
-            public void error(final List<HttpEventCollectorEventInfo> data, final Exception ex) {
-                String exceptionInfo = ex.getMessage() + " " + ex.getStackTrace();
-                HttpEventCollectorErrorHandler.ServerErrorException serverErrorException =
-                        new HttpEventCollectorErrorHandler.ServerErrorException(exceptionInfo);
-                System.out.printf("Callback has been called on error\n");
-                exceptionWasRaised = true;
-            }
+        HttpEventCollectorErrorHandler.onError((data, ex) -> {
+            System.out.print("Callback has been called on error\n");
+            message = ex.getMessage();
+            this.data = data;
+            exceptionWasRaised = true;
         });
         int expectedCounter = 200;
         exceptionWasRaised = false;
@@ -118,7 +117,7 @@ public class HttpEventCollector_Test {
         System.out.printf("\tSetting up http event collector with %s ... ", batching ? "batching" : "no batching");
         TestUtil.enableHttpEventCollector();
         String token=TestUtil.createHttpEventCollectorToken(httpEventCollectorName);
-        System.out.printf("set\n");
+        System.out.print("set\n");
 
         //modify the config file with the generated token
         String loggerName = "splunkLogger_disabled";
@@ -143,6 +142,9 @@ public class HttpEventCollector_Test {
             Thread.sleep(15000);
         }
         Assert.assertTrue(exceptionWasRaised);
+        Assert.assertNotNull(message);
+        Assert.assertNotNull(data);
+        Assert.assertTrue(data.size() > 0);
         System.out.printf("PASSED with %d events sent.\n\n", expectedCounter);
     }
 
@@ -150,7 +152,7 @@ public class HttpEventCollector_Test {
         System.out.printf("\tInserting data with logger '%s'... ", loggerType);
         long startTime = System.currentTimeMillis() / 1000;
         Thread.sleep(2000);
-        HashMap<String, String> userInputs = new HashMap<String, String>();
+        HashMap<String, String> userInputs = new HashMap<>();
         userInputs.put("user_httpEventCollector_token", token);
         if (batching) {
             userInputs.put("user_batch_interval", "200");

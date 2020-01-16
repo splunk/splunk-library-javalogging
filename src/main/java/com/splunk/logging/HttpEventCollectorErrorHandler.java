@@ -18,8 +18,9 @@ package com.splunk.logging;
  * under the License.
  */
 
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+
 import java.util.List;
 
 /**
@@ -42,7 +43,7 @@ public class HttpEventCollectorErrorHandler {
     public static class ServerErrorException extends Exception {
         private String reply;
         private long errorCode = -1;
-        private String errorText = "unknown error";
+        private String errorText;
 
         /**
          * Create an exception with server error reply
@@ -50,12 +51,11 @@ public class HttpEventCollectorErrorHandler {
          */
         public ServerErrorException(final String serverReply) {
             reply = serverReply;
-            JSONParser jsonParser = new JSONParser();
             try {
                 // read server reply
-                JSONObject json = (JSONObject)jsonParser.parse(serverReply);
-                errorCode = (Long)json.get("code");
-                errorText = (String)json.get("text");
+                JsonObject json = JsonParser.parseString(serverReply).getAsJsonObject();
+                errorCode = json.get("code").getAsLong();
+                errorText = json.get("text").getAsString();
             } catch (Exception e) {
                 errorText = e.getMessage();
             }
@@ -81,6 +81,12 @@ public class HttpEventCollectorErrorHandler {
         public String getErrorText() {
             return errorText;
         }
+
+        @Override
+        public String getMessage() {
+            return getErrorText();
+        }
+
 
         @Override public String toString() {
             return getReply();

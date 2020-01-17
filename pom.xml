@@ -165,6 +165,13 @@
             <url>http://splunk.artifactoryonline.com/splunk/ext-releases-local</url>
         </repository>
     </repositories>
+    <distributionManagement>
+        <repository>
+            <id>splunk-artifactory</id>
+            <name>Splunk Releases</name>
+            <url>http://splunk.artifactoryonline.com/splunk/ext-releases-local</url>
+        </repository>
+    </distributionManagement>
 
     <dependencies>
         <dependency>

@@ -36,8 +36,7 @@ You'll need Java version 8 or higher, from [OpenJDK](https://openjdk.java.net) o
   [Overview of Splunk logging for Java](http://dev.splunk.com/goto/sdk-slj).
 
 * For reference documentation, see the
-  [Splunk logging for Java API reference](https://docs.splunk.com
-  /DocumentationStatic/JavaLogging/1.8.0/index.html).
+  [Splunk logging for Java API reference](https://docs.splunk.com/DocumentationStatic/JavaLogging/1.8.0/index.html).
 
 * For all things developer with Splunk, see the
   [Splunk Developer Portal](http://dev.splunk.com).

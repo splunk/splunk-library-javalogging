@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.security.cert.CertificateException;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 
 /**
@@ -43,6 +44,7 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
     private static final String HttpContentType = "application/json; profile=urn:splunk:event:1.0; charset=utf-8";
     private static final String SendModeSequential = "sequential";
     private static final String SendModeSParallel = "parallel";
+    private TimeoutSettings timeoutSettings = new TimeoutSettings();
     private static final Gson gson = new GsonBuilder()
             .registerTypeAdapter(HttpEventCollectorEventInfo.class, new EventInfoTypeAdapter())
             .create();
@@ -98,11 +100,14 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
             final String Url, final String token, final String channel, final String type,
             long delay, long maxEventsBatchCount, long maxEventsBatchSize,
             String sendModeStr,
-            Map<String, String> metadata) {
+            Map<String, String> metadata, TimeoutSettings timeoutSettings) {
         this.url = Url + HttpEventCollectorUriPath;
         this.token = token;
         this.channel = channel;
         this.type = type;
+        if (timeoutSettings != null) {
+            this.timeoutSettings = timeoutSettings;
+        }
 
         if ("Raw".equalsIgnoreCase(type)) {
             this.url = Url + HttpRawCollectorUriPath;
@@ -254,6 +259,11 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
 
         OkHttpClient.Builder builder = new OkHttpClient.Builder();
 
+        builder.connectTimeout(timeoutSettings.connectTimeout, TimeUnit.MILLISECONDS)
+                .callTimeout(timeoutSettings.callTimeout, TimeUnit.MILLISECONDS)
+                .readTimeout(timeoutSettings.readTimeout, TimeUnit.MILLISECONDS)
+                .writeTimeout(timeoutSettings.writeTimeout, TimeUnit.MILLISECONDS);
+
         // limit max  number of async requests in sequential mode
         if (sendMode == SendMode.Sequential) {
             Dispatcher dispatcher = new Dispatcher();
@@ -295,6 +305,7 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
                 }
             });
         }
+
 
         httpClient = builder.build();
     }
@@ -361,5 +372,26 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
                 callback.failed(ex);
             }
         });
+    }
+
+    public static class TimeoutSettings {
+        public static final long DEFAULT_CONNECT_TIMEOUT = 30000;
+        public static final long DEFAULT_WRITE_TIMEOUT = 0; // 0 means no timeout
+        public static final long DEFAULT_CALL_TIMEOUT = 0;
+        public static final long DEFAULT_READ_TIMEOUT = 0;
+
+        public long connectTimeout = DEFAULT_CONNECT_TIMEOUT;
+        public long callTimeout = DEFAULT_CALL_TIMEOUT;
+        public long readTimeout = DEFAULT_READ_TIMEOUT;
+        public long writeTimeout = DEFAULT_WRITE_TIMEOUT;
+
+        public TimeoutSettings() {}
+
+        public TimeoutSettings(long connectTimeout, long callTimeout, long readTimeout, long writeTimeout) {
+            this.connectTimeout = connectTimeout;
+            this.callTimeout = callTimeout;
+            this.readTimeout = readTimeout;
+            this.writeTimeout = writeTimeout;
+        }
     }
 }

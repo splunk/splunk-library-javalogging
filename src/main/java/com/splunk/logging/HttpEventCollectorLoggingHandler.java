@@ -110,6 +110,11 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
     private final String SendModeTag = "send_mode";
     private final String MiddlewareTag = "middleware";
 
+    private final String ConnectTimeoutConfTag = "connect_timeout";
+    private final String CallTimeoutConfTag = "connect_timeout";
+    private final String ReadTimeoutConfTag = "connect_timeout";
+    private final String WriteTimeoutConfTag = "connect_timeout";
+
     /** HttpEventCollectorLoggingHandler c-or */
     public HttpEventCollectorLoggingHandler() {
         // read configuration settings
@@ -155,9 +160,16 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
         includeThreadName = getConfigurationBooleanProperty(IncludeThreadNameConfTag, true);
         includeException = getConfigurationBooleanProperty(IncludeExceptionConfTag, true);
 
+        HttpEventCollectorSender.TimeoutSettings timeoutSettings = new HttpEventCollectorSender.TimeoutSettings(
+            getConfigurationNumericProperty(ConnectTimeoutConfTag, HttpEventCollectorSender.TimeoutSettings.DEFAULT_CONNECT_TIMEOUT),
+            getConfigurationNumericProperty(CallTimeoutConfTag, HttpEventCollectorSender.TimeoutSettings.DEFAULT_CALL_TIMEOUT),
+            getConfigurationNumericProperty(ReadTimeoutConfTag, HttpEventCollectorSender.TimeoutSettings.DEFAULT_READ_TIMEOUT),
+            getConfigurationNumericProperty(WriteTimeoutConfTag, HttpEventCollectorSender.TimeoutSettings.DEFAULT_WRITE_TIMEOUT)
+        );
+
         // delegate all configuration params to event sender
         this.sender = new HttpEventCollectorSender(
-                url, token, channel, type, delay, batchCount, batchSize, sendMode, metadata);
+                url, token, channel, type, delay, batchCount, batchSize, sendMode, metadata, timeoutSettings);
 
         // plug a user middleware
         if (middleware != null && !middleware.isEmpty()) {

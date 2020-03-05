@@ -44,6 +44,7 @@ under the License.
               batch_size_bytes="0"
               batch_size_count="0"
               batch_interval="0"
+              connect_timeout="5000"
               disableCertificateValidation="true">
             <PatternLayout pattern="%m"/>
         </SplunkHttp>

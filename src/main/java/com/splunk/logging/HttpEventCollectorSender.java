@@ -18,45 +18,23 @@ package com.splunk.logging;
  * under the License.
  */
 
-import org.apache.http.HttpResponse;
-import org.apache.http.client.config.CookieSpecs;
-import org.apache.http.client.config.RequestConfig;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.concurrent.FutureCallback;
-import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
-import org.apache.http.conn.ssl.SSLContexts;
-import org.apache.http.conn.ssl.TrustStrategy;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
-import org.apache.http.impl.nio.client.HttpAsyncClients;
-import org.apache.http.util.EntityUtils;
+import com.google.gson.*;
+import com.splunk.logging.hec.MetadataTags;
+import com.splunk.logging.serialization.EventInfoTypeAdapter;
+import com.splunk.logging.serialization.HecJsonSerializer;
+import okhttp3.*;
 
-import org.json.simple.JSONObject;
-
-import javax.net.ssl.SSLContext;
+import javax.net.ssl.*;
 import java.io.IOException;
 import java.io.Serializable;
-import java.security.cert.X509Certificate;
-import java.util.Dictionary;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.List;
-import java.util.LinkedList;
-import java.util.Map;
-import java.util.Locale;
-
+import java.security.cert.CertificateException;
+import java.util.*;
 
 
 /**
  * This is an internal helper class that sends logging events to Splunk http event collector.
  */
 public class HttpEventCollectorSender extends TimerTask implements HttpEventCollectorMiddleware.IHttpSender {
-    public static final String MetadataTimeTag = "time";
-    public static final String MetadataHostTag = "host";
-    public static final String MetadataIndexTag = "index";
-    public static final String MetadataSourceTag = "source";
-    public static final String MetadataSourceTypeTag = "sourcetype";
-    public static final String MetadataMessageFormatTag = "messageFormat";
     private static final String SPLUNKREQUESTCHANNELTag = "X-Splunk-Request-Channel";
     private static final String AuthorizationHeaderTag = "Authorization";
     private static final String AuthorizationHeaderScheme = "Splunk %s";
@@ -65,6 +43,12 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
     private static final String HttpContentType = "application/json; profile=urn:splunk:event:1.0; charset=utf-8";
     private static final String SendModeSequential = "sequential";
     private static final String SendModeSParallel = "parallel";
+    private static final Gson gson = new GsonBuilder()
+            .registerTypeAdapter(HttpEventCollectorEventInfo.class, new EventInfoTypeAdapter())
+            .create();
+
+    private final HecJsonSerializer serializer;
+
 
     /**
      * Sender operation mode. Parallel means that all HTTP requests are
@@ -90,17 +74,14 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
     private String type;
     private long maxEventsBatchCount;
     private long maxEventsBatchSize;
-    private Dictionary<String, String> metadata;
     private Timer timer;
     private List<HttpEventCollectorEventInfo> eventsBatch = new LinkedList<HttpEventCollectorEventInfo>();
     private long eventsBatchSize = 0; // estimated total size of events batch
-    private CloseableHttpAsyncClient httpClient;
+    private static OkHttpClient httpClient = null;
     private boolean disableCertificateValidation = false;
     private SendMode sendMode = SendMode.Sequential;
     private HttpEventCollectorMiddleware middleware = new HttpEventCollectorMiddleware();
     private final MessageFormat messageFormat;
-    private EventBodySerializer eventBodySerializer;
-    private EventHeaderSerializer eventHeaderSerializer;
 
     /**
      * Initialize HttpEventCollectorSender
@@ -117,7 +98,7 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
             final String Url, final String token, final String channel, final String type,
             long delay, long maxEventsBatchCount, long maxEventsBatchSize,
             String sendModeStr,
-            Dictionary<String, String> metadata) {
+            Map<String, String> metadata) {
         this.url = Url + HttpEventCollectorUriPath;
         this.token = token;
         this.channel = channel;
@@ -136,9 +117,9 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
         }
         this.maxEventsBatchCount = maxEventsBatchCount;
         this.maxEventsBatchSize = maxEventsBatchSize;
-        this.metadata = metadata;
 
-        final String format = metadata.get(MetadataMessageFormatTag);
+        serializer = new HecJsonSerializer(metadata);
+        final String format = metadata.get(MetadataTags.MESSAGEFORMAT);
         // Get MessageFormat enum from format string. Do this once per instance in constructor to avoid expensive operation in
         // each event sender call
         this.messageFormat = MessageFormat.fromFormat(format);
@@ -199,20 +180,21 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
      * Flush all pending events
      */
     public synchronized void flush() {
-        flush(false);
-    }
-
-    public synchronized void flush(boolean close) {
         if (eventsBatch.size() > 0) {
-            postEventsAsync(eventsBatch, close);
-        } else if (close) {
-            this.stopHttpClient();
+            postEventsAsync(eventsBatch);
         }
         // Clear the batch. A new list should be created because events are
         // sending asynchronously and "previous" instance of eventsBatch object
         // is still in use.
-        eventsBatch = new LinkedList<HttpEventCollectorEventInfo>();
+        eventsBatch = new LinkedList<>();
         eventsBatchSize = 0;
+    }
+
+    public synchronized void flush(boolean close) {
+        flush();
+        if (close) {
+            stopHttpClient();
+        }
     }
 
     /**
@@ -221,7 +203,8 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
     void close() {
         if (timer != null)
             timer.cancel();
-        flush(true);
+        flush();
+        stopHttpClient();
         super.cancel();
     }
 
@@ -242,44 +225,29 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
     }
 
     public void setEventBodySerializer(EventBodySerializer eventBodySerializer) {
-        this.eventBodySerializer = eventBodySerializer;
+        serializer.setEventBodySerializer(eventBodySerializer);
     }
 
     public void setEventHeaderSerializer(EventHeaderSerializer eventHeaderSerializer) {
-        this.eventHeaderSerializer = eventHeaderSerializer;
+        serializer.setEventHeaderSerializer(eventHeaderSerializer);
     }
 
-    @SuppressWarnings("unchecked")
-    public static void putIfPresent(JSONObject collection, String tag, Object value) {
+    public static void putIfPresent(JsonObject collection, String tag, Object value) {
         if (value != null) {
             if (value instanceof String && ((String) value).length() == 0) {
                 // Do not add blank string
                 return;
             }
-            collection.put(tag, value);
+            collection.add(tag, gson.toJsonTree(value));
         }
     }
 
-    @SuppressWarnings("unchecked")
-    private String serializeEventInfo(HttpEventCollectorEventInfo eventInfo) {
-        // create event json content
-        //
-        // cf: http://dev.splunk.com/view/event-collector/SP-CAAAE6P
-        //
-        if (eventHeaderSerializer == null) {
-            eventHeaderSerializer = new EventHeaderSerializer.Default();
+
+    private void stopHttpClient() {
+        if (httpClient != null) {
+            httpClient.dispatcher().executorService().shutdown();
+            httpClient = null;
         }
-        JSONObject event = eventHeaderSerializer.serializeEventHeader(eventInfo, metadata);
-
-        // Parse message on the basis of format
-        final Object parsedMessage = this.messageFormat.parse(eventInfo.getMessage());
-
-        if (eventBodySerializer == null) {
-            eventBodySerializer = new EventBodySerializer.Default();
-        }
-
-        event.put("event", eventBodySerializer.serializeEventBody(eventInfo, parsedMessage));
-        return event.toString();
     }
 
     private void startHttpClient() {
@@ -287,56 +255,55 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
             // http client is already started
             return;
         }
-        // limit max  number of async requests in sequential mode, 0 means "use
-        // default limit"
-        int maxConnTotal = sendMode == SendMode.Sequential ? 1 : 0;
-        if (! disableCertificateValidation) {
-            // create an http client that validates certificates
-            httpClient = HttpAsyncClients.custom()
-                    .setDefaultRequestConfig(RequestConfig.custom().setCookieSpec(CookieSpecs.STANDARD).build())
-                    .useSystemProperties()
-                    .setMaxConnTotal(maxConnTotal)
-                    .build();
-        } else {
-            // create strategy that accepts all certificates
-            TrustStrategy acceptingTrustStrategy = new TrustStrategy() {
-                public boolean isTrusted(X509Certificate[] certificate,
-                                         String type) {
+
+        OkHttpClient.Builder builder = new OkHttpClient.Builder();
+
+        // limit max  number of async requests in sequential mode
+        if (sendMode == SendMode.Sequential) {
+            Dispatcher dispatcher = new Dispatcher();
+            dispatcher.setMaxRequests(1);
+            builder.dispatcher(dispatcher);
+        }
+
+        if (disableCertificateValidation) {
+            final TrustManager[] trustAllCerts = new TrustManager[]{
+                    new X509TrustManager() {
+                        @Override
+                        public void checkClientTrusted(java.security.cert.X509Certificate[] chain, String authType) throws CertificateException {
+                        }
+
+                        @Override
+                        public void checkServerTrusted(java.security.cert.X509Certificate[] chain, String authType) throws CertificateException {
+                        }
+
+                        @Override
+                        public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+                            return new java.security.cert.X509Certificate[]{};
+                        }
+                    }
+            };
+
+            try {
+                // install the all-trusting trust manager
+                final SSLContext sslContext = SSLContext.getInstance("TLSv1.2");
+                sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
+                // create an ssl socket factory with the all-trusting manager
+                final SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
+                builder.sslSocketFactory(sslSocketFactory, (X509TrustManager) trustAllCerts[0]);
+            } catch (Exception ignored) { /* nop */ }
+
+            builder.hostnameVerifier(new HostnameVerifier() {
+                @Override
+                public boolean verify(String hostname, SSLSession session) {
                     return true;
                 }
-            };
-            SSLContext sslContext = null;
-            try {
-                sslContext = SSLContexts.custom().loadTrustMaterial(
-                        null, acceptingTrustStrategy).build();
-                httpClient = HttpAsyncClients.custom()
-                        .setDefaultRequestConfig(RequestConfig.custom().setCookieSpec(CookieSpecs.STANDARD).build())
-                        .setMaxConnTotal(maxConnTotal)
-                        .setHostnameVerifier(SSLConnectionSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER)
-                        .setSSLContext(sslContext)
-                        .build();
-            } catch (Exception e) { }
+            });
         }
-        httpClient.start();
-    }
 
-    // Currently we never close http client. This method is added for symmetry
-    // with startHttpClient.
-    private void stopHttpClient() throws SecurityException {
-        if (httpClient != null) {
-            try {
-                httpClient.close();
-            } catch (IOException e) { }
-            httpClient = null;
-        }
+        httpClient = builder.build();
     }
 
     private void postEventsAsync(final List<HttpEventCollectorEventInfo> events) {
-        postEventsAsync(events, false);
-    }
-
-    private void postEventsAsync(final List<HttpEventCollectorEventInfo> events, final boolean close) {
-        final HttpEventCollectorSender sender = this;
         this.middleware.postEvents(events,  this, new HttpEventCollectorMiddleware.IHttpSenderCallback() {
 
             @Override
@@ -346,9 +313,6 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
                             events,
                             new HttpEventCollectorErrorHandler.ServerErrorException(reply));
                 }
-                if (close) {
-                    sender.stopHttpClient();
-                }
             }
 
             @Override
@@ -356,9 +320,6 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
                 HttpEventCollectorErrorHandler.error(
                         events,
                         new HttpEventCollectorErrorHandler.ServerErrorException(ex.getMessage()));
-                if (close) {
-                    sender.stopHttpClient();
-                }
             }
         });
     }
@@ -366,45 +327,43 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
     public void postEvents(final List<HttpEventCollectorEventInfo> events,
                            final HttpEventCollectorMiddleware.IHttpSenderCallback callback) {
         startHttpClient(); // make sure http client is started
-        final String encoding = "utf-8";
         // convert events list into a string
         StringBuilder eventsBatchString = new StringBuilder();
-        for (HttpEventCollectorEventInfo eventInfo : events)
-            eventsBatchString.append(serializeEventInfo(eventInfo));
-        // create http request
-        final HttpPost httpPost = new HttpPost(url);
-        httpPost.setHeader(
-                AuthorizationHeaderTag,
-                String.format(AuthorizationHeaderScheme, token));
-        if ("Raw".equalsIgnoreCase(type) && channel != null && !channel.trim().equals("")) {
-            httpPost.setHeader(SPLUNKREQUESTCHANNELTag, channel);
+        for (HttpEventCollectorEventInfo eventInfo : events) {
+            eventsBatchString.append(serializer.serialize(eventInfo));
         }
-        StringEntity entity = new StringEntity(eventsBatchString.toString(), encoding);
-        entity.setContentType(HttpContentType);
-        httpPost.setEntity(entity);
-        httpClient.execute(httpPost, new FutureCallback<HttpResponse>() {
+        // create http request
+        Request.Builder requestBldr = new Request.Builder()
+                .url(url)
+                .addHeader(AuthorizationHeaderTag, String.format(AuthorizationHeaderScheme, token))
+                .post(RequestBody.create(MediaType.parse(HttpContentType), eventsBatchString.toString()));
+
+        if ("Raw".equalsIgnoreCase(type) && channel != null && !channel.trim().equals("")) {
+            requestBldr.addHeader(SPLUNKREQUESTCHANNELTag, channel);
+        }
+
+        httpClient.newCall(requestBldr.build()).enqueue(new Callback() {
             @Override
-            public void completed(HttpResponse response) {
+            public void onResponse(Call call, final Response response) {
                 String reply = "";
-                int httpStatusCode = response.getStatusLine().getStatusCode();
+                int httpStatusCode = response.code();
                 // read reply only in case of a server error
-                if (httpStatusCode != 200) {
-                    try {
-                        reply = EntityUtils.toString(response.getEntity(), encoding);
-                    } catch (IOException e) {
-                        reply = e.getMessage();
+                try (ResponseBody body = response.body()) {
+                    if (httpStatusCode != 200 && body != null) {
+                        try {
+                            reply = body.string();
+                        } catch (IOException e) {
+                            reply = e.getMessage();
+                        }
                     }
                 }
                 callback.completed(httpStatusCode, reply);
             }
 
             @Override
-            public void failed(Exception ex) {
+            public void onFailure(Call call, IOException ex) {
                 callback.failed(ex);
             }
-
-            @Override
-            public void cancelled() {}
         });
     }
 }

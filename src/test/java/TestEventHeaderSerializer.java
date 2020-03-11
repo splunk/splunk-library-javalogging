@@ -14,31 +14,19 @@
  * under the License.
  */
 
-import com.splunk.logging.HttpEventCollectorSender;
-import org.json.simple.JSONObject;
+import com.splunk.logging.hec.MetadataTags;
 import com.splunk.logging.EventHeaderSerializer;
 import com.splunk.logging.HttpEventCollectorEventInfo;
 
-import java.util.Dictionary;
-import java.util.Locale;
+import java.util.Map;
 
 // Implement the interface of EventHeaderSerializer for testing
 public class TestEventHeaderSerializer implements EventHeaderSerializer {
 
     @Override
-    public JSONObject serializeEventHeader(
-            final HttpEventCollectorEventInfo eventInfo,
-            final Dictionary<String, String> metadata
-    ) {
-        JSONObject event = new JSONObject();
-
-        HttpEventCollectorSender.putIfPresent(event, HttpEventCollectorSender.MetadataTimeTag, String.format(Locale.US, "%.3f", eventInfo.getTime()));
-        HttpEventCollectorSender.putIfPresent(event, HttpEventCollectorSender.MetadataHostTag, metadata.get(HttpEventCollectorSender.MetadataHostTag));
-        HttpEventCollectorSender.putIfPresent(event, HttpEventCollectorSender.MetadataIndexTag, metadata.get(HttpEventCollectorSender.MetadataIndexTag));
-        HttpEventCollectorSender.putIfPresent(event, HttpEventCollectorSender.MetadataSourceTag, "user_source");
-        HttpEventCollectorSender.putIfPresent(event, HttpEventCollectorSender.MetadataSourceTypeTag, metadata.get(HttpEventCollectorSender.MetadataSourceTypeTag));
-
-        return event;
+    public Map<String, Object> serializeEventHeader(HttpEventCollectorEventInfo eventInfo, Map<String, Object> metadata) {
+        metadata.put(MetadataTags.SOURCE, "user_source");
+        return metadata;
     }
 }
 

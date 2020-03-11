@@ -19,10 +19,9 @@ import ch.qos.logback.classic.pattern.MarkerConverter;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.AppenderBase;
 import ch.qos.logback.core.Layout;
+import com.splunk.logging.hec.MetadataTags;
 
-import java.util.Collections;
-import java.util.Dictionary;
-import java.util.Hashtable;
+import java.util.*;
 
 /**
  * Logback Appender which writes its events to Splunk http event collector rest endpoint.
@@ -60,21 +59,21 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
             return;
 
         // init events sender
-        Dictionary<String, String> metadata = new Hashtable<String, String>();
+        Map<String, String> metadata = new HashMap<>();
         if (_host != null)
-            metadata.put(HttpEventCollectorSender.MetadataHostTag, _host);
+            metadata.put(MetadataTags.HOST, _host);
 
         if (_index != null)
-            metadata.put(HttpEventCollectorSender.MetadataIndexTag, _index);
+            metadata.put(MetadataTags.INDEX, _index);
 
         if (_source != null)
-            metadata.put(HttpEventCollectorSender.MetadataSourceTag, _source);
+            metadata.put(MetadataTags.SOURCE, _source);
 
         if (_sourcetype != null)
-            metadata.put(HttpEventCollectorSender.MetadataSourceTypeTag, _sourcetype);
+            metadata.put(MetadataTags.SOURCETYPE, _sourcetype);
         
         if (_messageFormat != null)
-            metadata.put(HttpEventCollectorSender.MetadataMessageFormatTag, _messageFormat);
+            metadata.put(MetadataTags.MESSAGEFORMAT, _messageFormat);
 
         this.sender = new HttpEventCollectorSender(
                 _url, _token, _channel, _type, _batchInterval, _batchCount, _batchSize, _sendMode, metadata);

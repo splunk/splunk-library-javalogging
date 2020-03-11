@@ -1,9 +1,6 @@
 package com.splunk.logging;
 
-import org.json.simple.JSONObject;
-
-import java.util.Dictionary;
-import java.util.Locale;
+import java.util.Map;
 
 /**
  *
@@ -13,29 +10,8 @@ import java.util.Locale;
 */
 public interface EventHeaderSerializer {
 
-
-    JSONObject serializeEventHeader(
+    Map<String, Object> serializeEventHeader(
             final HttpEventCollectorEventInfo eventInfo,
-            final Dictionary<String, String> metadata
+            final Map<String, Object> metadata
     );
-
-    class Default implements EventHeaderSerializer {
-
-        @Override
-        public JSONObject serializeEventHeader(
-                final HttpEventCollectorEventInfo eventInfo,
-                final Dictionary<String, String> metadata
-        ) {
-            JSONObject event = new JSONObject();
-
-            // event timestamp and metadata
-            HttpEventCollectorSender.putIfPresent(event, HttpEventCollectorSender.MetadataTimeTag, String.format(Locale.US, "%.3f", eventInfo.getTime()));
-            HttpEventCollectorSender.putIfPresent(event, HttpEventCollectorSender.MetadataHostTag, metadata.get(HttpEventCollectorSender.MetadataHostTag));
-            HttpEventCollectorSender.putIfPresent(event, HttpEventCollectorSender.MetadataIndexTag, metadata.get(HttpEventCollectorSender.MetadataIndexTag));
-            HttpEventCollectorSender.putIfPresent(event, HttpEventCollectorSender.MetadataSourceTag, metadata.get(HttpEventCollectorSender.MetadataSourceTag));
-            HttpEventCollectorSender.putIfPresent(event, HttpEventCollectorSender.MetadataSourceTypeTag, metadata.get(HttpEventCollectorSender.MetadataSourceTypeTag));
-
-            return event;
-        }
-    }
 }

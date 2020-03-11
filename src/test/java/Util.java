@@ -34,11 +34,11 @@ public class Util {
     /**
      * Asynchronously read a line from a TCP port or time out.
      *
-     * This method immediately returns a StringContainer object with its value set to <tt>null</tt>.
-     * It then listens on TCP port <tt>port</tt>. If a line arrives on that port within <tt>timeoutInMs</tt>
+     * This method immediately returns a StringContainer object with its value set to <code>null</code>.
+     * It then listens on TCP port <code>port</code>. If a line arrives on that port within <code>timeoutInMs</code>
      * milliseconds, its sets that line (minus the terminating newline) as the value of the returned
      * StringContainer and calls notifyAll on the StringContainer. If no line as arrived after the timeout
-     * expires, it calls notifyAll but leaves the value <tt>null</tt>.
+     * expires, it calls notifyAll but leaves the value <code>null</code>.
      *
      * A user of the method should call it something like this:
      *

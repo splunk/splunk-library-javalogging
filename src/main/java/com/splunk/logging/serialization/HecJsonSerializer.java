@@ -50,7 +50,7 @@ public class HecJsonSerializer {
     public String serialize(HttpEventCollectorEventInfo info) {
         Map<String, Object> event;
         if (this.eventHeaderSerializer != null) {
-            event = eventHeaderSerializer.serializeEventHeader(info, template);
+            event = eventHeaderSerializer.serializeEventHeader(info, new HashMap<>(template));
         } else {
             event = new HashMap<>(template);
         }

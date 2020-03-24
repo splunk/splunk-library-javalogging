@@ -2,7 +2,7 @@
 
 ## How to contribute
 
-If you would like to contribute to this project, [go here][indivcontrib] for more information:
+If you would like to contribute to this project, see [Contributions to Splunk][indivcontrib] for more information.
 
 ## Issues & Bug Reports
 

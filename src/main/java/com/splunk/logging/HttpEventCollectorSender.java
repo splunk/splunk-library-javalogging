@@ -135,7 +135,7 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
 
         if (delay > 0) {
             // start heartbeat timer
-            timer = new Timer();
+            timer = new Timer(true);
             timer.scheduleAtFixedRate(this, delay, delay);
         }
     }

@@ -68,4 +68,8 @@ The Splunk logging for Java is community-supported.
 
 ## Contact us
 
+You can [contact support][contact] if you have Splunk related questions.
+
 You can reach the Dev Platform team at [devinfo@splunk.com](mailto:devinfo@splunk.com).
+
+[contact]:                  https://www.splunk.com/en_us/support-and-services.html

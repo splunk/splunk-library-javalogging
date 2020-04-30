@@ -5,10 +5,9 @@
  */
 package com.splunk.logging.hec;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class MetadataTags {
     public static final String TIME = "time";
@@ -17,8 +16,10 @@ public class MetadataTags {
     public static final String SOURCE = "source";
     public static final String SOURCETYPE = "sourcetype";
     public static final String MESSAGEFORMAT = "messageFormat";
-    public static final Set<String> HEC_TAGS =
-            new HashSet<>(Arrays.asList(TIME, HOST, INDEX, SOURCE, SOURCETYPE));
-    public static final Set<String> INTERNAL_TAGS=
-            new HashSet<>(Collections.singletonList(MESSAGEFORMAT));
+    public static final String AWAITTERMINATIONTIMEOUT = "awaitTerminationTimeout";
+    public static final String AWAITTERMINATIONTIMEUNIT = "awaitTerminationTimeUnit";
+    public static final Set<String> HEC_TAGS = Stream.of(TIME, HOST, INDEX, SOURCE, SOURCETYPE)
+            .collect(Collectors.toSet());
+    public static final Set<String> INTERNAL_TAGS = Stream.of(MESSAGEFORMAT, AWAITTERMINATIONTIMEOUT, AWAITTERMINATIONTIMEUNIT)
+            .collect(Collectors.toSet());
 }

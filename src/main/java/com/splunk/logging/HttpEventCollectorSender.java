@@ -18,7 +18,9 @@ package com.splunk.logging;
  * under the License.
  */
 
-import com.google.gson.*;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
 import com.splunk.logging.hec.MetadataTags;
 import com.splunk.logging.serialization.EventInfoTypeAdapter;
 import com.splunk.logging.serialization.HecJsonSerializer;
@@ -29,6 +31,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.security.cert.CertificateException;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 
 /**
@@ -67,6 +70,7 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
     public static final int DefaultBatchInterval = 10 * 1000; // 10 seconds
     public static final int DefaultBatchSize = 10 * 1024; // 10KB
     public static final int DefaultBatchCount = 10; // 10 events
+    public static final int DefaultAwaitTerminationTimeUnit = 0;
 
     private String url;
     private String token;
@@ -75,13 +79,15 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
     private long maxEventsBatchCount;
     private long maxEventsBatchSize;
     private Timer timer;
-    private List<HttpEventCollectorEventInfo> eventsBatch = new LinkedList<HttpEventCollectorEventInfo>();
+    private List<HttpEventCollectorEventInfo> eventsBatch = new LinkedList<>();
     private long eventsBatchSize = 0; // estimated total size of events batch
     private static OkHttpClient httpClient = null;
     private boolean disableCertificateValidation = false;
     private SendMode sendMode = SendMode.Sequential;
     private HttpEventCollectorMiddleware middleware = new HttpEventCollectorMiddleware();
     private final MessageFormat messageFormat;
+    private final long awaitTerminationTimeout;
+    private final TimeUnit awaitTerminationTimeUnit;
 
     /**
      * Initialize HttpEventCollectorSender
@@ -123,6 +129,10 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
         // Get MessageFormat enum from format string. Do this once per instance in constructor to avoid expensive operation in
         // each event sender call
         this.messageFormat = MessageFormat.fromFormat(format);
+
+        // Get await termination for the sender's execution context
+        this.awaitTerminationTimeout = Long.parseLong(metadata.get(MetadataTags.AWAITTERMINATIONTIMEOUT));
+        this.awaitTerminationTimeUnit = TimeUnit.valueOf(metadata.get(MetadataTags.AWAITTERMINATIONTIMEUNIT));
 
         if (sendModeStr != null) {
             if (sendModeStr.equals(SendModeSequential))
@@ -242,6 +252,13 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
     private void stopHttpClient() {
         if (httpClient != null) {
             httpClient.dispatcher().executorService().shutdown();
+            if(awaitTerminationTimeout > 0) {
+                try {
+                    httpClient.dispatcher().executorService().awaitTermination(awaitTerminationTimeout, awaitTerminationTimeUnit);
+                } catch (InterruptedException ignored) {
+                    // For backwards compatibility sake
+                }
+            }
             httpClient = null;
         }
     }

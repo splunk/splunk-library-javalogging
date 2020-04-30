@@ -82,7 +82,9 @@ package com.splunk.logging;
 
 import com.splunk.logging.hec.MetadataTags;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
 import java.util.logging.Handler;
 import java.util.logging.LogManager;
 import java.util.logging.LogRecord;
@@ -125,10 +127,16 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
 
         metadata.put(MetadataTags.SOURCETYPE,
                 getConfigurationProperty(MetadataTags.SOURCETYPE, ""));
-        
+
         // Extract message format value
         metadata.put(MetadataTags.MESSAGEFORMAT,
-            getConfigurationProperty(MetadataTags.MESSAGEFORMAT, ""));
+                getConfigurationProperty(MetadataTags.MESSAGEFORMAT, ""));
+
+        metadata.put(MetadataTags.AWAITTERMINATIONTIMEOUT,
+                getConfigurationProperty(MetadataTags.AWAITTERMINATIONTIMEOUT, "0"));
+
+        metadata.put(MetadataTags.AWAITTERMINATIONTIMEUNIT,
+                getConfigurationProperty(MetadataTags.AWAITTERMINATIONTIMEUNIT, "SECONDS"));
 
         // http event collector endpoint properties
         String url = getConfigurationProperty(UrlConfTag, null);

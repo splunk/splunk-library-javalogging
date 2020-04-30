@@ -15,24 +15,23 @@ package com.splunk.logging;
  * under the License.
  */
 
-import java.io.Serializable;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
-
 import com.splunk.logging.hec.MetadataTags;
-import org.apache.logging.log4j.core.appender.AbstractAppender;
 import org.apache.logging.log4j.core.Filter;
 import org.apache.logging.log4j.core.Layout;
-import org.apache.logging.log4j.core.config.Property;
-import org.apache.logging.log4j.core.layout.PatternLayout;
 import org.apache.logging.log4j.core.LogEvent;
+import org.apache.logging.log4j.core.appender.AbstractAppender;
+import org.apache.logging.log4j.core.config.Property;
 import org.apache.logging.log4j.core.config.plugins.Plugin;
 import org.apache.logging.log4j.core.config.plugins.PluginAttribute;
 import org.apache.logging.log4j.core.config.plugins.PluginElement;
 import org.apache.logging.log4j.core.config.plugins.PluginFactory;
+import org.apache.logging.log4j.core.layout.PatternLayout;
+
+import java.io.Serializable;
+import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Splunk Http Appender.
@@ -56,6 +55,8 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
                          final String source,
                          final String sourcetype,
                          final String messageFormat,
+                         final long awaitTerminationTimeout,
+                         final String awaitTerminationTimeUnit,
                          final String host,
                          final String index,
                          final Filter filter,
@@ -82,6 +83,8 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
         metadata.put(MetadataTags.SOURCE, source != null ? source : "");
         metadata.put(MetadataTags.SOURCETYPE, sourcetype != null ? sourcetype : "");
         metadata.put(MetadataTags.MESSAGEFORMAT, messageFormat != null ? messageFormat : "");
+        metadata.put(MetadataTags.AWAITTERMINATIONTIMEOUT, Long.toString(awaitTerminationTimeout));
+        metadata.put(MetadataTags.AWAITTERMINATIONTIMEUNIT, awaitTerminationTimeUnit != null ? awaitTerminationTimeUnit : "SECONDS");
 
         this.sender = new HttpEventCollectorSender(url, token, channel, type, batchInterval, batchCount, batchSize, sendMode, metadata);
 
@@ -129,6 +132,8 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
             @PluginAttribute("source") final String source,
             @PluginAttribute("sourcetype") final String sourcetype,
             @PluginAttribute("messageFormat") final String messageFormat,
+            @PluginAttribute("awaitTerminationTimeout") final String awaitTerminationTimeout,
+            @PluginAttribute("awaitTerminationTimeUnit") final String awaitTerminationTimeUnit,
             @PluginAttribute("host") final String host,
             @PluginAttribute("index") final String index,
             @PluginAttribute(value = "ignoreExceptions", defaultBoolean = true) final String ignoreExceptions,
@@ -181,7 +186,10 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
 
         return new HttpEventCollectorLog4jAppender(
                 name, url, token,  channel, type,
-                source, sourcetype, messageFormat, host, index,
+                source, sourcetype, messageFormat,
+                parseInt(awaitTerminationTimeout, HttpEventCollectorSender.DefaultAwaitTerminationTimeUnit),
+                awaitTerminationTimeUnit,
+                host, index,
                 filter, layout, 
                 includeLoggerName, includeThreadName, includeMDC, includeException, includeMarker,
                 ignoreExceptionsBool,

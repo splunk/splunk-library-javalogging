@@ -187,7 +187,7 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
         return new HttpEventCollectorLog4jAppender(
                 name, url, token,  channel, type,
                 source, sourcetype, messageFormat,
-                parseInt(awaitTerminationTimeout, HttpEventCollectorSender.DefaultAwaitTerminationTimeUnit),
+                parseInt(awaitTerminationTimeout, HttpEventCollectorSender.DefaultAwaitTerminationTimeout),
                 awaitTerminationTimeUnit,
                 host, index,
                 filter, layout, 

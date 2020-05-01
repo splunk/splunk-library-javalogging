@@ -70,7 +70,7 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
     public static final int DefaultBatchInterval = 10 * 1000; // 10 seconds
     public static final int DefaultBatchSize = 10 * 1024; // 10KB
     public static final int DefaultBatchCount = 10; // 10 events
-    public static final int DefaultAwaitTerminationTimeUnit = 0;
+    public static final int DefaultAwaitTerminationTimeout = 0;
 
     private String url;
     private String token;

@@ -15,6 +15,7 @@
               batch_size_count="%user_batch_size_count%"
               disableCertificateValidation="true"
               send_mode="%user_send_mode%"
+              synchronous="%user_synchronous%"
               middleware="%user_middleware%"
               eventBodySerializer="%user_eventBodySerializer%"
                 >

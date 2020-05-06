@@ -27,7 +27,7 @@ import java.util.*;
  * Logback Appender which writes its events to Splunk http event collector rest endpoint.
  */
 public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
-    private HttpEventCollectorSender sender = null;
+    private AHttpEventCollectorSender sender = null;
     private Layout<E> _layout;
     private boolean _includeLoggerName = true;
     private boolean _includeThreadName = true;
@@ -44,6 +44,7 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
     private String _channel;
     private String _type;
     private String _disableCertificateValidation;
+    private boolean _synchronous;
     private String _middleware;
     private String _eventBodySerializer;
     private long _batchInterval = 0;
@@ -74,8 +75,13 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
         if (_messageFormat != null)
             metadata.put(MetadataTags.MESSAGEFORMAT, _messageFormat);
 
-        this.sender = new HttpEventCollectorSender(
-                _url, _token, _channel, _type, _batchInterval, _batchCount, _batchSize, _sendMode, metadata);
+        if(!_synchronous) {
+            this.sender = new HttpEventCollectorSender(
+                    _url, _token, _channel, _type, _batchInterval, _batchCount, _batchSize, _sendMode, metadata);
+        } else {
+            this.sender = new HttpEventCollectorSenderSync(
+                    _url, _token, _channel, _type, _batchInterval, _batchCount, _batchSize, _sendMode, metadata);
+        }
 
         // plug a user middleware
         if (_middleware != null && !_middleware.isEmpty()) {
@@ -289,6 +295,10 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
 
     public void setsend_mode(String value) {
         _sendMode = value;
+    }
+
+    public void setsynchronous(boolean value) {
+        _synchronous = value;
     }
 
     public void setmiddleware(String value) {

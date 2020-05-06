@@ -22,25 +22,13 @@ import okhttp3.*;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.CountDownLatch;
 
 
 /**
  * This is an internal helper class that sends logging events to Splunk http event collector.
  */
-public class HttpEventCollectorSender extends AHttpEventCollectorSender<HttpEventCollectorMiddleware, HttpEventCollectorMiddleware.HttpSenderMiddleware> implements HttpEventCollectorMiddleware.IHttpSender {
-    /**
-     * Sender operation mode. Parallel means that all HTTP requests are
-     * asynchronous and may be indexed out of order. Sequential mode guarantees
-     * sequential order of the indexed events.
-     */
-    public enum SendMode
-    {
-        Sequential,
-        Parallel
-    };
-
-    private SendMode sendMode;
-
+public class HttpEventCollectorSender extends AHttpEventCollectorSender implements HttpEventCollectorMiddleware.IHttpSender {
     /**
      * Initialize HttpEventCollectorSender
      * @param url http event collector input server
@@ -57,27 +45,7 @@ public class HttpEventCollectorSender extends AHttpEventCollectorSender<HttpEven
             long delay, long maxEventsBatchCount, long maxEventsBatchSize,
             String sendModeStr,
             Map<String, String> metadata) {
-        super(new HttpEventCollectorMiddleware(), url, token, channel, type, delay, maxEventsBatchCount, maxEventsBatchSize, metadata);
-        if (sendModeStr != null) {
-            if (sendModeStr.equals(SendModeSequential))
-                this.sendMode = SendMode.Sequential;
-            else if (sendModeStr.equals(SendModeSParallel))
-                this.sendMode = SendMode.Parallel;
-            else
-                throw new IllegalArgumentException("Unknown send mode: " + sendModeStr);
-        }
-    }
-
-    @Override
-    protected OkHttpClient.Builder buildOkHttpClient() {
-        OkHttpClient.Builder builder = super.buildOkHttpClient();
-        // limit max  number of async requests in sequential mode
-        if (sendMode == SendMode.Sequential) {
-            Dispatcher dispatcher = new Dispatcher();
-            dispatcher.setMaxRequests(1);
-            builder.dispatcher(dispatcher);
-        }
-        return builder;
+        super(url, token, channel, type, delay, maxEventsBatchCount, maxEventsBatchSize, sendModeStr, metadata);
     }
 
     @Override
@@ -111,19 +79,8 @@ public class HttpEventCollectorSender extends AHttpEventCollectorSender<HttpEven
         httpClient.newCall(requestBldr.build()).enqueue(new Callback() {
             @Override
             public void onResponse(Call call, final Response response) {
-                String reply = "";
-                int httpStatusCode = response.code();
-                // read reply only in case of a server error
-                try (ResponseBody body = response.body()) {
-                    if (httpStatusCode != 200 && body != null) {
-                        try {
-                            reply = body.string();
-                        } catch (IOException e) {
-                            reply = e.getMessage();
-                        }
-                    }
-                }
-                callback.completed(httpStatusCode, reply);
+                HttpEventCollectorMiddleware.HttpSenderSuccess result = responseSuccess(response);
+                callback.completed(result.statusCode, result.reply);
             }
 
             @Override
@@ -131,5 +88,28 @@ public class HttpEventCollectorSender extends AHttpEventCollectorSender<HttpEven
                 callback.failed(ex);
             }
         });
+    }
+
+    @Override
+    public HttpEventCollectorMiddleware.HttpSenderResult postEvents(List<HttpEventCollectorEventInfo> events) {
+        final CountDownLatch latch = new CountDownLatch(1);
+        final HttpEventCollectorMiddleware.HttpSenderResult result = new HttpEventCollectorMiddleware.HttpSenderResult();
+        postEvents(events, new HttpEventCollectorMiddleware.IHttpSenderCallback(){
+            @Override
+            public void completed(int statusCode, String reply) {
+                result.success = new HttpEventCollectorMiddleware.HttpSenderSuccess(statusCode, reply);
+            }
+
+            @Override
+            public void failed(Exception ex) {
+                result.failed = ex;
+            }
+        });
+        try {
+            latch.await();
+        } catch (InterruptedException ex) {
+            result.failed = ex;
+        }
+        return result;
     }
 }

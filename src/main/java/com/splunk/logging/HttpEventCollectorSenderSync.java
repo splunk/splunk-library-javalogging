@@ -6,6 +6,8 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
+import static com.splunk.logging.HttpEventCollectorMiddleware.convertToCallback;
+
 /**
  * @copyright Copyright 2013-2015 Splunk, Inc.
  * <p>
@@ -22,14 +24,22 @@ import java.util.Map;
  * under the License.
  */
 
-public class HttpEventCollectorSenderSync extends AHttpEventCollectorSender<HttpEventCollectorMiddlewareSync, HttpEventCollectorMiddlewareSync.HttpSenderMiddleware> implements HttpEventCollectorMiddlewareSync.IHttpSender {
-    public HttpEventCollectorSenderSync(String url, String token, String channel, String type, long delay, long maxEventsBatchCount, long maxEventsBatchSize, String sendModeStr, Map<String, String> metadata) {
-        super(new HttpEventCollectorMiddlewareSync(), url, token, channel, type, delay, maxEventsBatchCount, maxEventsBatchSize, metadata);
+public class HttpEventCollectorSenderSync extends AHttpEventCollectorSender implements HttpEventCollectorMiddleware.IHttpSender {
+    public HttpEventCollectorSenderSync(String url, String token, String channel, String type, long delay,
+                                        long maxEventsBatchCount, long maxEventsBatchSize, String sendModeStr, Map<String, String> metadata) {
+        super(url, token, channel, type, delay, maxEventsBatchCount, maxEventsBatchSize, sendModeStr, metadata);
+    }
+
+
+    @Override
+    public void postEvents(List<HttpEventCollectorEventInfo> events, HttpEventCollectorMiddleware.IHttpSenderCallback callback) {
+        HttpEventCollectorMiddleware.HttpSenderResult result = postEvents(events);
+        convertToCallback(callback, result);
     }
 
     @Override
     protected void postEventsMiddleware(List<HttpEventCollectorEventInfo> eventsBatch) {
-        HttpEventCollectorMiddlewareSync.HttpSenderResult result = this.middleware.postEvents(eventsBatch, this);
+        HttpEventCollectorMiddleware.HttpSenderResult result = this.middleware.postEvents(eventsBatch, this);
         if (result.failed != null) {
             HttpEventCollectorErrorHandler.error(
                     eventsBatch,
@@ -43,14 +53,14 @@ public class HttpEventCollectorSenderSync extends AHttpEventCollectorSender<Http
 
 
     @Override
-    public HttpEventCollectorMiddlewareSync.HttpSenderResult postEvents(List<HttpEventCollectorEventInfo> events) {
+    public HttpEventCollectorMiddleware.HttpSenderResult postEvents(List<HttpEventCollectorEventInfo> events) {
         Request.Builder requestBldr = requestBuilder(events);
 
         try {
             Response response = httpClient.newCall(requestBldr.build()).execute();
-            return new HttpEventCollectorMiddlewareSync.HttpSenderResult(responseSuccess(response));
+            return new HttpEventCollectorMiddleware.HttpSenderResult(responseSuccess(response));
         } catch (IOException ex) {
-            return new HttpEventCollectorMiddlewareSync.HttpSenderResult(ex);
+            return new HttpEventCollectorMiddleware.HttpSenderResult(ex);
         }
     }
 }

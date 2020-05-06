@@ -3,6 +3,8 @@ import com.splunk.logging.HttpEventCollectorMiddleware;
 
 import java.util.List;
 
+import static com.splunk.logging.HttpEventCollectorMiddleware.convertToCallback;
+
 /**
  * @copyright
  *
@@ -29,13 +31,23 @@ public class HttpEventCollectorUnitTestMiddleware extends HttpEventCollectorMidd
     public void postEvents(List<HttpEventCollectorEventInfo> events,
                            HttpEventCollectorMiddleware.IHttpSender sender,
                            HttpEventCollectorMiddleware.IHttpSenderCallback callback) {
+        HttpEventCollectorMiddleware.HttpSenderResult result = postEvents(events, sender);
+        convertToCallback(callback, result);
+    }
+
+    @Override
+    public HttpEventCollectorMiddleware.HttpSenderResult postEvents(List<HttpEventCollectorEventInfo> events, HttpEventCollectorMiddleware.IHttpSender sender) {
         eventsReceived += events.size();
         io.input(events);
         HttpResponse response = io.output();
-        if (response.status > 0)
-            callback.completed(response.status, response.reply);
-        else
-            callback.failed(new Exception(response.reply));
+        HttpEventCollectorMiddleware.HttpSenderResult result = new HttpEventCollectorMiddleware.HttpSenderResult();
+        if (response.status > 0) {
+            result.success = new HttpEventCollectorMiddleware.HttpSenderSuccess(response.status, response.reply);
+        }
+        else {
+            result.failed = new Exception(response.reply);
+        }
+        return result;
     }
 
     public static class HttpResponse {

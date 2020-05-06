@@ -32,11 +32,24 @@ import java.util.*;
  * under the License.
  */
 
-public abstract class AHttpEventCollectorSender<M extends IHttpEventCollectorMiddleware<S>, S extends IHttpSenderMiddleware>
+public abstract class AHttpEventCollectorSender
         extends TimerTask implements IHttpEventCollectorSender {
     private static final Gson gson = new GsonBuilder()
             .registerTypeAdapter(HttpEventCollectorEventInfo.class, new EventInfoTypeAdapter())
             .create();
+    /**
+     * Sender operation mode. Parallel means that all HTTP requests are
+     * asynchronous and may be indexed out of order. Sequential mode guarantees
+     * sequential order of the indexed events.
+     */
+    public enum SendMode
+    {
+        Sequential,
+        Parallel
+    };
+
+    private SendMode sendMode;
+
     protected static OkHttpClient httpClient = null;
     protected final String url;
     protected final String token;
@@ -45,7 +58,7 @@ public abstract class AHttpEventCollectorSender<M extends IHttpEventCollectorMid
 
     protected long maxEventsBatchCount = Long.MAX_VALUE;
     protected long maxEventsBatchSize = Long.MAX_VALUE;
-    protected M middleware;
+    protected HttpEventCollectorMiddleware middleware = new HttpEventCollectorMiddleware();
 
     protected List<HttpEventCollectorEventInfo> eventsBatch = new LinkedList<>();
     protected long eventsBatchSize = 0; // estimated total size of events batch
@@ -55,9 +68,9 @@ public abstract class AHttpEventCollectorSender<M extends IHttpEventCollectorMid
     private Timer timer;
     private boolean disableCertificateValidation = false;
 
-    public AHttpEventCollectorSender(M middleware, final String url, final String token, final String channel, final String type,
-                                     long delay, long maxEventsBatchCount, long maxEventsBatchSize, Map<String, String> metadata) {
-        this.middleware = middleware;
+    public AHttpEventCollectorSender(final String url, final String token, final String channel, final String type,
+                                     long delay, long maxEventsBatchCount, long maxEventsBatchSize, String sendModeStr,
+                                     Map<String, String> metadata) {
         this.url = "Raw".equalsIgnoreCase(type) ? url + HttpRawCollectorUriPath : url + HttpEventCollectorUriPath;
         this.token = token;
         this.channel = channel;
@@ -74,6 +87,15 @@ public abstract class AHttpEventCollectorSender<M extends IHttpEventCollectorMid
 
         this.serializer = new HecJsonSerializer(metadata);
 
+        if (sendModeStr != null) {
+            if (sendModeStr.equals(SendModeSequential))
+                this.sendMode = HttpEventCollectorSender.SendMode.Sequential;
+            else if (sendModeStr.equals(SendModeSParallel))
+                this.sendMode = HttpEventCollectorSender.SendMode.Parallel;
+            else
+                throw new IllegalArgumentException("Unknown send mode: " + sendModeStr);
+        }
+
         if (delay > 0) {
             // start heartbeat timer
             timer = new Timer(true);
@@ -83,7 +105,7 @@ public abstract class AHttpEventCollectorSender<M extends IHttpEventCollectorMid
 
     protected abstract void postEventsMiddleware(List<HttpEventCollectorEventInfo> eventsBatch);
 
-    public void addMiddleware(S middleware) {
+    public void addMiddleware(HttpEventCollectorMiddleware.HttpSenderMiddleware middleware) {
         this.middleware.add(middleware);
     }
 
@@ -107,8 +129,9 @@ public abstract class AHttpEventCollectorSender<M extends IHttpEventCollectorMid
 
     /**
      * Send a single logging event in case of batching the event isn't sent immediately
+     *
      * @param severity event severity level (info, warning, etc.)
-     * @param message event text
+     * @param message  event text
      */
     @Override
     public void send(String severity, String message, String logger_name, String thread_name, Map<String, String> properties, String exception_message, Serializable marker) {
@@ -124,6 +147,7 @@ public abstract class AHttpEventCollectorSender<M extends IHttpEventCollectorMid
 
     /**
      * Send a single logging event with message only in case of batching the event isn't sent immediately
+     *
      * @param message event text
      */
     public synchronized void send(final String message) {
@@ -132,6 +156,13 @@ public abstract class AHttpEventCollectorSender<M extends IHttpEventCollectorMid
 
     protected OkHttpClient.Builder buildOkHttpClient() {
         OkHttpClient.Builder builder = new OkHttpClient.Builder();
+
+        // limit max  number of async requests in sequential mode
+        if (sendMode == SendMode.Sequential) {
+            Dispatcher dispatcher = new Dispatcher();
+            dispatcher.setMaxRequests(1);
+            builder.dispatcher(dispatcher);
+        }
 
         if (disableCertificateValidation) {
             final TrustManager[] trustAllCerts = new TrustManager[]{
@@ -238,7 +269,7 @@ public abstract class AHttpEventCollectorSender<M extends IHttpEventCollectorMid
         return requestBldr;
     }
 
-    static HttpEventCollectorMiddlewareSync.HttpSenderSuccess responseSuccess(Response response) {
+    static HttpEventCollectorMiddleware.HttpSenderSuccess responseSuccess(Response response) {
         String reply = "";
         int httpStatusCode = response.code();
         // read reply only in case of a server error
@@ -251,6 +282,6 @@ public abstract class AHttpEventCollectorSender<M extends IHttpEventCollectorMid
                 }
             }
         }
-        return new HttpEventCollectorMiddlewareSync.HttpSenderSuccess(response.code(), reply);
+        return new HttpEventCollectorMiddleware.HttpSenderSuccess(response.code(), reply);
     }
 }

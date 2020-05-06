@@ -47,6 +47,12 @@ public class HttpEventCollectorResendMiddleware
          callNext(events, sender, new Callback(events, sender, callback));
     }
 
+    @Override
+    public HttpEventCollectorMiddleware.HttpSenderResult postEvents(List<HttpEventCollectorEventInfo> events,
+                                                                    HttpEventCollectorMiddleware.IHttpSender sender) {
+        return callNext(events, sender);
+    }
+
     private class Callback implements HttpEventCollectorMiddleware.IHttpSenderCallback {
         private long retries = 0;
         private final List<HttpEventCollectorEventInfo> events;

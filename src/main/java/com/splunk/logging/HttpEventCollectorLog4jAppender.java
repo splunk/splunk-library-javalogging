@@ -38,8 +38,7 @@ import org.apache.logging.log4j.core.config.plugins.PluginFactory;
  */
 @Plugin(name = "SplunkHttp", category = "Core", elementType = "appender", printObject = true)
 @SuppressWarnings("serial")
-public final class HttpEventCollectorLog4jAppender extends AbstractAppender
-{
+public final class HttpEventCollectorLog4jAppender extends AbstractAppender {
     private AHttpEventCollectorSender sender;
     private final boolean includeLoggerName;
     private final boolean includeThreadName;
@@ -48,33 +47,32 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
     private final boolean includeMarker;
 
     private HttpEventCollectorLog4jAppender(final String name,
-                         final String url,
-                         final String token,
-                         final String channel,
-                         final String type,
-                         final String source,
-                         final String sourcetype,
-                         final String messageFormat,
-                         final String host,
-                         final String index,
-                         final Filter filter,
-                         final Layout<? extends Serializable> layout,
-                         final boolean includeLoggerName,
-                         final boolean includeThreadName,
-                         final boolean includeMDC,
-                         final boolean includeException,
-                         final boolean includeMarker,
-                         final boolean ignoreExceptions,
-                         long batchInterval,
-                         long batchCount,
-                         long batchSize,
-                         long retriesOnError,
-                         String sendMode,
-                         boolean synchronous,
-                         String middleware,
-                         final String disableCertificateValidation,
-                         final String eventBodySerializer)
-    {
+                                            final String url,
+                                            final String token,
+                                            final String channel,
+                                            final String type,
+                                            final String source,
+                                            final String sourcetype,
+                                            final String messageFormat,
+                                            final String host,
+                                            final String index,
+                                            final Filter filter,
+                                            final Layout<? extends Serializable> layout,
+                                            final boolean includeLoggerName,
+                                            final boolean includeThreadName,
+                                            final boolean includeMDC,
+                                            final boolean includeException,
+                                            final boolean includeMarker,
+                                            final boolean ignoreExceptions,
+                                            long batchInterval,
+                                            long batchCount,
+                                            long batchSize,
+                                            long retriesOnError,
+                                            String sendMode,
+                                            boolean synchronous,
+                                            String middleware,
+                                            final String disableCertificateValidation,
+                                            final String eventBodySerializer) {
         super(name, filter, layout, ignoreExceptions, Property.EMPTY_ARRAY);
         Map<String, String> metadata = new HashMap<>();
         metadata.put(MetadataTags.HOST, host != null ? host : "");
@@ -83,7 +81,7 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
         metadata.put(MetadataTags.SOURCETYPE, sourcetype != null ? sourcetype : "");
         metadata.put(MetadataTags.MESSAGEFORMAT, messageFormat != null ? messageFormat : "");
 
-        if(!synchronous) {
+        if (!synchronous) {
             this.sender = new HttpEventCollectorSender(url, token, channel, type, batchInterval, batchCount, batchSize, sendMode, metadata);
         } else {
             this.sender = new HttpEventCollectorSenderSync(url, token, channel, type, batchInterval, batchCount, batchSize, sendMode, metadata);
@@ -92,14 +90,16 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
         // plug a user middleware
         if (middleware != null && !middleware.isEmpty()) {
             try {
-                this.sender.addMiddleware((HttpEventCollectorMiddleware.HttpSenderMiddleware)(Class.forName(middleware).newInstance()));
-            } catch (Exception ignored) {}
+                this.sender.addMiddleware((HttpEventCollectorMiddleware.HttpSenderMiddleware) (Class.forName(middleware).newInstance()));
+            } catch (Exception ignored) {
+            }
         }
 
         if (eventBodySerializer != null && !eventBodySerializer.isEmpty()) {
             try {
                 this.sender.setEventBodySerializer((EventBodySerializer) Class.forName(eventBodySerializer).newInstance());
-            } catch (final Exception ignored) {}
+            } catch (final Exception ignored) {
+            }
         }
 
         // plug resend middleware
@@ -120,6 +120,7 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
 
     /**
      * Create a Http Appender.
+     *
      * @return The Http Appender.
      */
     @PluginFactory
@@ -152,28 +153,23 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
             @PluginAttribute(value = "includeMarker", defaultBoolean = true) final boolean includeMarker,
             @PluginElement("Layout") Layout<? extends Serializable> layout,
             @PluginElement("Filter") final Filter filter
-    )
-    {
-        if (name == null)
-        {
+    ) {
+        if (name == null) {
             LOGGER.error("No name provided for HttpEventCollectorLog4jAppender");
             return null;
         }
 
-        if (url == null)
-        {
+        if (url == null) {
             LOGGER.error("No Splunk URL provided for HttpEventCollectorLog4jAppender");
             return null;
         }
 
-        if (token == null)
-        {
+        if (token == null) {
             LOGGER.error("No token provided for HttpEventCollectorLog4jAppender");
             return null;
         }
 
-        if (layout == null)
-        {
+        if (layout == null) {
             layout = PatternLayout.newBuilder()
                     .withPattern("%m")
                     .withCharset(StandardCharsets.UTF_8)
@@ -185,9 +181,9 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
         final boolean ignoreExceptionsBool = Boolean.getBoolean(ignoreExceptions);
 
         return new HttpEventCollectorLog4jAppender(
-                name, url, token,  channel, type,
+                name, url, token, channel, type,
                 source, sourcetype, messageFormat, host, index,
-                filter, layout, 
+                filter, layout,
                 includeLoggerName, includeThreadName, includeMDC, includeException, includeMarker,
                 ignoreExceptionsBool,
                 parseInt(batchInterval, HttpEventCollectorSender.DefaultBatchInterval),
@@ -195,7 +191,7 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
                 parseInt(batchSize, HttpEventCollectorSender.DefaultBatchSize),
                 parseInt(retriesOnError, 0),
                 sendMode,
-                Boolean.getBoolean(synchronous),
+                Boolean.parseBoolean(synchronous),
                 middleware,
                 disableCertificateValidation,
                 eventBodySerializer
@@ -205,11 +201,11 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
 
     /**
      * Perform Appender specific appending actions.
+     *
      * @param event The Log event.
      */
     @Override
-    public void append(final LogEvent event)
-    {
+    public void append(final LogEvent event) {
         // if an exception was thrown
         this.sender.send(
                 event.getLevel().toString(),

@@ -81,6 +81,7 @@ package com.splunk.logging;
  */
 
 import com.splunk.logging.hec.MetadataTags;
+import com.sun.corba.se.impl.orbutil.concurrent.Sync;
 
 import java.util.*;
 import java.util.logging.Handler;
@@ -93,7 +94,7 @@ import java.util.logging.LogRecord;
  * properties file.
  */
 public final class HttpEventCollectorLoggingHandler extends Handler {
-    private HttpEventCollectorSender sender;
+    private AHttpEventCollectorSender sender;
     private final String IncludeLoggerNameConfTag = "include_logger_name";
     private final boolean includeLoggerName;
     private final String IncludeThreadNameConfTag = "include_thread_name";
@@ -108,6 +109,7 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
     private final String RetriesOnErrorTag = "retries_on_error";
     private final String UrlConfTag = "url";
     private final String SendModeTag = "send_mode";
+    private final String Synchronous = "synchronous";
     private final String MiddlewareTag = "middleware";
 
     /** HttpEventCollectorLoggingHandler c-or */
@@ -148,6 +150,7 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
         long batchSize = getConfigurationNumericProperty(BatchSizeConfTag, HttpEventCollectorSender.DefaultBatchSize);
         long retriesOnError = getConfigurationNumericProperty(RetriesOnErrorTag, 0);
         String sendMode = getConfigurationProperty(SendModeTag, "sequential");
+        boolean synchronous = getConfigurationBooleanProperty(Synchronous, false);
         String middleware = getConfigurationProperty(MiddlewareTag, "");
         String eventBodySerializer = getConfigurationProperty("eventBodySerializer", "");
 
@@ -156,8 +159,13 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
         includeException = getConfigurationBooleanProperty(IncludeExceptionConfTag, true);
 
         // delegate all configuration params to event sender
-        this.sender = new HttpEventCollectorSender(
-                url, token, channel, type, delay, batchCount, batchSize, sendMode, metadata);
+        if(!synchronous) {
+            this.sender = new HttpEventCollectorSender(
+                    url, token, channel, type, delay, batchCount, batchSize, sendMode, metadata);
+        } else {
+            this.sender = new HttpEventCollectorSenderSync(
+                    url, token, channel, type, delay, batchCount, batchSize, sendMode, metadata);
+        }
 
         // plug a user middleware
         if (!middleware.isEmpty()) {

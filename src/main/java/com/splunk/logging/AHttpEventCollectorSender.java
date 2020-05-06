@@ -238,7 +238,7 @@ public abstract class AHttpEventCollectorSender<M extends IHttpEventCollectorMid
         return requestBldr;
     }
 
-    static HttpEventCollectorMiddleware.HttpSenderSuccess responseSuccess(Response response) {
+    static HttpEventCollectorMiddlewareSync.HttpSenderSuccess responseSuccess(Response response) {
         String reply = "";
         int httpStatusCode = response.code();
         // read reply only in case of a server error
@@ -251,6 +251,6 @@ public abstract class AHttpEventCollectorSender<M extends IHttpEventCollectorMid
                 }
             }
         }
-        return new HttpEventCollectorMiddleware.HttpSenderSuccess(response.code(), reply);
+        return new HttpEventCollectorMiddlewareSync.HttpSenderSuccess(response.code(), reply);
     }
 }

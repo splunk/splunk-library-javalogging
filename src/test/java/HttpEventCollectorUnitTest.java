@@ -66,6 +66,37 @@ public class HttpEventCollectorUnitTest {
     }
 
     @Test
+    public void log4j_simple_sync() throws Exception {
+        HashMap<String, String> userInputs = new HashMap<String, String>();
+        String loggerName = "splunk.log4jSimple";
+        userInputs.put("user_logger_name", loggerName);
+        userInputs.put("user_httpEventCollector_token", "11111111-2222-3333-4444-555555555555");
+        userInputs.put("user_middleware", "HttpEventCollectorUnitTestMiddlewareSync");
+        userInputs.put("user_batch_size_count", "1");
+        userInputs.put("user_batch_size_bytes", "0");
+        userInputs.put("user_eventBodySerializer", "DoesNotExistButShouldNotCrashTest");
+        TestUtil.resetLog4j2Configuration("log4j2_template.xml", "log4j2.xml", userInputs);
+        org.apache.logging.log4j.Logger LOG4J = org.apache.logging.log4j.LogManager.getLogger(loggerName);
+
+        // send 3 events
+        HttpEventCollectorUnitTestMiddlewareSync.eventsReceived = 0;
+        HttpEventCollectorUnitTestMiddlewareSync.io = new HttpEventCollectorUnitTestMiddlewareSync.IO() {
+            @Override
+            public void input(List<HttpEventCollectorEventInfo> events) {
+                Assert.assertEquals(1, events.size());
+                Assert.assertEquals(0, events.get(0).getMessage().compareTo("hello log4j"));
+                Assert.assertEquals(0, events.get(0).getSeverity().compareTo("INFO"));
+            }
+        };
+        LOG4J.info("hello log4j");
+        LOG4J.info("hello log4j");
+        LOG4J.info("hello log4j");
+        if (HttpEventCollectorUnitTestMiddlewareSync.eventsReceived == 0)
+            sleep(15000);
+        Assert.assertEquals(3, HttpEventCollectorUnitTestMiddlewareSync.eventsReceived);
+    }
+
+    @Test
     public void logback_simple() throws Exception {
         HashMap<String, String> userInputs = new HashMap<String, String>();
         final String loggerName = "splunk.logback";

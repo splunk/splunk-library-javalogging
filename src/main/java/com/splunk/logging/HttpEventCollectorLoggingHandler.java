@@ -93,7 +93,7 @@ import java.util.logging.LogRecord;
  * properties file.
  */
 public final class HttpEventCollectorLoggingHandler extends Handler {
-    private HttpEventCollectorSenderAsync sender;
+    private HttpEventCollectorSender sender;
     private final String IncludeLoggerNameConfTag = "include_logger_name";
     private final boolean includeLoggerName;
     private final String IncludeThreadNameConfTag = "include_thread_name";
@@ -143,9 +143,9 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
         String type = getConfigurationProperty("type", "");
 
         // batching properties
-        long delay = getConfigurationNumericProperty(BatchDelayConfTag, HttpEventCollectorSenderAsync.DefaultBatchInterval);
-        long batchCount = getConfigurationNumericProperty(BatchCountConfTag, HttpEventCollectorSenderAsync.DefaultBatchCount);
-        long batchSize = getConfigurationNumericProperty(BatchSizeConfTag, HttpEventCollectorSenderAsync.DefaultBatchSize);
+        long delay = getConfigurationNumericProperty(BatchDelayConfTag, HttpEventCollectorSender.DefaultBatchInterval);
+        long batchCount = getConfigurationNumericProperty(BatchCountConfTag, HttpEventCollectorSender.DefaultBatchCount);
+        long batchSize = getConfigurationNumericProperty(BatchSizeConfTag, HttpEventCollectorSender.DefaultBatchSize);
         long retriesOnError = getConfigurationNumericProperty(RetriesOnErrorTag, 0);
         String sendMode = getConfigurationProperty(SendModeTag, "sequential");
         String middleware = getConfigurationProperty(MiddlewareTag, "");
@@ -156,13 +156,13 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
         includeException = getConfigurationBooleanProperty(IncludeExceptionConfTag, true);
 
         // delegate all configuration params to event sender
-        this.sender = new HttpEventCollectorSenderAsync(
+        this.sender = new HttpEventCollectorSender(
                 url, token, channel, type, delay, batchCount, batchSize, sendMode, metadata);
 
         // plug a user middleware
         if (!middleware.isEmpty()) {
             try {
-                this.sender.addMiddleware((HttpEventCollectorMiddlewareAsync.HttpSenderMiddleware)(Class.forName(middleware).newInstance()));
+                this.sender.addMiddleware((HttpEventCollectorMiddleware.HttpSenderMiddleware)(Class.forName(middleware).newInstance()));
             } catch (Exception ignored) {}
         }
 

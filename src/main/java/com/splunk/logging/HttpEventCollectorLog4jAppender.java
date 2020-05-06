@@ -40,7 +40,7 @@ import org.apache.logging.log4j.core.config.plugins.PluginFactory;
 @SuppressWarnings("serial")
 public final class HttpEventCollectorLog4jAppender extends AbstractAppender
 {
-    private HttpEventCollectorSenderAsync sender;
+    private AHttpEventCollectorSender sender;
     private final boolean includeLoggerName;
     private final boolean includeThreadName;
     private final boolean includeMDC;
@@ -70,6 +70,7 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
                          long batchSize,
                          long retriesOnError,
                          String sendMode,
+                         boolean synchronous,
                          String middleware,
                          final String disableCertificateValidation,
                          final String eventBodySerializer)
@@ -82,12 +83,16 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
         metadata.put(MetadataTags.SOURCETYPE, sourcetype != null ? sourcetype : "");
         metadata.put(MetadataTags.MESSAGEFORMAT, messageFormat != null ? messageFormat : "");
 
-        this.sender = new HttpEventCollectorSenderAsync(url, token, channel, type, batchInterval, batchCount, batchSize, sendMode, metadata);
+        if(!synchronous) {
+            this.sender = new HttpEventCollectorSender(url, token, channel, type, batchInterval, batchCount, batchSize, sendMode, metadata);
+        } else {
+            this.sender = new HttpEventCollectorSenderSync(url, token, channel, type, batchInterval, batchCount, batchSize, sendMode, metadata);
+        }
 
         // plug a user middleware
         if (middleware != null && !middleware.isEmpty()) {
             try {
-                this.sender.addMiddleware((HttpEventCollectorMiddlewareAsync.HttpSenderMiddleware)(Class.forName(middleware).newInstance()));
+                this.sender.addMiddleware((HttpEventCollectorMiddleware.HttpSenderMiddleware)(Class.forName(middleware).newInstance()));
             } catch (Exception ignored) {}
         }
 
@@ -136,6 +141,7 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
             @PluginAttribute("batch_interval") final String batchInterval,
             @PluginAttribute("retries_on_error") final String retriesOnError,
             @PluginAttribute("send_mode") final String sendMode,
+            @PluginAttribute("synchronous") final String synchronous,
             @PluginAttribute("middleware") final String middleware,
             @PluginAttribute("disableCertificateValidation") final String disableCertificateValidation,
             @PluginAttribute("eventBodySerializer") final String eventBodySerializer,
@@ -184,11 +190,12 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
                 filter, layout, 
                 includeLoggerName, includeThreadName, includeMDC, includeException, includeMarker,
                 ignoreExceptionsBool,
-                parseInt(batchInterval, HttpEventCollectorSenderAsync.DefaultBatchInterval),
-                parseInt(batchCount, HttpEventCollectorSenderAsync.DefaultBatchCount),
-                parseInt(batchSize, HttpEventCollectorSenderAsync.DefaultBatchSize),
+                parseInt(batchInterval, HttpEventCollectorSender.DefaultBatchInterval),
+                parseInt(batchCount, HttpEventCollectorSender.DefaultBatchCount),
+                parseInt(batchSize, HttpEventCollectorSender.DefaultBatchSize),
                 parseInt(retriesOnError, 0),
                 sendMode,
+                Boolean.getBoolean(synchronous),
                 middleware,
                 disableCertificateValidation,
                 eventBodySerializer

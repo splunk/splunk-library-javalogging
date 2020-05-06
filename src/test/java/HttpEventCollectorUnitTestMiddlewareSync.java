@@ -1,5 +1,6 @@
 import com.splunk.logging.HttpEventCollectorEventInfo;
 import com.splunk.logging.HttpEventCollectorMiddleware;
+import com.splunk.logging.HttpEventCollectorMiddlewareSync;
 
 import java.util.List;
 
@@ -24,18 +25,16 @@ import java.util.List;
 /**
  * Middleware component that mimics a real http event collector server.
  */
-public class HttpEventCollectorUnitTestMiddleware extends HttpEventCollectorMiddleware.HttpSenderMiddleware {
+public class HttpEventCollectorUnitTestMiddlewareSync extends HttpEventCollectorMiddlewareSync.HttpSenderMiddleware {
     @Override
-    public void postEvents(List<HttpEventCollectorEventInfo> events,
-                           HttpEventCollectorMiddleware.IHttpSender sender,
-                           HttpEventCollectorMiddleware.IHttpSenderCallback callback) {
+    public HttpEventCollectorMiddlewareSync.HttpSenderResult postEvents(List<HttpEventCollectorEventInfo> events, HttpEventCollectorMiddlewareSync.IHttpSender sender) {
         eventsReceived += events.size();
         io.input(events);
         HttpResponse response = io.output();
         if (response.status > 0)
-            callback.completed(response.status, response.reply);
+            return new HttpEventCollectorMiddlewareSync.HttpSenderResult(new HttpEventCollectorMiddlewareSync.HttpSenderSuccess(response.status, response.reply));
         else
-            callback.failed(new Exception(response.reply));
+            return new HttpEventCollectorMiddlewareSync.HttpSenderResult(new Exception(response.reply));
     }
 
     public static class HttpResponse {

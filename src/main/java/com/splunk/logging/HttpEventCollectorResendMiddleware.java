@@ -29,7 +29,7 @@ import java.util.List;
  * An exponentially growing delay is used to prevent server overflow.
  */
 public class HttpEventCollectorResendMiddleware
-        extends HttpEventCollectorMiddlewareAsync.HttpSenderMiddleware {
+        extends HttpEventCollectorMiddleware.HttpSenderMiddleware {
     private long retriesOnError = 0;
 
     /**
@@ -42,23 +42,23 @@ public class HttpEventCollectorResendMiddleware
 
     public void postEvents(
             final List<HttpEventCollectorEventInfo> events,
-            HttpEventCollectorMiddlewareAsync.IHttpSender sender,
-            HttpEventCollectorMiddlewareAsync.IHttpSenderCallback callback) {
+            HttpEventCollectorMiddleware.IHttpSender sender,
+            HttpEventCollectorMiddleware.IHttpSenderCallback callback) {
          callNext(events, sender, new Callback(events, sender, callback));
     }
 
-    private class Callback implements HttpEventCollectorMiddlewareAsync.IHttpSenderCallback {
+    private class Callback implements HttpEventCollectorMiddleware.IHttpSenderCallback {
         private long retries = 0;
         private final List<HttpEventCollectorEventInfo> events;
-        private HttpEventCollectorMiddlewareAsync.IHttpSenderCallback prevCallback;
-        private HttpEventCollectorMiddlewareAsync.IHttpSender sender;
+        private HttpEventCollectorMiddleware.IHttpSenderCallback prevCallback;
+        private HttpEventCollectorMiddleware.IHttpSender sender;
         private final long RetryDelayCeiling = 60 * 1000; // 1 minute
         private long retryDelay = 1000; // start with 1 second
 
         public Callback(
                 final List<HttpEventCollectorEventInfo> events,
-                HttpEventCollectorMiddlewareAsync.IHttpSender sender,
-                HttpEventCollectorMiddlewareAsync.IHttpSenderCallback prevCallback) {
+                HttpEventCollectorMiddleware.IHttpSender sender,
+                HttpEventCollectorMiddleware.IHttpSenderCallback prevCallback) {
             this.events = events;
             this.prevCallback = prevCallback;
             this.sender = sender;

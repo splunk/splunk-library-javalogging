@@ -16,7 +16,6 @@ package com.splunk.logging;
  */
 
 import java.io.Serializable;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
@@ -41,7 +40,7 @@ import org.apache.logging.log4j.core.config.plugins.PluginFactory;
 @SuppressWarnings("serial")
 public final class HttpEventCollectorLog4jAppender extends AbstractAppender
 {
-    private HttpEventCollectorSender sender = null;
+    private HttpEventCollectorSenderAsync sender;
     private final boolean includeLoggerName;
     private final boolean includeThreadName;
     private final boolean includeMDC;
@@ -83,12 +82,12 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
         metadata.put(MetadataTags.SOURCETYPE, sourcetype != null ? sourcetype : "");
         metadata.put(MetadataTags.MESSAGEFORMAT, messageFormat != null ? messageFormat : "");
 
-        this.sender = new HttpEventCollectorSender(url, token, channel, type, batchInterval, batchCount, batchSize, sendMode, metadata);
+        this.sender = new HttpEventCollectorSenderAsync(url, token, channel, type, batchInterval, batchCount, batchSize, sendMode, metadata);
 
         // plug a user middleware
         if (middleware != null && !middleware.isEmpty()) {
             try {
-                this.sender.addMiddleware((HttpEventCollectorMiddleware.HttpSenderMiddleware)(Class.forName(middleware).newInstance()));
+                this.sender.addMiddleware((HttpEventCollectorMiddlewareAsync.HttpSenderMiddleware)(Class.forName(middleware).newInstance()));
             } catch (Exception ignored) {}
         }
 
@@ -185,9 +184,9 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
                 filter, layout, 
                 includeLoggerName, includeThreadName, includeMDC, includeException, includeMarker,
                 ignoreExceptionsBool,
-                parseInt(batchInterval, HttpEventCollectorSender.DefaultBatchInterval),
-                parseInt(batchCount, HttpEventCollectorSender.DefaultBatchCount),
-                parseInt(batchSize, HttpEventCollectorSender.DefaultBatchSize),
+                parseInt(batchInterval, HttpEventCollectorSenderAsync.DefaultBatchInterval),
+                parseInt(batchCount, HttpEventCollectorSenderAsync.DefaultBatchCount),
+                parseInt(batchSize, HttpEventCollectorSenderAsync.DefaultBatchSize),
                 parseInt(retriesOnError, 0),
                 sendMode,
                 middleware,

@@ -27,7 +27,7 @@ import java.util.*;
  * Logback Appender which writes its events to Splunk http event collector rest endpoint.
  */
 public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
-    private HttpEventCollectorSender sender = null;
+    private HttpEventCollectorSenderAsync sender = null;
     private Layout<E> _layout;
     private boolean _includeLoggerName = true;
     private boolean _includeThreadName = true;
@@ -74,13 +74,13 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
         if (_messageFormat != null)
             metadata.put(MetadataTags.MESSAGEFORMAT, _messageFormat);
 
-        this.sender = new HttpEventCollectorSender(
+        this.sender = new HttpEventCollectorSenderAsync(
                 _url, _token, _channel, _type, _batchInterval, _batchCount, _batchSize, _sendMode, metadata);
 
         // plug a user middleware
         if (_middleware != null && !_middleware.isEmpty()) {
             try {
-                this.sender.addMiddleware((HttpEventCollectorMiddleware.HttpSenderMiddleware)(Class.forName(_middleware).newInstance()));
+                this.sender.addMiddleware((HttpEventCollectorMiddlewareAsync.HttpSenderMiddleware)(Class.forName(_middleware).newInstance()));
             } catch (Exception ignored) {}
         }
 
@@ -272,15 +272,15 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
     }
 
     public void setbatch_size_count(String value) {
-        _batchCount = parseLong(value, HttpEventCollectorSender.DefaultBatchCount);
+        _batchCount = parseLong(value, HttpEventCollectorSenderAsync.DefaultBatchCount);
     }
 
     public void setbatch_size_bytes(String value) {
-        _batchSize = parseLong(value, HttpEventCollectorSender.DefaultBatchSize);
+        _batchSize = parseLong(value, HttpEventCollectorSenderAsync.DefaultBatchSize);
     }
 
     public void setbatch_interval(String value) {
-        _batchInterval = parseLong(value, HttpEventCollectorSender.DefaultBatchInterval);
+        _batchInterval = parseLong(value, HttpEventCollectorSenderAsync.DefaultBatchInterval);
     }
 
     public void setretries_on_error(String value) {

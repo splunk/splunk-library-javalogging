@@ -81,7 +81,6 @@ package com.splunk.logging;
  */
 
 import com.splunk.logging.hec.MetadataTags;
-import com.sun.corba.se.impl.orbutil.concurrent.Sync;
 
 import java.util.*;
 import java.util.logging.Handler;

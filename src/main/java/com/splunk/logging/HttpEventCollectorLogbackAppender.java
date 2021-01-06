@@ -51,31 +51,32 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
     private long _batchSize = 0;
     private String _sendMode;
     private long _retriesOnError = 0;
-
+    private Map<String, String> _metadata = new HashMap<>();
+    
+    
     @Override
     public void start() {
         if (started)
             return;
 
         // init events sender
-        Map<String, String> metadata = new HashMap<>();
         if (_host != null)
-            metadata.put(MetadataTags.HOST, _host);
+            _metadata.put(MetadataTags.HOST, _host);
 
         if (_index != null)
-            metadata.put(MetadataTags.INDEX, _index);
+            _metadata.put(MetadataTags.INDEX, _index);
 
         if (_source != null)
-            metadata.put(MetadataTags.SOURCE, _source);
+            _metadata.put(MetadataTags.SOURCE, _source);
 
         if (_sourcetype != null)
-            metadata.put(MetadataTags.SOURCETYPE, _sourcetype);
+            _metadata.put(MetadataTags.SOURCETYPE, _sourcetype);
         
         if (_messageFormat != null)
-            metadata.put(MetadataTags.MESSAGEFORMAT, _messageFormat);
+            _metadata.put(MetadataTags.MESSAGEFORMAT, _messageFormat);
 
         this.sender = new HttpEventCollectorSender(
-                _url, _token, _channel, _type, _batchInterval, _batchCount, _batchSize, _sendMode, metadata);
+                _url, _token, _channel, _type, _batchInterval, _batchCount, _batchSize, _sendMode, _metadata);
 
         // plug a user middleware
         if (_middleware != null && !_middleware.isEmpty()) {
@@ -261,6 +262,10 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
 
     public String getIndex() {
         return this._index;
+    }
+    
+    public void addMetadata(String tag, String value){
+        this._metadata.put(tag,value)
     }
 
     public String getEventBodySerializer() {

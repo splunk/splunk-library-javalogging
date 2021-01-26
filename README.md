@@ -30,6 +30,13 @@ Splunk and system requirements, see [Installing & Running Splunk](http://dev.spl
 
 You'll need Java version 8 or higher, from [OpenJDK](https://openjdk.java.net) or [Oracle](https://www.oracle.com/technetwork/java).
 
+#### Logging frameworks
+
+If you're using the Log4j 2, Simple Logging Facade for Java (SLF4J), or Logback logging frameworks in conjunction with Splunk logging for Java there are additional compatibility requirements. For more about logging framework requirements, see [Enable logging to HEC](https://dev.splunk.com/enterprise/docs/devtools/java/logging-java/howtouseloggingjava/enableloghttpjava/) and [Enable logging to TCP inputs](https://dev.splunk.com/enterprise/docs/devtools/java/logging-java/howtouseloggingjava/enablelogtcpjava). These frameworks require:
+* Log4j version 2.12.1
+* SLF4J version 1.7.29
+* Logback version 1.2.3
+
 ## Documentation and resources
 
 * For more information about installing and using Splunk logging for Java, see

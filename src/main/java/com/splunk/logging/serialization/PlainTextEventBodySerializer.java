@@ -4,7 +4,7 @@ import com.splunk.logging.EventBodySerializer;
 import com.splunk.logging.HttpEventCollectorEventInfo;
 
 /**
- * Custom serializer which send message in plain-text format and provides message timestamp with millisecond precision.
+ * Custom serializer which sends message in plain-text format and provides message timestamp with millisecond precision.
  */
 public class PlainTextEventBodySerializer implements EventBodySerializer {
 

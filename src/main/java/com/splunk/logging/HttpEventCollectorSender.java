@@ -104,8 +104,12 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
         this.channel = channel;
         this.type = type;
 
-        if ("Raw".equalsIgnoreCase(type) && channel != null && !channel.trim().equals("")) {
-            HttpUrl.Builder urlBuilder = HttpUrl.parse(Url + HttpRawCollectorUriPath).newBuilder()
+        if ("Raw".equalsIgnoreCase(type)) {
+            if (channel == null || channel.trim().equals("")) {
+                throw new IllegalArgumentException("Channel cannot be null or empty");
+            }
+            HttpUrl.Builder urlBuilder = HttpUrl.parse(Url + HttpRawCollectorUriPath)
+                    .newBuilder()
                     .addQueryParameter(ChannelQueryParam, channel);
             metadata.forEach(urlBuilder::addQueryParameter);
             this.url = urlBuilder.build();

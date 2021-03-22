@@ -120,20 +120,20 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
         // read configuration settings
         Map<String, String> metadata = new HashMap<>();
         metadata.put(MetadataTags.HOST,
-                getConfigurationProperty(MetadataTags.HOST, ""));
+                getConfigurationProperty(MetadataTags.HOST, null));
 
         metadata.put(MetadataTags.INDEX,
-                getConfigurationProperty(MetadataTags.INDEX, ""));
+                getConfigurationProperty(MetadataTags.INDEX, null));
 
         metadata.put(MetadataTags.SOURCE,
-                getConfigurationProperty(MetadataTags.SOURCE, ""));
+                getConfigurationProperty(MetadataTags.SOURCE, null));
 
         metadata.put(MetadataTags.SOURCETYPE,
-                getConfigurationProperty(MetadataTags.SOURCETYPE, ""));
+                getConfigurationProperty(MetadataTags.SOURCETYPE, null));
         
         // Extract message format value
         metadata.put(MetadataTags.MESSAGEFORMAT,
-            getConfigurationProperty(MetadataTags.MESSAGEFORMAT, ""));
+            getConfigurationProperty(MetadataTags.MESSAGEFORMAT, null));
 
         // http event collector endpoint properties
         String url = getConfigurationProperty(UrlConfTag, null);
@@ -142,10 +142,10 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
         String token = getConfigurationProperty("token", null);
 
         //app channel
-        String channel = getConfigurationProperty("channel", "");
+        String channel = getConfigurationProperty("channel", null);
 
         //app type
-        String type = getConfigurationProperty("type", "");
+        String type = getConfigurationProperty("type", null);
 
         // batching properties
         long delay = getConfigurationNumericProperty(BatchDelayConfTag, HttpEventCollectorSender.DefaultBatchInterval);
@@ -153,8 +153,8 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
         long batchSize = getConfigurationNumericProperty(BatchSizeConfTag, HttpEventCollectorSender.DefaultBatchSize);
         long retriesOnError = getConfigurationNumericProperty(RetriesOnErrorTag, 0);
         String sendMode = getConfigurationProperty(SendModeTag, "sequential");
-        String middleware = getConfigurationProperty(MiddlewareTag, "");
-        String eventBodySerializer = getConfigurationProperty("eventBodySerializer", "");
+        String middleware = getConfigurationProperty(MiddlewareTag, null);
+        String eventBodySerializer = getConfigurationProperty("eventBodySerializer", null);
 
         includeLoggerName = getConfigurationBooleanProperty(IncludeLoggerNameConfTag, true);
         includeThreadName = getConfigurationBooleanProperty(IncludeThreadNameConfTag, true);
@@ -241,10 +241,6 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
         );
         if (value == null) {
             value = defaultValue;
-        }
-        if (value == null) {
-            throw new IllegalArgumentException(String.format(
-                    "Configuration property %s is missing", property));
         }
         return value;
     }

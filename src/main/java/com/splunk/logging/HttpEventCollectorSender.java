@@ -30,18 +30,20 @@ import java.io.Serializable;
 import java.security.cert.CertificateException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 
 /**
  * This is an internal helper class that sends logging events to Splunk http event collector.
  */
 public class HttpEventCollectorSender extends TimerTask implements HttpEventCollectorMiddleware.IHttpSender {
-    private static final String SPLUNKREQUESTCHANNELTag = "X-Splunk-Request-Channel";
+    private static final String ChannelQueryParam = "channel";
     private static final String AuthorizationHeaderTag = "Authorization";
     private static final String AuthorizationHeaderScheme = "Splunk %s";
     private static final String HttpEventCollectorUriPath = "/services/collector/event/1.0";
     private static final String HttpRawCollectorUriPath = "/services/collector/raw";
-    private static final String HttpContentType = "application/json; profile=urn:splunk:event:1.0; charset=utf-8";
+    private static final String JsonHttpContentType = "application/json; profile=urn:splunk:event:1.0; charset=utf-8";
+    private static final String PlainTextHttpContentType = "plain/text; charset=utf-8";
     private static final String SendModeSequential = "sequential";
     private static final String SendModeSParallel = "parallel";
     private TimeoutSettings timeoutSettings = new TimeoutSettings();
@@ -62,7 +64,7 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
         Sequential,
         Parallel
     };
-    
+
     /**
      * Recommended default values for events batching.
      */
@@ -70,7 +72,7 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
     public static final int DefaultBatchSize = 10 * 1024; // 10KB
     public static final int DefaultBatchCount = 10; // 10 events
 
-    private String url;
+    private HttpUrl url;
     private String token;
     private String channel;
     private String type;
@@ -83,7 +85,6 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
     private boolean disableCertificateValidation = false;
     private SendMode sendMode = SendMode.Sequential;
     private HttpEventCollectorMiddleware middleware = new HttpEventCollectorMiddleware();
-    private final MessageFormat messageFormat;
 
     /**
      * Initialize HttpEventCollectorSender
@@ -101,7 +102,6 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
             long delay, long maxEventsBatchCount, long maxEventsBatchSize,
             String sendModeStr,
             Map<String, String> metadata, TimeoutSettings timeoutSettings) {
-        this.url = Url + HttpEventCollectorUriPath;
         this.token = token;
         this.channel = channel;
         this.type = type;
@@ -110,7 +110,16 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
         }
 
         if ("Raw".equalsIgnoreCase(type)) {
-            this.url = Url + HttpRawCollectorUriPath;
+            if (channel == null || channel.trim().equals("")) {
+                throw new IllegalArgumentException("Channel cannot be null or empty");
+            }
+            HttpUrl.Builder urlBuilder = HttpUrl.parse(Url + HttpRawCollectorUriPath)
+                    .newBuilder()
+                    .addQueryParameter(ChannelQueryParam, channel);
+            metadata.forEach(urlBuilder::addQueryParameter);
+            this.url = urlBuilder.build();
+        } else {
+            this.url = HttpUrl.parse(Url + HttpEventCollectorUriPath);
         }
 
         // when size configuration setting is missing it's treated as "infinity",
@@ -127,7 +136,6 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
         final String format = metadata.get(MetadataTags.MESSAGEFORMAT);
         // Get MessageFormat enum from format string. Do this once per instance in constructor to avoid expensive operation in
         // each event sender call
-        this.messageFormat = MessageFormat.fromFormat(format);
 
         if (sendModeStr != null) {
             if (sendModeStr.equals(SendModeSequential))
@@ -259,11 +267,6 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
 
         OkHttpClient.Builder builder = new OkHttpClient.Builder();
 
-        builder.connectTimeout(timeoutSettings.connectTimeout, TimeUnit.MILLISECONDS)
-                .callTimeout(timeoutSettings.callTimeout, TimeUnit.MILLISECONDS)
-                .readTimeout(timeoutSettings.readTimeout, TimeUnit.MILLISECONDS)
-                .writeTimeout(timeoutSettings.writeTimeout, TimeUnit.MILLISECONDS);
-
         // limit max  number of async requests in sequential mode
         if (sendMode == SendMode.Sequential) {
             Dispatcher dispatcher = new Dispatcher();
@@ -306,7 +309,6 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
             });
         }
 
-
         httpClient = builder.build();
     }
 
@@ -334,19 +336,22 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
     public void postEvents(final List<HttpEventCollectorEventInfo> events,
                            final HttpEventCollectorMiddleware.IHttpSenderCallback callback) {
         startHttpClient(); // make sure http client is started
-        // convert events list into a string
-        StringBuilder eventsBatchString = new StringBuilder();
-        for (HttpEventCollectorEventInfo eventInfo : events) {
-            eventsBatchString.append(serializer.serialize(eventInfo));
-        }
         // create http request
         Request.Builder requestBldr = new Request.Builder()
                 .url(url)
-                .addHeader(AuthorizationHeaderTag, String.format(AuthorizationHeaderScheme, token))
-                .post(RequestBody.create(MediaType.parse(HttpContentType), eventsBatchString.toString()));
-
-        if ("Raw".equalsIgnoreCase(type) && channel != null && !channel.trim().equals("")) {
-            requestBldr.addHeader(SPLUNKREQUESTCHANNELTag, channel);
+                .addHeader(AuthorizationHeaderTag, String.format(AuthorizationHeaderScheme, token));
+        if ("Raw".equalsIgnoreCase(type)) {
+            String lineSeparatedEvents = events.stream()
+                    .map(HttpEventCollectorEventInfo::getMessage)
+                    .collect(Collectors.joining(System.lineSeparator()));
+            requestBldr.post(RequestBody.create(MediaType.parse(PlainTextHttpContentType), lineSeparatedEvents));
+        } else {
+            // convert events list into a string
+            StringBuilder eventsBatchString = new StringBuilder();
+            for (HttpEventCollectorEventInfo eventInfo : events) {
+                eventsBatchString.append(serializer.serialize(eventInfo));
+            }
+            requestBldr.post(RequestBody.create(MediaType.parse(JsonHttpContentType), eventsBatchString.toString()));
         }
 
         httpClient.newCall(requestBldr.build()).enqueue(new Callback() {

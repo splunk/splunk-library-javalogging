@@ -111,9 +111,9 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
     private final String MiddlewareTag = "middleware";
 
     private final String ConnectTimeoutConfTag = "connect_timeout";
-    private final String CallTimeoutConfTag = "connect_timeout";
-    private final String ReadTimeoutConfTag = "connect_timeout";
-    private final String WriteTimeoutConfTag = "connect_timeout";
+    private final String CallTimeoutConfTag = "call_timeout";
+    private final String ReadTimeoutConfTag = "read_timeout";
+    private final String WriteTimeoutConfTag = "write_timeout";
 
     /** HttpEventCollectorLoggingHandler c-or */
     public HttpEventCollectorLoggingHandler() {
@@ -130,7 +130,7 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
 
         metadata.put(MetadataTags.SOURCETYPE,
                 getConfigurationProperty(MetadataTags.SOURCETYPE, null));
-        
+
         // Extract message format value
         metadata.put(MetadataTags.MESSAGEFORMAT,
             getConfigurationProperty(MetadataTags.MESSAGEFORMAT, null));
@@ -253,7 +253,7 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
 
     private boolean getConfigurationBooleanProperty(
             final String property, boolean defaultValue) {
-        return Boolean.valueOf(
+        return Boolean.parseBoolean(
                 getConfigurationProperty(property, String.valueOf(defaultValue)));
     }
 }

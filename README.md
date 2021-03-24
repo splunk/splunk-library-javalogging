@@ -43,8 +43,7 @@ If you're using the Log4j 2, Simple Logging Facade for Java (SLF4J), or Logback 
   [Overview of Splunk logging for Java](http://dev.splunk.com/goto/sdk-slj).
 
 * For reference documentation, see the
-  [Splunk logging for Java API reference](https://docs.splunk.com
-  /DocumentationStatic/JavaLogging/1.8.0/index.html).
+  [Splunk logging for Java API reference](https://docs.splunk.com/DocumentationStatic/JavaLogging/1.8.0/index.html).
 
 * For all things developer with Splunk, see the
   [Splunk Developer Portal](http://dev.splunk.com).

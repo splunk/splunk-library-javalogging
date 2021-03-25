@@ -52,6 +52,7 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
     private long _batchSize = 0;
     private String _sendMode;
     private long _retriesOnError = 0;
+    private HttpEventCollectorSender.TimeoutSettings timeoutSettings = new HttpEventCollectorSender.TimeoutSettings();
 
     @Override
     public void start() {
@@ -71,12 +72,12 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
 
         if (_sourcetype != null)
             metadata.put(MetadataTags.SOURCETYPE, _sourcetype);
-        
+
         if (_messageFormat != null)
             metadata.put(MetadataTags.MESSAGEFORMAT, _messageFormat);
 
         this.sender = new HttpEventCollectorSender(
-                _url, _token, _channel, _type, _batchInterval, _batchCount, _batchSize, _sendMode, metadata);
+                _url, _token, _channel, _type, _batchInterval, _batchCount, _batchSize, _sendMode, metadata, timeoutSettings);
 
         // plug a user middleware
         if (_middleware != null && !_middleware.isEmpty()) {
@@ -245,7 +246,7 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
     public String getSourcetype() {
         return this._sourcetype;
     }
-    
+
     public void setMessageFormat(String messageFormat) {
         this._messageFormat = messageFormat;
     }
@@ -316,6 +317,39 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
 
     public void setEventHeaderSerializer(String eventHeaderSerializer) {
         this._eventHeaderSerializer = eventHeaderSerializer;
+    }
+
+    public void setConnectTimeout(long milliseconds) {
+        this.timeoutSettings.connectTimeout = milliseconds;
+    }
+
+    public long getConnectTimeout(long milliseconds) {
+        return this.timeoutSettings.connectTimeout = milliseconds;
+    }
+
+    public void setCallTimeout(long milliseconds) {
+        this.timeoutSettings.callTimeout = milliseconds;
+    }
+
+    public long getCallTimeout(long milliseconds) {
+        return this.timeoutSettings.callTimeout = milliseconds;
+    }
+
+
+    public void setReadTimeout(long milliseconds) {
+        this.timeoutSettings.readTimeout = milliseconds;
+    }
+
+    public long getReadTimeout(long milliseconds) {
+        return this.timeoutSettings.readTimeout = milliseconds;
+    }
+
+    public void setWriteTimeout(long milliseconds) {
+        this.timeoutSettings.writeTimeout = milliseconds;
+    }
+
+    public long getWriteTimeout(long milliseconds) {
+        return this.timeoutSettings.writeTimeout = milliseconds;
     }
 
     private static long parseLong(String string, int defaultValue) {

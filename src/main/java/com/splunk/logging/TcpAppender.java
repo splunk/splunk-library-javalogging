@@ -21,6 +21,7 @@ import ch.qos.logback.core.Layout;
 import ch.qos.logback.core.net.DefaultSocketConnector;
 import ch.qos.logback.core.net.SocketConnector;
 import ch.qos.logback.core.util.CloseUtil;
+import ch.qos.logback.core.util.Duration;
 
 import javax.net.SocketFactory;
 import java.io.IOException;
@@ -41,6 +42,12 @@ public class TcpAppender extends AppenderBase<ILoggingEvent> implements Runnable
     private static final int DEFAULT_QUEUE_SIZE = 0;
     private static final int DEFAULT_ACCEPT_CONNECTION_DELAY = 5000;
 
+    /**
+     * Default timeout for how long to wait when inserting an event into
+     * the BlockingQueue.
+     */
+    private static final int DEFAULT_EVENT_DELAY_TIMEOUT = 100;
+
     private String host;
     private int port;
     private InetAddress address;
@@ -52,6 +59,7 @@ public class TcpAppender extends AppenderBase<ILoggingEvent> implements Runnable
     private int reconnectionDelay = DEFAULT_RECONNECTION_DELAY;
     private int queueSize = DEFAULT_QUEUE_SIZE;
     private int acceptConnectionTimeout = DEFAULT_ACCEPT_CONNECTION_DELAY;
+    private Duration eventDelayLimit = new Duration(DEFAULT_EVENT_DELAY_TIMEOUT);
 
     private BlockingQueue<ILoggingEvent> queue;
 
@@ -274,9 +282,18 @@ public class TcpAppender extends AppenderBase<ILoggingEvent> implements Runnable
         event.prepareForDeferredProcessing();
         event.getCallerData();
 
+        if (event == null || !started) return;
+
         // Append to the queue to be logged.
-        if (event != null && started)
-            queue.offer(event);
+        try {
+            final boolean inserted = queue.offer(event, eventDelayLimit.getMilliseconds(), TimeUnit.MILLISECONDS);
+            if (!inserted) {
+                addInfo("Dropping event due to timeout limit of [" + eventDelayLimit +
+                    "] milliseconds being exceeded");
+            }
+        } catch (InterruptedException e) {
+            addError("Interrupted while appending event to TcpAppender", e);
+        }
     }
 
     // The setters are peculiar here. They are used by Logback (via reflection) to set
@@ -296,4 +313,22 @@ public class TcpAppender extends AppenderBase<ILoggingEvent> implements Runnable
 
     public void setLayout(Layout<ILoggingEvent> layout) { this.layout = layout; }
     public Layout<ILoggingEvent> getLayout() { return this.layout; }
+
+    /**
+     * The <b>eventDelayLimit</b> takes a non-negative integer representing the
+     * number of milliseconds to allow the appender to block if the underlying
+     * BlockingQueue is full. Once this limit is reached, the event is dropped.
+     *
+     * @param eventDelayLimit the event delay limit
+     */
+    public void setEventDelayLimit(Duration eventDelayLimit) {
+        this.eventDelayLimit = eventDelayLimit;
+    }
+
+    /**
+     * Returns the value of the <b>eventDelayLimit</b> property.
+     */
+    public Duration getEventDelayLimit() {
+        return eventDelayLimit;
+    }
 }

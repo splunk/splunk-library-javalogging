@@ -110,25 +110,30 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
     private final String SendModeTag = "send_mode";
     private final String MiddlewareTag = "middleware";
 
+    private final String ConnectTimeoutConfTag = "connect_timeout";
+    private final String CallTimeoutConfTag = "call_timeout";
+    private final String ReadTimeoutConfTag = "read_timeout";
+    private final String WriteTimeoutConfTag = "write_timeout";
+
     /** HttpEventCollectorLoggingHandler c-or */
     public HttpEventCollectorLoggingHandler() {
         // read configuration settings
         Map<String, String> metadata = new HashMap<>();
         metadata.put(MetadataTags.HOST,
-                getConfigurationProperty(MetadataTags.HOST, ""));
+                getConfigurationProperty(MetadataTags.HOST, null));
 
         metadata.put(MetadataTags.INDEX,
-                getConfigurationProperty(MetadataTags.INDEX, ""));
+                getConfigurationProperty(MetadataTags.INDEX, null));
 
         metadata.put(MetadataTags.SOURCE,
-                getConfigurationProperty(MetadataTags.SOURCE, ""));
+                getConfigurationProperty(MetadataTags.SOURCE, null));
 
         metadata.put(MetadataTags.SOURCETYPE,
-                getConfigurationProperty(MetadataTags.SOURCETYPE, ""));
-        
+                getConfigurationProperty(MetadataTags.SOURCETYPE, null));
+
         // Extract message format value
         metadata.put(MetadataTags.MESSAGEFORMAT,
-            getConfigurationProperty(MetadataTags.MESSAGEFORMAT, ""));
+            getConfigurationProperty(MetadataTags.MESSAGEFORMAT, null));
 
         // http event collector endpoint properties
         String url = getConfigurationProperty(UrlConfTag, null);
@@ -137,10 +142,10 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
         String token = getConfigurationProperty("token", null);
 
         //app channel
-        String channel = getConfigurationProperty("channel", "");
+        String channel = getConfigurationProperty("channel", null);
 
         //app type
-        String type = getConfigurationProperty("type", "");
+        String type = getConfigurationProperty("type", null);
 
         // batching properties
         long delay = getConfigurationNumericProperty(BatchDelayConfTag, HttpEventCollectorSender.DefaultBatchInterval);
@@ -148,17 +153,24 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
         long batchSize = getConfigurationNumericProperty(BatchSizeConfTag, HttpEventCollectorSender.DefaultBatchSize);
         long retriesOnError = getConfigurationNumericProperty(RetriesOnErrorTag, 0);
         String sendMode = getConfigurationProperty(SendModeTag, "sequential");
-        String middleware = getConfigurationProperty(MiddlewareTag, "");
-        String eventBodySerializer = getConfigurationProperty("eventBodySerializer", "");
         String eventHeaderSerializer = getConfigurationProperty("eventHeaderSerializer", "");
+        String middleware = getConfigurationProperty(MiddlewareTag, null);
+        String eventBodySerializer = getConfigurationProperty("eventBodySerializer", null);
 
         includeLoggerName = getConfigurationBooleanProperty(IncludeLoggerNameConfTag, true);
         includeThreadName = getConfigurationBooleanProperty(IncludeThreadNameConfTag, true);
         includeException = getConfigurationBooleanProperty(IncludeExceptionConfTag, true);
 
+        HttpEventCollectorSender.TimeoutSettings timeoutSettings = new HttpEventCollectorSender.TimeoutSettings(
+            getConfigurationNumericProperty(ConnectTimeoutConfTag, HttpEventCollectorSender.TimeoutSettings.DEFAULT_CONNECT_TIMEOUT),
+            getConfigurationNumericProperty(CallTimeoutConfTag, HttpEventCollectorSender.TimeoutSettings.DEFAULT_CALL_TIMEOUT),
+            getConfigurationNumericProperty(ReadTimeoutConfTag, HttpEventCollectorSender.TimeoutSettings.DEFAULT_READ_TIMEOUT),
+            getConfigurationNumericProperty(WriteTimeoutConfTag, HttpEventCollectorSender.TimeoutSettings.DEFAULT_WRITE_TIMEOUT)
+        );
+
         // delegate all configuration params to event sender
         this.sender = new HttpEventCollectorSender(
-                url, token, channel, type, delay, batchCount, batchSize, sendMode, metadata);
+                url, token, channel, type, delay, batchCount, batchSize, sendMode, metadata, timeoutSettings);
 
         // plug a user middleware
         if (middleware != null && !middleware.isEmpty()) {
@@ -240,10 +252,6 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
         if (value == null) {
             value = defaultValue;
         }
-        if (value == null) {
-            throw new IllegalArgumentException(String.format(
-                    "Configuration property %s is missing", property));
-        }
         return value;
     }
 
@@ -255,7 +263,7 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
 
     private boolean getConfigurationBooleanProperty(
             final String property, boolean defaultValue) {
-        return Boolean.valueOf(
+        return Boolean.parseBoolean(
                 getConfigurationProperty(property, String.valueOf(defaultValue)));
     }
 }

@@ -30,8 +30,8 @@ import java.util.List;
  * caused by network connection and/or Splunk server.
  *
  * Usage example:
- * HttpEventCollectorErrorHandler.onError(new HttpEventErrorHandler.ErrorCallback() {
- *     public void error(final String data, final Exception ex) {  handle exception  }
+ * HttpEventCollectorErrorHandler.onError(new HttpEventCollectorErrorHandler.ErrorCallback() {
+ *     public void error(final String data, final Exception ex) {  // handle exception  }
  * });
  */
 public class HttpEventCollectorErrorHandler {

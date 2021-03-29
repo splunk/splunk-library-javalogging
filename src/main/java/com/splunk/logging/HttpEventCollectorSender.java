@@ -81,7 +81,8 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
     private Timer timer;
     private List<HttpEventCollectorEventInfo> eventsBatch = new LinkedList<HttpEventCollectorEventInfo>();
     private long eventsBatchSize = 0; // estimated total size of events batch
-    private static OkHttpClient httpClient = null;
+    private static final OkHttpClient httpSharedClient = new OkHttpClient(); // shared instance with the default settings
+    private OkHttpClient httpClient = null; // shares the same connection pool and thread pools with the shared instance
     private boolean disableCertificateValidation = false;
     private SendMode sendMode = SendMode.Sequential;
     private HttpEventCollectorMiddleware middleware = new HttpEventCollectorMiddleware();
@@ -269,7 +270,7 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
             return;
         }
 
-        OkHttpClient.Builder builder = new OkHttpClient.Builder();
+        OkHttpClient.Builder builder = httpSharedClient.newBuilder();
 
         // limit max  number of async requests in sequential mode
         if (sendMode == SendMode.Sequential) {

@@ -242,6 +242,10 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
         serializer.setEventBodySerializer(eventBodySerializer);
     }
 
+    public void setEventHeaderSerializer(EventHeaderSerializer eventHeaderSerializer) {
+        serializer.setEventHeaderSerializer(eventHeaderSerializer);
+    }
+
     public static void putIfPresent(JsonObject collection, String tag, Object value) {
         if (value != null) {
             if (value instanceof String && ((String) value).length() == 0) {

@@ -153,6 +153,7 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
         long batchSize = getConfigurationNumericProperty(BatchSizeConfTag, HttpEventCollectorSender.DefaultBatchSize);
         long retriesOnError = getConfigurationNumericProperty(RetriesOnErrorTag, 0);
         String sendMode = getConfigurationProperty(SendModeTag, "sequential");
+        String eventHeaderSerializer = getConfigurationProperty("eventHeaderSerializer", "");
         String middleware = getConfigurationProperty(MiddlewareTag, null);
         String eventBodySerializer = getConfigurationProperty("eventBodySerializer", null);
 
@@ -183,6 +184,15 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
                 this.sender.setEventBodySerializer((EventBodySerializer) Class.forName(eventBodySerializer).newInstance());
             } catch (final Exception ex) {
                 //output error msg but not fail, it will default to use the default EventBodySerializer
+                System.out.println(ex);
+            }
+        }
+
+        if (eventHeaderSerializer != null && !eventHeaderSerializer.isEmpty()) {
+            try {
+                this.sender.setEventHeaderSerializer((EventHeaderSerializer) Class.forName(eventHeaderSerializer).newInstance());
+            } catch (final Exception ex) {
+                //output error msg but not fail, it will default to use the default EventHeaderSerializer
                 System.out.println(ex);
             }
         }

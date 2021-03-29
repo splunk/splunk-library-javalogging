@@ -46,6 +46,7 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
     private String _disableCertificateValidation;
     private String _middleware;
     private String _eventBodySerializer;
+    private String _eventHeaderSerializer;
     private long _batchInterval = 0;
     private long _batchCount = 0;
     private long _batchSize = 0;
@@ -71,7 +72,7 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
 
         if (_sourcetype != null)
             metadata.put(MetadataTags.SOURCETYPE, _sourcetype);
-        
+
         if (_messageFormat != null)
             metadata.put(MetadataTags.MESSAGEFORMAT, _messageFormat);
 
@@ -88,6 +89,12 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
         if (_eventBodySerializer != null && !_eventBodySerializer.isEmpty()) {
             try {
                 this.sender.setEventBodySerializer((EventBodySerializer) Class.forName(_eventBodySerializer).newInstance());
+            } catch (final Exception ignored) {}
+        }
+
+        if (_eventHeaderSerializer != null && !_eventHeaderSerializer.isEmpty()) {
+            try {
+                this.sender.setEventHeaderSerializer((EventHeaderSerializer) Class.forName(_eventHeaderSerializer).newInstance());
             } catch (final Exception ignored) {}
         }
 
@@ -239,7 +246,7 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
     public String getSourcetype() {
         return this._sourcetype;
     }
-    
+
     public void setMessageFormat(String messageFormat) {
         this._messageFormat = messageFormat;
     }
@@ -266,6 +273,10 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
 
     public String getEventBodySerializer() {
         return _eventBodySerializer;
+    }
+
+    public String getEventHeaderSerializer() {
+        return _eventHeaderSerializer;
     }
 
     public void setDisableCertificateValidation(String disableCertificateValidation) {
@@ -302,6 +313,10 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
 
     public void setEventBodySerializer(String eventBodySerializer) {
         this._eventBodySerializer = eventBodySerializer;
+    }
+
+    public void setEventHeaderSerializer(String eventHeaderSerializer) {
+        this._eventHeaderSerializer = eventHeaderSerializer;
     }
 
     public void setConnectTimeout(long milliseconds) {

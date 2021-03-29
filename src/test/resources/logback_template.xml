@@ -17,6 +17,7 @@
         <send_mode>%user_send_mode%</send_mode>
         <middleware>%user_middleware%</middleware>
         <eventBodySerializer>%user_eventBodySerializer%</eventBodySerializer>
+        <eventHeaderSerializer>%user_eventHeaderSerializer%</eventHeaderSerializer>
 
         <layout class="ch.qos.logback.classic.PatternLayout">
             <pattern>%msg</pattern>

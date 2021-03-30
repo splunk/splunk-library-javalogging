@@ -62,24 +62,25 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
         if (started)
             return;
 
+        Map<String, String> metadata = new HashMap<>(_metadata);
         // init events sender
         if (_host != null)
-            _metadata.put(MetadataTags.HOST, _host);
+            metadata.put(MetadataTags.HOST, _host);
 
         if (_index != null)
-            _metadata.put(MetadataTags.INDEX, _index);
+            metadata.put(MetadataTags.INDEX, _index);
 
         if (_source != null)
-            _metadata.put(MetadataTags.SOURCE, _source);
+            metadata.put(MetadataTags.SOURCE, _source);
 
         if (_sourcetype != null)
-            _metadata.put(MetadataTags.SOURCETYPE, _sourcetype);
+            metadata.put(MetadataTags.SOURCETYPE, _sourcetype);
 
         if (_messageFormat != null)
-            _metadata.put(MetadataTags.MESSAGEFORMAT, _messageFormat);
+            metadata.put(MetadataTags.MESSAGEFORMAT, _messageFormat);
 
         this.sender = new HttpEventCollectorSender(
-                _url, _token, _channel, _type, _batchInterval, _batchCount, _batchSize, _sendMode, _metadata, timeoutSettings);
+                _url, _token, _channel, _type, _batchInterval, _batchCount, _batchSize, _sendMode, metadata, timeoutSettings);
 
         // plug a user middleware
         if (_middleware != null && !_middleware.isEmpty()) {

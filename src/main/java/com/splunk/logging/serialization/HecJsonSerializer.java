@@ -8,13 +8,15 @@ package com.splunk.logging.serialization;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.splunk.logging.EventBodySerializer;
+import com.splunk.logging.EventHeaderSerializer;
 import com.splunk.logging.HttpEventCollectorEventInfo;
+import com.splunk.logging.hec.MetadataTags;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class HecJsonSerializer {
-    private static final Set<String> KEYWORDS = new HashSet<>(Arrays.asList(
-            "host", "source", "sourcetype", "index", "time"));
+    private static final Set<String> KEYWORDS = MetadataTags.HEC_TAGS;
     private Map<String, Object> template = new LinkedHashMap<>();
     private EventInfoTypeAdapter typeAdapter = new EventInfoTypeAdapter();
     private Gson gson = new GsonBuilder()
@@ -22,6 +24,7 @@ public class HecJsonSerializer {
             .disableHtmlEscaping()
             .create();
     private EventBodySerializer eventBodySerializer;
+    private EventHeaderSerializer eventHeaderSerializer;
 
     public HecJsonSerializer(Map<String, String> metadata) {
         for (Map.Entry<String, String> entry : metadata.entrySet()) {
@@ -45,9 +48,18 @@ public class HecJsonSerializer {
     }
 
     public String serialize(HttpEventCollectorEventInfo info) {
-        Map<String, Object> event = new HashMap<>(template);
+        Map<String, Object> event;
+        if (this.eventHeaderSerializer != null) {
+            event = eventHeaderSerializer.serializeEventHeader(info, new HashMap<>(template));
+        } else {
+            event = new HashMap<>(template);
+        }
         if (this.eventBodySerializer != null) {
             event.put("event", eventBodySerializer.serializeEventBody(info, info.getMessage()));
+            double eventTime = eventBodySerializer.getEventTime(info);
+            if (eventTime > 0) {
+                event.put("time", String.format(Locale.US, "%.3f", eventTime));
+            }
         } else {
             event.put("event", info);
         }
@@ -56,5 +68,9 @@ public class HecJsonSerializer {
 
     public void setEventBodySerializer(EventBodySerializer eventBodySerializer) {
         this.eventBodySerializer = eventBodySerializer;
+    }
+
+    public void setEventHeaderSerializer(EventHeaderSerializer eventHeaderSerializer) {
+        this.eventHeaderSerializer = eventHeaderSerializer;
     }
 }

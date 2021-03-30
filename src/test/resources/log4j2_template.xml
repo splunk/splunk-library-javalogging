@@ -17,6 +17,7 @@
               send_mode="%user_send_mode%"
               middleware="%user_middleware%"
               eventBodySerializer="%user_eventBodySerializer%"
+              eventHeaderSerializer="%user_eventHeaderSerializer%"
                 >
 
             <PatternLayout pattern="%m"/>

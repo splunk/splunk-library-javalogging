@@ -27,6 +27,7 @@ import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.logging.LogManager;
@@ -43,33 +44,63 @@ public class TestUtil {
      * read splunk host info from .splunkrc file
      */
     private static void getSplunkHostInfo() throws IOException {
+        // .splunkrc overrides environment
 
         if (serviceArgs.isEmpty()) {
             //set default value
-            serviceArgs.setUsername("admin");
-            serviceArgs.setPassword("changeme");
-            serviceArgs.setHost("localhost");
+            Map<String, String> environment = System.getenv();
+            serviceArgs.setUsername(environment.getOrDefault("SPLUNK_USER", "admin"));
+            serviceArgs.setPassword(environment.getOrDefault("SPLUNK_PASSWORD", "changeme"));
+            serviceArgs.setHost(environment.getOrDefault("SPLUNK_HOST", "localhost"));
+
             serviceArgs.setPort(8089);
-            serviceArgs.setScheme("https");
+            String environmentPort = environment.get("SPLUNK_ADMIN_PORT");
+            if (environmentPort != null) {
+                try {
+                    int parsedPort = Integer.parseInt(environmentPort);
+                } catch(NumberFormatException e) {
+                    // Use default set above
+                }
+            }
+
+            String environmentScheme = environment.get("SPLUNK_ADMIN_PROTOCOL");
+            if (environmentScheme != null) {
+                if ("https".equalsIgnoreCase(environmentScheme) || "http".equalsIgnoreCase(environmentScheme)) {
+                    serviceArgs.setScheme(environmentScheme.toLowerCase());
+                } else {
+                    throw new IOException("Unknown admin transport protocol '" + environmentScheme + "', expect http or https");
+                }
+            } else {
+                serviceArgs.setScheme("https");
+            }
+
+            String splunkUserEnv = System.getenv("SPLUNK_USER");
+            if (splunkUserEnv != null) {
+                serviceArgs.setUsername("SPLUNK_USER");
+            }
 
             //update serviceArgs with customer splunk host info
             String splunkhostfile = System.getProperty("user.home") + File.separator + ".splunkrc";
-            List<String> lines = Files.readAllLines(new File(splunkhostfile).toPath(), Charset.defaultCharset());
-            for (String line : lines) {
-                if (line.toLowerCase().contains("host=")) {
-                    serviceArgs.setHost(line.split("=")[1]);
-                }
-                if (line.toLowerCase().contains("admin=")) {
-                    serviceArgs.setUsername(line.split("=")[1]);
-                }
-                if (line.toLowerCase().contains("password=")) {
-                    serviceArgs.setPassword(line.split("=")[1]);
-                }
-                if (line.toLowerCase().contains("scheme=")) {
-                    serviceArgs.setScheme(line.split("=")[1]);
-                }
-                if (line.toLowerCase().contains("port=")) {
-                    serviceArgs.setPort(Integer.parseInt(line.split("=")[1]));
+
+            Path configPath = new File(splunkhostfile).toPath();
+            if (Files.exists(configPath)) {
+                List<String> lines = Files.readAllLines(configPath, Charset.defaultCharset());
+                for (String line : lines) {
+                    if (line.toLowerCase().contains("host=")) {
+                        serviceArgs.setHost(line.split("=")[1]);
+                    }
+                    if (line.toLowerCase().contains("admin=")) {
+                        serviceArgs.setUsername(line.split("=")[1]);
+                    }
+                    if (line.toLowerCase().contains("password=")) {
+                        serviceArgs.setPassword(line.split("=")[1]);
+                    }
+                    if (line.toLowerCase().contains("scheme=")) {
+                        serviceArgs.setScheme(line.split("=")[1]);
+                    }
+                    if (line.toLowerCase().contains("port=")) {
+                        serviceArgs.setPort(Integer.parseInt(line.split("=")[1]));
+                    }
                 }
             }
         }
@@ -477,8 +508,8 @@ public class TestUtil {
                     String.format("expect: %s, actual: %s", expect, results.get(i));
         }
     }
-    
-    
+
+
     /**
      * Builds user input map using specified parameters.
      *

@@ -1,5 +1,17 @@
 # Splunk Logging for Java Changelog
 
+## Version 1.9.0
+
+* Resolve an issue with TcpAppender losing events when busy (@avdv)
+* Fix an issue with middleware not delegating on completion (@Blackbaud-MikeLueders)
+* Add EventHeaderSerializer that allows specifying HEC metadata (@snorwin)
+* Allow specification of timeout parameters
+* Allow time to be specified by EventBodySerializer (@avpavlov)
+* Use an Okhttp client per appender rather than a global client (@snorwin)
+* Fix an issue with empty strings in configs (@thomasmey)
+* Resolve an issue with sending raw events to HEC (@tburch)
+* Allow templated metadata values to be applied to an appender (@brunoalexandresantos)
+
 ## Version 1.8.0
 
 * Update JSON serialization- message property should not be encoded as a string

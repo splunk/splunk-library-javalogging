@@ -49,31 +49,33 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
     private final boolean includeMarker;
 
     private HttpEventCollectorLog4jAppender(final String name,
-                         final String url,
-                         final String token,
-                         final String channel,
-                         final String type,
-                         final String source,
-                         final String sourcetype,
-                         final String messageFormat,
-                         final String host,
-                         final String index,
-                         final Filter filter,
-                         final Layout<? extends Serializable> layout,
-                         final boolean includeLoggerName,
-                         final boolean includeThreadName,
-                         final boolean includeMDC,
-                         final boolean includeException,
-                         final boolean includeMarker,
-                         final boolean ignoreExceptions,
-                         long batchInterval,
-                         long batchCount,
-                         long batchSize,
-                         long retriesOnError,
-                         String sendMode,
-                         String middleware,
-                         final String disableCertificateValidation,
-                         final String eventBodySerializer)
+                                            final String url,
+                                            final String token,
+                                            final String channel,
+                                            final String type,
+                                            final String source,
+                                            final String sourcetype,
+                                            final String messageFormat,
+                                            final String host,
+                                            final String index,
+                                            final Filter filter,
+                                            final Layout<? extends Serializable> layout,
+                                            final boolean includeLoggerName,
+                                            final boolean includeThreadName,
+                                            final boolean includeMDC,
+                                            final boolean includeException,
+                                            final boolean includeMarker,
+                                            final boolean ignoreExceptions,
+                                            long batchInterval,
+                                            long batchCount,
+                                            long batchSize,
+                                            long retriesOnError,
+                                            String sendMode,
+                                            String middleware,
+                                            final String disableCertificateValidation,
+                                            final String eventBodySerializer,
+                                            final String eventHeaderSerializer,
+                                            HttpEventCollectorSender.TimeoutSettings timeoutSettings)
     {
         super(name, filter, layout, ignoreExceptions, Property.EMPTY_ARRAY);
         Map<String, String> metadata = new HashMap<>();
@@ -83,7 +85,7 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
         metadata.put(MetadataTags.SOURCETYPE, sourcetype != null ? sourcetype : "");
         metadata.put(MetadataTags.MESSAGEFORMAT, messageFormat != null ? messageFormat : "");
 
-        this.sender = new HttpEventCollectorSender(url, token, channel, type, batchInterval, batchCount, batchSize, sendMode, metadata);
+        this.sender = new HttpEventCollectorSender(url, token, channel, type, batchInterval, batchCount, batchSize, sendMode, metadata, timeoutSettings);
 
         // plug a user middleware
         if (middleware != null && !middleware.isEmpty()) {
@@ -95,6 +97,12 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
         if (eventBodySerializer != null && !eventBodySerializer.isEmpty()) {
             try {
                 this.sender.setEventBodySerializer((EventBodySerializer) Class.forName(eventBodySerializer).newInstance());
+            } catch (final Exception ignored) {}
+        }
+
+        if (eventHeaderSerializer != null && !eventHeaderSerializer.isEmpty()) {
+            try {
+                this.sender.setEventHeaderSerializer((EventHeaderSerializer) Class.forName(eventHeaderSerializer).newInstance());
             } catch (final Exception ignored) {}
         }
 
@@ -140,11 +148,16 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
             @PluginAttribute("middleware") final String middleware,
             @PluginAttribute("disableCertificateValidation") final String disableCertificateValidation,
             @PluginAttribute("eventBodySerializer") final String eventBodySerializer,
+            @PluginAttribute("eventHeaderSerializer") final String eventHeaderSerializer,
             @PluginAttribute(value = "includeLoggerName", defaultBoolean = true) final boolean includeLoggerName,
             @PluginAttribute(value = "includeThreadName", defaultBoolean = true) final boolean includeThreadName,
             @PluginAttribute(value = "includeMDC", defaultBoolean = true) final boolean includeMDC,
             @PluginAttribute(value = "includeException", defaultBoolean = true) final boolean includeException,
             @PluginAttribute(value = "includeMarker", defaultBoolean = true) final boolean includeMarker,
+            @PluginAttribute(value = "connect_timeout", defaultLong = HttpEventCollectorSender.TimeoutSettings.DEFAULT_CONNECT_TIMEOUT) final long connectTimeout,
+            @PluginAttribute(value = "call_timeout", defaultLong = HttpEventCollectorSender.TimeoutSettings.DEFAULT_CALL_TIMEOUT) final long callTimeout,
+            @PluginAttribute(value = "read_timeout", defaultLong = HttpEventCollectorSender.TimeoutSettings.DEFAULT_READ_TIMEOUT) final long readTimeout,
+            @PluginAttribute(value = "write_timeout", defaultLong = HttpEventCollectorSender.TimeoutSettings.DEFAULT_WRITE_TIMEOUT) final long writeTimeout,
             @PluginElement("Layout") Layout<? extends Serializable> layout,
             @PluginElement("Filter") final Filter filter
     )
@@ -182,7 +195,7 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
         return new HttpEventCollectorLog4jAppender(
                 name, url, token,  channel, type,
                 source, sourcetype, messageFormat, host, index,
-                filter, layout, 
+                filter, layout,
                 includeLoggerName, includeThreadName, includeMDC, includeException, includeMarker,
                 ignoreExceptionsBool,
                 parseInt(batchInterval, HttpEventCollectorSender.DefaultBatchInterval),
@@ -192,7 +205,9 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
                 sendMode,
                 middleware,
                 disableCertificateValidation,
-                eventBodySerializer
+                eventBodySerializer,
+                eventHeaderSerializer,
+                new HttpEventCollectorSender.TimeoutSettings(connectTimeout, callTimeout, readTimeout, writeTimeout)
         );
     }
 

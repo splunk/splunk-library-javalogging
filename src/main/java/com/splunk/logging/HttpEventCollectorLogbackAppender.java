@@ -46,19 +46,24 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
     private String _disableCertificateValidation;
     private String _middleware;
     private String _eventBodySerializer;
+    private String _eventHeaderSerializer;
     private long _batchInterval = 0;
     private long _batchCount = 0;
     private long _batchSize = 0;
     private String _sendMode;
     private long _retriesOnError = 0;
+    private Map<String, String> _metadata = new HashMap<>();
+
+
+    private HttpEventCollectorSender.TimeoutSettings timeoutSettings = new HttpEventCollectorSender.TimeoutSettings();
 
     @Override
     public void start() {
         if (started)
             return;
 
+        Map<String, String> metadata = new HashMap<>(_metadata);
         // init events sender
-        Map<String, String> metadata = new HashMap<>();
         if (_host != null)
             metadata.put(MetadataTags.HOST, _host);
 
@@ -70,12 +75,12 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
 
         if (_sourcetype != null)
             metadata.put(MetadataTags.SOURCETYPE, _sourcetype);
-        
+
         if (_messageFormat != null)
             metadata.put(MetadataTags.MESSAGEFORMAT, _messageFormat);
 
         this.sender = new HttpEventCollectorSender(
-                _url, _token, _channel, _type, _batchInterval, _batchCount, _batchSize, _sendMode, metadata);
+                _url, _token, _channel, _type, _batchInterval, _batchCount, _batchSize, _sendMode, metadata, timeoutSettings);
 
         // plug a user middleware
         if (_middleware != null && !_middleware.isEmpty()) {
@@ -87,6 +92,12 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
         if (_eventBodySerializer != null && !_eventBodySerializer.isEmpty()) {
             try {
                 this.sender.setEventBodySerializer((EventBodySerializer) Class.forName(_eventBodySerializer).newInstance());
+            } catch (final Exception ignored) {}
+        }
+
+        if (_eventHeaderSerializer != null && !_eventHeaderSerializer.isEmpty()) {
+            try {
+                this.sender.setEventHeaderSerializer((EventHeaderSerializer) Class.forName(_eventHeaderSerializer).newInstance());
             } catch (final Exception ignored) {}
         }
 
@@ -238,7 +249,7 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
     public String getSourcetype() {
         return this._sourcetype;
     }
-    
+
     public void setMessageFormat(String messageFormat) {
         this._messageFormat = messageFormat;
     }
@@ -263,8 +274,16 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
         return this._index;
     }
 
+    public void addMetadata(String tag, String value){
+        this._metadata.put(tag,value);
+    }
+
     public String getEventBodySerializer() {
         return _eventBodySerializer;
+    }
+
+    public String getEventHeaderSerializer() {
+        return _eventHeaderSerializer;
     }
 
     public void setDisableCertificateValidation(String disableCertificateValidation) {
@@ -301,6 +320,43 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
 
     public void setEventBodySerializer(String eventBodySerializer) {
         this._eventBodySerializer = eventBodySerializer;
+    }
+
+    public void setEventHeaderSerializer(String eventHeaderSerializer) {
+        this._eventHeaderSerializer = eventHeaderSerializer;
+    }
+
+    public void setConnectTimeout(long milliseconds) {
+        this.timeoutSettings.connectTimeout = milliseconds;
+    }
+
+    public long getConnectTimeout(long milliseconds) {
+        return this.timeoutSettings.connectTimeout = milliseconds;
+    }
+
+    public void setCallTimeout(long milliseconds) {
+        this.timeoutSettings.callTimeout = milliseconds;
+    }
+
+    public long getCallTimeout(long milliseconds) {
+        return this.timeoutSettings.callTimeout = milliseconds;
+    }
+
+
+    public void setReadTimeout(long milliseconds) {
+        this.timeoutSettings.readTimeout = milliseconds;
+    }
+
+    public long getReadTimeout(long milliseconds) {
+        return this.timeoutSettings.readTimeout = milliseconds;
+    }
+
+    public void setWriteTimeout(long milliseconds) {
+        this.timeoutSettings.writeTimeout = milliseconds;
+    }
+
+    public long getWriteTimeout(long milliseconds) {
+        return this.timeoutSettings.writeTimeout = milliseconds;
     }
 
     private static long parseLong(String string, int defaultValue) {

@@ -16,6 +16,7 @@ jobs:
           java-version: 1.8
           server-username: MAVEN_USERNAME
           server-password: MAVEN_PASSWORD
+          server-id: splunk-artifactory
       - name: build
         run: mvn -B package --file pom.xml
       - name: Create GitHub Release

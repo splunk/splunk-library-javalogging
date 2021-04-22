@@ -29,7 +29,6 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.security.cert.CertificateException;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 
@@ -112,9 +111,13 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
 
         if ("Raw".equalsIgnoreCase(type)) {
             if (channel == null || channel.trim().equals("")) {
-                throw new IllegalArgumentException("Channel cannot be null or empty");
+                this.channel = UUID.randomUUID().toString();
             }
-            HttpUrl.Builder urlBuilder = HttpUrl.parse(Url + HttpRawCollectorUriPath)
+            HttpUrl fullUrl = HttpUrl.parse(Url + HttpRawCollectorUriPath);
+            if (fullUrl == null) {
+                throw new IllegalArgumentException(String.format("Unparseable URL argument: %s",  Url + HttpEventCollectorUriPath));
+            }
+            HttpUrl.Builder urlBuilder = fullUrl
                     .newBuilder()
                     .addQueryParameter(ChannelQueryParam, channel);
             metadata.forEach(urlBuilder::addQueryParameter);

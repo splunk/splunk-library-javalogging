@@ -53,6 +53,7 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
     private String _sendMode;
     private long _retriesOnError = 0;
     private Map<String, String> _metadata = new HashMap<>();
+    private boolean _batchingConfigured = false;
 
 
     private HttpEventCollectorSender.TimeoutSettings timeoutSettings = new HttpEventCollectorSender.TimeoutSettings();
@@ -78,6 +79,10 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
 
         if (_messageFormat != null)
             metadata.put(MetadataTags.MESSAGEFORMAT, _messageFormat);
+
+        if ("raw".equalsIgnoreCase(_type)) {
+
+        }
 
         this.sender = new HttpEventCollectorSender(
                 _url, _token, _channel, _type, _batchInterval, _batchCount, _batchSize, _sendMode, metadata, timeoutSettings);
@@ -188,6 +193,18 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
 
     public void setType(String type) {
         this._type = type;
+        if ("raw".equalsIgnoreCase(type)) {
+            validateNotBatchedAndRaw();
+            this._batchCount = 1; // Enforce sending on every event
+        }
+    }
+
+    private void validateNotBatchedAndRaw() {
+        if ("raw".equalsIgnoreCase(_type)) {
+            if (_batchingConfigured) {
+                throw new IllegalArgumentException("Batching configuration and sending type of raw are incompatible.");
+            }
+        }
     }
 
     public String getType() {
@@ -292,14 +309,20 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
 
     public void setbatch_size_count(String value) {
         _batchCount = parseLong(value, HttpEventCollectorSender.DefaultBatchCount);
+        _batchingConfigured = true;
+        validateNotBatchedAndRaw();
     }
 
     public void setbatch_size_bytes(String value) {
         _batchSize = parseLong(value, HttpEventCollectorSender.DefaultBatchSize);
+        _batchingConfigured = true;
+        validateNotBatchedAndRaw();
     }
 
     public void setbatch_interval(String value) {
         _batchInterval = parseLong(value, HttpEventCollectorSender.DefaultBatchInterval);
+        _batchingConfigured = true;
+        validateNotBatchedAndRaw();
     }
 
     public void setretries_on_error(String value) {

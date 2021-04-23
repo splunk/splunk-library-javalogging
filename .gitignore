@@ -2,6 +2,7 @@
 *~
 .idea
 target
+.vscode
 *.iml
 pom.xml.old
 pom.xml.orig
@@ -14,4 +15,3 @@ TODOS
 
 docs
 docs.zip
-.vscode/

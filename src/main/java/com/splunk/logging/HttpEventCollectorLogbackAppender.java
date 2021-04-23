@@ -80,8 +80,9 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
         if (_messageFormat != null)
             metadata.put(MetadataTags.MESSAGEFORMAT, _messageFormat);
 
-        if ("raw".equalsIgnoreCase(_type)) {
-
+        // This should have been caught at configuration time, but double-check at start
+        if ("raw".equalsIgnoreCase(_type) && _batchingConfigured) {
+            throw new IllegalArgumentException("Batching configuration and sending type of raw are incompatible.");
         }
 
         this.sender = new HttpEventCollectorSender(

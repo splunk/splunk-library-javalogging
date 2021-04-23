@@ -168,6 +168,15 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
             getConfigurationNumericProperty(WriteTimeoutConfTag, HttpEventCollectorSender.TimeoutSettings.DEFAULT_WRITE_TIMEOUT)
         );
 
+        if ("raw".equalsIgnoreCase(type)) {
+            if (batchCount != HttpEventCollectorSender.DefaultBatchCount
+                        || batchSize != HttpEventCollectorSender.DefaultBatchSize
+                        || delay != HttpEventCollectorSender.DefaultBatchInterval) {
+                throw new IllegalArgumentException("Batching configuration and sending type of raw are incompatible.");
+            }
+            batchCount = 1;
+        }
+
         // delegate all configuration params to event sender
         this.sender = new HttpEventCollectorSender(
                 url, token, channel, type, delay, batchCount, batchSize, sendMode, metadata, timeoutSettings);

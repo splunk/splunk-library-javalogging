@@ -16,7 +16,6 @@ package com.splunk.logging;
  */
 
 import java.io.Serializable;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
@@ -162,6 +161,19 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
             @PluginElement("Filter") final Filter filter
     )
     {
+        // The raw endpoint presumes that a single post is a single event.
+        // The batch size should be 1 if "type" is raw, and we should error if batch
+        // configuration is specified.
+        int clampedBatchCountDefault = HttpEventCollectorSender.DefaultBatchCount;
+
+        if ("raw".equalsIgnoreCase(type)) {
+            if (batchSize != null || batchCount != null || batchInterval != null) {
+                LOGGER.error("batch configuration is not compatible with the raw endpoint");
+                return null;
+            }
+            clampedBatchCountDefault = 1;
+        }
+
         if (name == null)
         {
             LOGGER.error("No name provided for HttpEventCollectorLog4jAppender");
@@ -199,7 +211,7 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
                 includeLoggerName, includeThreadName, includeMDC, includeException, includeMarker,
                 ignoreExceptionsBool,
                 parseInt(batchInterval, HttpEventCollectorSender.DefaultBatchInterval),
-                parseInt(batchCount, HttpEventCollectorSender.DefaultBatchCount),
+                parseInt(batchCount, clampedBatchCountDefault),
                 parseInt(batchSize, HttpEventCollectorSender.DefaultBatchSize),
                 parseInt(retriesOnError, 0),
                 sendMode,

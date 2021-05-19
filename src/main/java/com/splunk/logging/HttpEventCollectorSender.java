@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.security.cert.CertificateException;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 
@@ -274,6 +275,12 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
         }
 
         OkHttpClient.Builder builder = httpSharedClient.newBuilder();
+
+        // set timeouts
+        builder.connectTimeout(timeoutSettings.connectTimeout, TimeUnit.MILLISECONDS)
+                .callTimeout(timeoutSettings.callTimeout, TimeUnit.MILLISECONDS)
+                .readTimeout(timeoutSettings.readTimeout, TimeUnit.MILLISECONDS)
+                .writeTimeout(timeoutSettings.writeTimeout, TimeUnit.MILLISECONDS);
 
         // limit max  number of async requests in sequential mode
         if (sendMode == SendMode.Sequential) {

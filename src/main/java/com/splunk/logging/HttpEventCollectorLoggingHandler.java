@@ -114,7 +114,7 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
     private final String CallTimeoutConfTag = "call_timeout";
     private final String ReadTimeoutConfTag = "read_timeout";
     private final String WriteTimeoutConfTag = "write_timeout";
-    private final String AwaitTerminationTimeoutConfTag = "await_termination_timeout";
+    private final String TerminationTimeoutConfTag = "termination_timeout";
 
     /** HttpEventCollectorLoggingHandler c-or */
     public HttpEventCollectorLoggingHandler() {
@@ -167,7 +167,7 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
             getConfigurationNumericProperty(CallTimeoutConfTag, HttpEventCollectorSender.TimeoutSettings.DEFAULT_CALL_TIMEOUT),
             getConfigurationNumericProperty(ReadTimeoutConfTag, HttpEventCollectorSender.TimeoutSettings.DEFAULT_READ_TIMEOUT),
             getConfigurationNumericProperty(WriteTimeoutConfTag, HttpEventCollectorSender.TimeoutSettings.DEFAULT_WRITE_TIMEOUT),
-            getConfigurationNumericProperty(AwaitTerminationTimeoutConfTag, HttpEventCollectorSender.TimeoutSettings.DEFAULT_AWAIT_TERMINATION_TIMEOUT)
+            getConfigurationNumericProperty(TerminationTimeoutConfTag, HttpEventCollectorSender.TimeoutSettings.DEFAULT_TERMINATION_TIMEOUT)
         );
 
         if ("raw".equalsIgnoreCase(type)) {

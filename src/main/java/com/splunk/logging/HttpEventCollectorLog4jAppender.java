@@ -157,7 +157,7 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
             @PluginAttribute(value = "call_timeout", defaultLong = HttpEventCollectorSender.TimeoutSettings.DEFAULT_CALL_TIMEOUT) final long callTimeout,
             @PluginAttribute(value = "read_timeout", defaultLong = HttpEventCollectorSender.TimeoutSettings.DEFAULT_READ_TIMEOUT) final long readTimeout,
             @PluginAttribute(value = "write_timeout", defaultLong = HttpEventCollectorSender.TimeoutSettings.DEFAULT_WRITE_TIMEOUT) final long writeTimeout,
-            @PluginAttribute(value = "await_termination_timeout", defaultLong = HttpEventCollectorSender.TimeoutSettings.DEFAULT_AWAIT_TERMINATION_TIMEOUT) final long awaitTerminationTimeout,
+            @PluginAttribute(value = "termination_timeout", defaultLong = HttpEventCollectorSender.TimeoutSettings.DEFAULT_TERMINATION_TIMEOUT) final long terminationTimeout,
             @PluginElement("Layout") Layout<? extends Serializable> layout,
             @PluginElement("Filter") final Filter filter
     )
@@ -220,7 +220,7 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
                 disableCertificateValidation,
                 eventBodySerializer,
                 eventHeaderSerializer,
-                new HttpEventCollectorSender.TimeoutSettings(connectTimeout, callTimeout, readTimeout, writeTimeout, awaitTerminationTimeout)
+                new HttpEventCollectorSender.TimeoutSettings(connectTimeout, callTimeout, readTimeout, writeTimeout, terminationTimeout)
         );
     }
 

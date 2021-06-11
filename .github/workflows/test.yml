@@ -26,7 +26,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-maven-
       - name: Set up make
-        run: sudo apt-get -y install make
+        run: apt-get -y install make
       - name: Make Up
         run: make up
       - name: Make Test

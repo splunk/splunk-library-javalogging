@@ -13,6 +13,8 @@ jobs:
     runs-on: ubuntu-latest
     container: maven:3-jdk-8
     steps:
+      - name: Set up make
+      - run: sudo apt-get -y install make
       - uses: actions/checkout@v2
       - name: Set up JDK
         uses: actions/setup-java@v1

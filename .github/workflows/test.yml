@@ -26,6 +26,8 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-maven-
       - name: Set up docker
+        with:
+          file: ./docker-compose.yml
         run: docker-compose up -d
 #      - name: Make Up
 #        run: make up

@@ -5,16 +5,13 @@ on:
 
 jobs:
 
-  tests:
-#    needs: unit-test
+  test-execution:
     strategy:
       matrix:
         splunk-version:
           - "latest"
           - "8.0"
     runs-on: ubuntu-latest
-    #container: maven:3-jdk-8
-
     services:
       splunk:
         image: splunk/splunk:${{matrix.splunk-version}}
@@ -29,7 +26,6 @@ jobs:
           - 15000:15000
           - 10667:10667
           - 10668:10668/udp
-
     steps:
       - uses: actions/checkout@v2
       - name: Set up JDK
@@ -43,7 +39,5 @@ jobs:
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-maven-
-#      - name: Make up
-#        run: make up
       - name: Make Test
         run: make test

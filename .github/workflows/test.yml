@@ -68,5 +68,7 @@ jobs:
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-maven-
-      - name: Acceptance Test
+      - name: Make up
+        run: make up
+      - name: Make Test
         run: make test

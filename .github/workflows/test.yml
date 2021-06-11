@@ -48,12 +48,13 @@ jobs:
           SPLUNK_START_ARGS: --accept-license
           SPLUNK_PASSWORD: changed!
         ports:
-          - 8089
-          - 8088
-          - 5555
-          - 15000
-          - 10667
-          - 10668/udp
+          - 8000:8000
+          - 5555:5555
+          - 8088:8088
+          - 8089:8089
+          - 15000:15000
+          - 10667:10667
+          - 10668:10668/udp
 
     steps:
       - uses: actions/checkout@v2

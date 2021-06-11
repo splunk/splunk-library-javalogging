@@ -4,7 +4,35 @@ on:
   [push, pull_request]
 
 jobs:
-  dock-comp-test:
+#  unit-test:
+#    strategy:
+#      matrix:
+#        java-version:
+#          - 1.8
+#          - 11
+#        os:
+#          - ubuntu-latest
+#          - windows-latest
+#          - macos-latest
+#    runs-on: ${{ matrix.os }}
+#    steps:
+#      - uses: actions/checkout@v2
+#      - name: Set up JDK
+#        uses: actions/setup-java@v1
+#        with:
+#          java-version: ${{ matrix.java-version }}
+#      - name: Cache local Maven repository
+#        uses: actions/cache@v2
+#        with:
+#          path: ~/.m2/repository
+#          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+#          restore-keys: |
+#            ${{ runner.os }}-maven-
+#      - name: Unit Test
+#        run: mvn -P Unittest -B verify --file pom.xml
+
+  acceptance-test:
+    needs: unit-test
     strategy:
       matrix:
         splunk-version:
@@ -12,6 +40,21 @@ jobs:
           - 8.0
     runs-on: ubuntu-latest
     container: maven:3-jdk-8
+
+    services:
+      splunk:
+        image: splunk/splunk:${{matrix.splunk-version}}
+        env:
+          SPLUNK_START_ARGS: --accept-license
+          SPLUNK_PASSWORD: changed!
+        ports:
+          - 8089
+          - 8088
+          - 5555
+          - 15000
+          - 10667
+          - 10668/udp
+
     steps:
       - uses: actions/checkout@v2
       - name: Set up JDK
@@ -25,14 +68,7 @@ jobs:
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-maven-
-      - name: Set up docker
-        run:  docker-compose -f "docker-compose.yml" up -d --build
-#      - name: Make Up
-#        run: make up
-      - name: Unit Test
-        run: mvn package -P Unittest
-#      - name: Acceptance Test
-#        run: mvn package -P AcceptanceTest
-        env:
-          SPLUNK_PASSWORD: changed!
-          SPLUNK_HOST: splunk
+      - name: Acceptance Test
+        uses: ./.github/actions/go-make-action
+          with:
+            target: 'test'

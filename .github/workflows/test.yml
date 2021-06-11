@@ -32,7 +32,7 @@ jobs:
 #        run: mvn -P Unittest -B verify --file pom.xml
 
   acceptance-test:
-    needs: unit-test
+#    needs: unit-test
     strategy:
       matrix:
         splunk-version:

@@ -36,7 +36,8 @@ jobs:
     strategy:
       matrix:
         splunk-version:
-          - 8.0
+          - "latest"
+          - "8.0"
     runs-on: ubuntu-latest
     container: maven:3-jdk-8
 

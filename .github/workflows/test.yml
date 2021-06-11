@@ -39,7 +39,7 @@ jobs:
           - "latest"
           - "8.0"
     runs-on: ubuntu-latest
-    container: maven:3-jdk-8
+    #container: maven:3-jdk-8
 
     services:
       splunk:
@@ -69,6 +69,4 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-maven-
       - name: Acceptance Test
-        uses: ./.github/actions/go-make-action
-        with:
-          target: 'test'
+        run: make test

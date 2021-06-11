@@ -26,8 +26,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-maven-
       - name: Set up docker
-        uses: isbang/compose-action@v1.0.0
-        #run: docker-compose up -d
+        run:  docker-compose -f "docker-compose.yml" up -d --build
 #      - name: Make Up
 #        run: make up
       - name: Unit Test

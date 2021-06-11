@@ -25,12 +25,14 @@ jobs:
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-maven-
-      - name: Set up make
-        run: apt-get -y install make
-      - name: Make Up
-        run: make up
-      - name: Make Test
-        run: make test
+      - name: Set up docker
+        run: docker-compose up -d
+#      - name: Make Up
+#        run: make up
+      - name: Unit Test
+        run: mvn package -P Unittest
+#      - name: Acceptance Test
+#        run: mvn package -P AcceptanceTest
         env:
           SPLUNK_PASSWORD: changed!
           SPLUNK_HOST: splunk

@@ -70,5 +70,5 @@ jobs:
             ${{ runner.os }}-maven-
       - name: Acceptance Test
         uses: ./.github/actions/go-make-action
-          with:
-            target: 'test'
+        with:
+          target: 'test'

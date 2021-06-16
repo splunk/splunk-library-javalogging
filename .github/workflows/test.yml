@@ -46,7 +46,7 @@ jobs:
         image: splunk/splunk:${{matrix.splunk-version}}
         env:
           SPLUNK_START_ARGS: --accept-license
-          SPLUNK_PASSWORD: chamged!
+          SPLUNK_PASSWORD: changed!
         ports:
           - 8089
           - 8088

@@ -4,28 +4,57 @@ on:
   [push, pull_request]
 
 jobs:
+  unit-test:
+    strategy:
+      matrix:
+        java-version:
+          - 1.8
+          - 11
+        os:
+          - ubuntu-latest
+          - windows-latest
+          - macos-latest
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up JDK
+        uses: actions/setup-java@v1
+        with:
+          java-version: ${{ matrix.java-version }}
+      - name: Cache local Maven repository
+        uses: actions/cache@v2
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+      - name: Unit Test
+        run: mvn -P Unittest -B verify --file pom.xml
 
-  test-execution:
+  acceptance-test:
+    needs: unit-test
     strategy:
       matrix:
         splunk-version:
-          - "latest"
           - "8.0"
+          - "latest"
     runs-on: ubuntu-latest
+    container: maven:3-jdk-8
+
     services:
       splunk:
         image: splunk/splunk:${{matrix.splunk-version}}
         env:
           SPLUNK_START_ARGS: --accept-license
-          SPLUNK_PASSWORD: changed!
+          SPLUNK_PASSWORD: chamged!
         ports:
-          - 8000:8000
-          - 5555:5555
-          - 8088:8088
-          - 8089:8089
-          - 15000:15000
-          - 10667:10667
-          - 10668:10668/udp
+          - 8089
+          - 8088
+          - 5555
+          - 15000
+          - 10667
+          - 10668/udp
+
     steps:
       - uses: actions/checkout@v2
       - name: Set up JDK
@@ -39,5 +68,8 @@ jobs:
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-maven-
-      - name: Make Test
-        run: make test
+      - name: Acceptance Test
+        run: mvn -P AcceptanceTest -B verify --file pom.xml
+        env:
+          SPLUNK_PASSWORD: changed!
+          SPLUNK_HOST: splunk

@@ -25,9 +25,9 @@ init:
 test:
 	@echo "$(ATTN_COLOR)==> test $(NO_COLOR)"
 	@echo "Running Unit test"
-	@mvn package -P Unittest
+	@mvn -P Unittest -B verify --file pom.xml
 	@echo "Running Acceptance test"
-	@mvn package -P AcceptanceTest
+	@mvn -P AcceptanceTest -B verify --file pom.xml
 	
 .PHONY: test_specific
 test_specific:

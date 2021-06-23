@@ -50,7 +50,7 @@ public class TestUtil {
             //set default value
             Map<String, String> environment = System.getenv();
             serviceArgs.setUsername(environment.getOrDefault("SPLUNK_USER", "admin"));
-            serviceArgs.setPassword(environment.getOrDefault("SPLUNK_PASSWORD", "changeme"));
+            serviceArgs.setPassword(environment.getOrDefault("SPLUNK_PASSWORD", "changed!"));
             serviceArgs.setHost(environment.getOrDefault("SPLUNK_HOST", "localhost"));
 
             serviceArgs.setPort(8089);
@@ -104,7 +104,7 @@ public class TestUtil {
                 }
             }
         }
-        // Use TLSv1 intead of SSLv3
+        // Use TLSv1 instead of SSLv3
         serviceArgs.setSSLSecurityProtocol(SSLSecurityProtocol.TLSv1_2);
     }
 

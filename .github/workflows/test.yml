@@ -36,8 +36,8 @@ jobs:
     strategy:
       matrix:
         splunk-version:
-          - 8.1
-          - 7.3
+          - "8.0"
+          - "latest"
     runs-on: ubuntu-latest
     container: maven:3-jdk-8
 
@@ -46,7 +46,7 @@ jobs:
         image: splunk/splunk:${{matrix.splunk-version}}
         env:
           SPLUNK_START_ARGS: --accept-license
-          SPLUNK_PASSWORD: test_password
+          SPLUNK_PASSWORD: changed!
         ports:
           - 8089
           - 8088
@@ -71,5 +71,5 @@ jobs:
       - name: Acceptance Test
         run: mvn -P AcceptanceTest -B verify --file pom.xml
         env:
-          SPLUNK_PASSWORD: test_password
+          SPLUNK_PASSWORD: changed!
           SPLUNK_HOST: splunk

@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+    splunk:
+        image: splunk/splunk:latest
+        container_name: splunk
+        environment:
+            - SPLUNK_START_ARGS=--accept-license
+            - SPLUNK_PASSWORD=changed!
+        ports:
+            - 8000:8000
+            - 5555:5555
+            - 8088:8088
+            - 8089:8089
+            - 15000:15000
+            - 10667:10667
+            - 10668:10668/udp
+        healthcheck:
+            test: ['CMD', 'curl', '-f', 'https://localhost:8000']
+            interval: 5s
+            timeout: 5s
+            retries: 20

@@ -36,6 +36,7 @@ public class HttpEventCollectorEventInfo {
 
     /**
      * Create a new HttpEventCollectorEventInfo container
+     * @param timeMsSinceEpoch in milliseconds since "unix epoch"
      * @param severity of event
      * @param message is an event content
      * @param logger_name name of the logger
@@ -45,6 +46,7 @@ public class HttpEventCollectorEventInfo {
      * @param marker event marker
      */
     public HttpEventCollectorEventInfo(
+    		final long timeMsSinceEpoch,
             final String severity,
             final String message,
             final String logger_name,
@@ -53,7 +55,7 @@ public class HttpEventCollectorEventInfo {
             final String exception_message,
             final Serializable marker
     ) {
-        this.time = System.currentTimeMillis() / 1000.0;
+        this.time = timeMsSinceEpoch / 1000.0;
         this.severity = severity;
         this.message = message;
         this.logger_name = logger_name;

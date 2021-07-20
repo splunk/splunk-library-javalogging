@@ -24,8 +24,8 @@ To create a pull request:
 
 1. Fill out the [Individual Contributor Agreement][indivcontrib].
 1. Fork [the repository][repo].
-1. Make changes to the **`develop`** branch, preferably with tests.
-1. Create a [pull request][pulls] against the **`develop`** branch.
+1. Make changes to the **`main`** branch, preferably with tests.
+1. Create a [pull request][pulls] against the **`main`** branch.
 
 ## Contact us
 

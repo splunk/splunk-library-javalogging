@@ -145,6 +145,7 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
         MarkerConverter c = new MarkerConverter();
         if (this.started) {
             this.sender.send(
+            		event.getTimeStamp(),
                     event.getLevel().toString(),
                     _layout.doLayout((E) event),
                     _includeLoggerName ? event.getLoggerName() : null,

@@ -223,6 +223,7 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
     @Override
     public void publish(LogRecord record) {
         this.sender.send(
+        		record.getMillis(),
                 record.getLevel().toString(),
                 record.getMessage(),
                 includeLoggerName ? record.getLoggerName() : null,

@@ -233,6 +233,7 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
     {
         // if an exception was thrown
         this.sender.send(
+        		event.getTimeMillis(),
                 event.getLevel().toString(),
                 getLayout().toSerializable(event).toString(),
                 includeLoggerName ? event.getLoggerName() : null,

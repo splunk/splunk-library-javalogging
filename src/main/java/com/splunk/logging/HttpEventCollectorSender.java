@@ -275,12 +275,12 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
 
         OkHttpClient.Builder builder = httpSharedClient.newBuilder();
 
+        Dispatcher dispatcher = new Dispatcher();
         // limit max  number of async requests in sequential mode
         if (sendMode == SendMode.Sequential) {
-            Dispatcher dispatcher = new Dispatcher();
             dispatcher.setMaxRequests(1);
-            builder.dispatcher(dispatcher);
         }
+        builder.dispatcher(dispatcher);
 
         if (disableCertificateValidation) {
             final TrustManager[] trustAllCerts = new TrustManager[]{

@@ -1,5 +1,21 @@
 # Splunk Logging for Java Changelog
 
+## Version 1.10.0
+
+### Bug Fixes
+
+* Fixed issue causing delayed time when using AsyncAppender (GitHub issue [#186](https://github.com/splunk/splunk-javascript-logging/issues/186))
+
+### Minor Changes
+
+* Updated the project to use make conventions to spin up local dockerized instances.
+* Upgrade version of okhttp to 4.9.1.
+* Upgrade version of slf4j to 1.7.30.
+* Upgrade version of gson to 2.8.7.
+* Upgrade version of junit to 4.13.2.
+* Upgrade version of commons to 3.12.
+
+ 
 ## Version 1.9.0
 
 * Resolve an issue with TcpAppender losing events when busy (@avdv)

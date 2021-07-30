@@ -5,6 +5,7 @@
 ### Bug Fixes
 
 * Fixed issue causing delayed time when using AsyncAppender (GitHub issue [#186](https://github.com/splunk/splunk-javascript-logging/issues/186))
+  * Now the timestamp is being recorded at the time when log event "occurs" instead of the time when log event is being "sent"
 
 ### Minor Changes
 

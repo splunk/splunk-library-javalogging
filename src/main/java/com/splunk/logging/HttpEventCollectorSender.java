@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.security.cert.CertificateException;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 
@@ -46,6 +47,8 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
     private static final String SendModeSequential = "sequential";
     private static final String SendModeSParallel = "parallel";
     private TimeoutSettings timeoutSettings = new TimeoutSettings();
+    private static final int MaxFlushRetries = 5;
+    private static final AtomicInteger FlushRetries = new AtomicInteger(0); // allow flushing up to 5 times until messages in buffer are cleared.
     private static final Gson gson = new GsonBuilder()
             .registerTypeAdapter(HttpEventCollectorEventInfo.class, new EventInfoTypeAdapter())
             .create();
@@ -62,7 +65,7 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
     {
         Sequential,
         Parallel
-    };
+    }
 
     /**
      * Recommended default values for events batching.
@@ -176,11 +179,15 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
             final String exception_message,
             Serializable marker
     ) {
-        // create event info container and add it to the batch
-        HttpEventCollectorEventInfo eventInfo =
-                new HttpEventCollectorEventInfo(timeMsSinceEpoch, severity, message, logger_name, thread_name, properties, exception_message, marker);
-        eventsBatch.add(eventInfo);
-        eventsBatchSize += severity.length() + message.length();
+        // check whether message or severity are null
+        if (message != null && severity != null) {
+            // create event info container and add it to the batch
+            HttpEventCollectorEventInfo eventInfo =
+                    new HttpEventCollectorEventInfo(timeMsSinceEpoch, severity, message, logger_name, thread_name, properties, exception_message, marker);
+            eventsBatch.add(eventInfo);
+            eventsBatchSize += severity.length() + message.length();
+        }
+        // flush anyway on message since last flush could have caused exception
         if (eventsBatch.size() >= maxEventsBatchCount || eventsBatchSize > maxEventsBatchSize) {
             flush();
         }
@@ -199,7 +206,23 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
      */
     public synchronized void flush() {
         if (eventsBatch.size() > 0) {
-            postEventsAsync(eventsBatch);
+            try {
+                postEventsAsync(eventsBatch);
+            }
+            catch (Exception e) {
+                // log error, update max retries
+                HttpEventCollectorErrorHandler.error(
+                        eventsBatch,
+                        new HttpEventCollectorErrorHandler.FlushException(eventsBatch.size()));
+                if(FlushRetries.getAndIncrement() < MaxFlushRetries) {
+                    // do _not_ clear events list in this case since error could be network connection or some other fault
+                    return;
+                }
+                else {
+                    // max retries reached reset counter
+                    FlushRetries.set(0);
+                }
+            }
         }
         // Clear the batch. A new list should be created because events are
         // sending asynchronously and "previous" instance of eventsBatch object

@@ -1,4 +1,4 @@
-/**
+package com.splunk.logging; /**
  * @copyright
  *
  * Copyright 2013-2015 Splunk, Inc.
@@ -17,21 +17,14 @@
  */
 
 import java.io.IOException;
-import java.io.OutputStream;
-import java.net.InetSocketAddress;
 
-import com.splunk.logging.HttpEventCollectorErrorHandler;
-import com.splunk.logging.HttpEventCollectorEventInfo;
 import org.junit.Assert;
 import org.junit.Test;
-import sun.rmi.runtime.Log;
 
 import java.io.ByteArrayInputStream;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.logging.LogManager;
-import java.util.logging.Logger;
 
 public class HttpEventCollectorUnitTest {
     @Test
@@ -40,7 +33,7 @@ public class HttpEventCollectorUnitTest {
         String loggerName = "splunk.log4jSimple";
         userInputs.put("user_logger_name", loggerName);
         userInputs.put("user_httpEventCollector_token", "11111111-2222-3333-4444-555555555555");
-        userInputs.put("user_middleware", "HttpEventCollectorUnitTestMiddleware");
+        userInputs.put("user_middleware", "com.splunk.logging.HttpEventCollectorUnitTestMiddleware");
         userInputs.put("user_batch_size_count", "1");
         userInputs.put("user_batch_size_bytes", "0");
         userInputs.put("user_eventBodySerializer", "DoesNotExistButShouldNotCrashTest");
@@ -72,7 +65,7 @@ public class HttpEventCollectorUnitTest {
         final String loggerName = "splunk.logback";
         userInputs.put("user_logger_name", loggerName);
         userInputs.put("user_httpEventCollector_token", "11111111-2222-3333-4444-555555555555");
-        userInputs.put("user_middleware", "HttpEventCollectorUnitTestMiddleware");
+        userInputs.put("user_middleware", "com.splunk.logging.HttpEventCollectorUnitTestMiddleware");
         userInputs.put("user_eventBodySerializer", "DoesNotExistButShouldNotCrashTest");
         userInputs.put("user_eventHeaderSerializer", "DoesNotExistButShouldNotCrashTest");
         TestUtil.resetLogbackConfiguration("logback_template.xml", "logback.xml", userInputs);
@@ -105,7 +98,7 @@ public class HttpEventCollectorUnitTest {
             "com.splunk.logging.HttpEventCollectorLoggingHandler.batch_size_count=0\n" +
             "com.splunk.logging.HttpEventCollectorLoggingHandler.batch_size_bytes=0\n" +
             "com.splunk.logging.HttpEventCollectorLoggingHandler.batch_interval=0\n" +
-            "com.splunk.logging.HttpEventCollectorLoggingHandler.middleware=HttpEventCollectorUnitTestMiddleware\n" +
+            "com.splunk.logging.HttpEventCollectorLoggingHandler.middleware=com.splunk.logging.HttpEventCollectorUnitTestMiddleware\n" +
             "com.splunk.logging.HttpEventCollectorLoggingHandler.eventBodySerializer=DoesNotExistButShouldNotCrashTest\n" +
             "com.splunk.logging.HttpEventCollectorLoggingHandler.eventHeaderSerializer=DoesNotExistButShouldNotCrashTest\n"
         );
@@ -136,7 +129,7 @@ public class HttpEventCollectorUnitTest {
             "com.splunk.logging.HttpEventCollectorLoggingHandler.batch_size_count=0\n" +
             "com.splunk.logging.HttpEventCollectorLoggingHandler.batch_size_bytes=0\n" +
             "com.splunk.logging.HttpEventCollectorLoggingHandler.batch_interval=0\n" +
-            "com.splunk.logging.HttpEventCollectorLoggingHandler.middleware=HttpEventCollectorUnitTestMiddleware\n"
+            "com.splunk.logging.HttpEventCollectorLoggingHandler.middleware=com.splunk.logging.HttpEventCollectorUnitTestMiddleware\n"
         );
 
         // mimic server 404
@@ -168,7 +161,7 @@ public class HttpEventCollectorUnitTest {
             "handlers=com.splunk.logging.HttpEventCollectorLoggingHandler\n" +
             "com.splunk.logging.HttpEventCollectorLoggingHandler.url=http://localhost:8088\n" +
             "com.splunk.logging.HttpEventCollectorLoggingHandler.token=TOKEN\n" +
-            "com.splunk.logging.HttpEventCollectorLoggingHandler.middleware=HttpEventCollectorUnitTestMiddleware\n" +
+            "com.splunk.logging.HttpEventCollectorLoggingHandler.middleware=com.splunk.logging.HttpEventCollectorUnitTestMiddleware\n" +
             "com.splunk.logging.HttpEventCollectorLoggingHandler.batch_size_count=0\n" +
             "com.splunk.logging.HttpEventCollectorLoggingHandler.batch_size_bytes=0\n" +
             "com.splunk.logging.HttpEventCollectorLoggingHandler.batch_interval=0\n" +
@@ -211,7 +204,7 @@ public class HttpEventCollectorUnitTest {
             "com.splunk.logging.HttpEventCollectorLoggingHandler.batch_size_count=0\n" +
             "com.splunk.logging.HttpEventCollectorLoggingHandler.batch_size_bytes=0\n" +
             "com.splunk.logging.HttpEventCollectorLoggingHandler.batch_interval=0\n" +
-            "com.splunk.logging.HttpEventCollectorLoggingHandler.middleware=HttpEventCollectorUnitTestMiddleware\n" +
+            "com.splunk.logging.HttpEventCollectorLoggingHandler.middleware=com.splunk.logging.HttpEventCollectorUnitTestMiddleware\n" +
             "com.splunk.logging.HttpEventCollectorLoggingHandler.retries_on_error=2\n"
         );
 
@@ -246,7 +239,7 @@ public class HttpEventCollectorUnitTest {
             "handlers=com.splunk.logging.HttpEventCollectorLoggingHandler\n" +
             "com.splunk.logging.HttpEventCollectorLoggingHandler.url=http://localhost:8088\n" +
             "com.splunk.logging.HttpEventCollectorLoggingHandler.token=TOKEN\n" +
-            "com.splunk.logging.HttpEventCollectorLoggingHandler.middleware=HttpEventCollectorUnitTestMiddleware\n" +
+            "com.splunk.logging.HttpEventCollectorLoggingHandler.middleware=com.splunk.logging.HttpEventCollectorUnitTestMiddleware\n" +
             "com.splunk.logging.HttpEventCollectorLoggingHandler.batch_size_count=3\n"
         );
 
@@ -273,7 +266,7 @@ public class HttpEventCollectorUnitTest {
                 "handlers=com.splunk.logging.HttpEventCollectorLoggingHandler\n" +
                 "com.splunk.logging.HttpEventCollectorLoggingHandler.url=http://localhost:8088\n" +
                 "com.splunk.logging.HttpEventCollectorLoggingHandler.token=TOKEN\n" +
-                "com.splunk.logging.HttpEventCollectorLoggingHandler.middleware=HttpEventCollectorUnitTestMiddleware\n"
+                "com.splunk.logging.HttpEventCollectorLoggingHandler.middleware=com.splunk.logging.HttpEventCollectorUnitTestMiddleware\n"
         );
         final int DefaultBatchCount = 10;
         HttpEventCollectorUnitTestMiddleware.eventsReceived = 0;
@@ -296,7 +289,7 @@ public class HttpEventCollectorUnitTest {
                 "handlers=com.splunk.logging.HttpEventCollectorLoggingHandler\n" +
                 "com.splunk.logging.HttpEventCollectorLoggingHandler.url=http://localhost:8088\n" +
                 "com.splunk.logging.HttpEventCollectorLoggingHandler.token=TOKEN\n" +
-                "com.splunk.logging.HttpEventCollectorLoggingHandler.middleware=HttpEventCollectorUnitTestMiddleware\n"
+                "com.splunk.logging.HttpEventCollectorLoggingHandler.middleware=com.splunk.logging.HttpEventCollectorUnitTestMiddleware\n"
         );
         final int DefaultBatchSize = 10 * 1024;
         HttpEventCollectorUnitTestMiddleware.eventsReceived = 0;
@@ -319,7 +312,7 @@ public class HttpEventCollectorUnitTest {
                 "handlers=com.splunk.logging.HttpEventCollectorLoggingHandler\n" +
                 "com.splunk.logging.HttpEventCollectorLoggingHandler.url=http://localhost:8088\n" +
                 "com.splunk.logging.HttpEventCollectorLoggingHandler.token=TOKEN\n" +
-                "com.splunk.logging.HttpEventCollectorLoggingHandler.middleware=HttpEventCollectorUnitTestMiddleware\n"
+                "com.splunk.logging.HttpEventCollectorLoggingHandler.middleware=com.splunk.logging.HttpEventCollectorUnitTestMiddleware\n"
         );
         final int DefaultInterval = 10000;
         HttpEventCollectorUnitTestMiddleware.eventsReceived = 0;

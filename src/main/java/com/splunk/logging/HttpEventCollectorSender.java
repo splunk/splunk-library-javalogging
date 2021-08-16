@@ -44,8 +44,6 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
     private static final String HttpRawCollectorUriPath = "/services/collector/raw";
     private static final String JsonHttpContentType = "application/json; profile=urn:splunk:event:1.0; charset=utf-8";
     private static final String PlainTextHttpContentType = "plain/text; charset=utf-8";
-    private static final String SendModeSequential = "sequential";
-    private static final String SendModeSParallel = "parallel";
     private TimeoutSettings timeoutSettings = new TimeoutSettings();
     private static final int MaxFlushRetries = 5;
     private static final AtomicInteger FlushRetries = new AtomicInteger(0); // allow flushing up to 5 times until messages in buffer are cleared.
@@ -73,6 +71,12 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
     public static final int DefaultBatchInterval = 10 * 1000; // 10 seconds
     public static final int DefaultBatchSize = 10 * 1024; // 10KB
     public static final int DefaultBatchCount = 10; // 10 events
+
+    /**
+     * Send modes to choose from
+     */
+    public static final String SendModeSequential = "sequential";
+    public static final String SendModeSParallel = "parallel";
 
     private HttpUrl url;
     private String token;
@@ -214,7 +218,7 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
                 HttpEventCollectorErrorHandler.error(
                         eventsBatch,
                         new HttpEventCollectorErrorHandler.FlushException(eventsBatch.size()));
-                if(FlushRetries.getAndIncrement() < MaxFlushRetries) {
+                if(FlushRetries.incrementAndGet() < MaxFlushRetries) {
                     // do _not_ clear events list in this case since error could be network connection or some other fault
                     return;
                 }
@@ -344,7 +348,7 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
         httpClient = builder.build();
     }
 
-    private void postEventsAsync(final List<HttpEventCollectorEventInfo> events) {
+    protected void postEventsAsync(final List<HttpEventCollectorEventInfo> events) {
         this.middleware.postEvents(events,  this, new HttpEventCollectorMiddleware.IHttpSenderCallback() {
 
             @Override
@@ -409,6 +413,14 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
                 callback.failed(ex);
             }
         });
+    }
+
+    public static int getMaxFlushRetries() {
+        return MaxFlushRetries;
+    }
+
+    protected int getCurrentEventsBatchSize() {
+        return eventsBatch.size();
     }
 
     public static class TimeoutSettings {

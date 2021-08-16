@@ -1,4 +1,4 @@
-/*
+package com.splunk.logging;/*
  * Copyright 2013-2014 Splunk, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"): you may
@@ -18,8 +18,6 @@ import java.util.*;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
-import com.splunk.logging.HttpEventCollectorErrorHandler;
-import com.splunk.logging.HttpEventCollectorEventInfo;
 
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Assert;
@@ -355,7 +353,7 @@ public final class HttpEventCollector_JavaLoggingTest {
     public void EventsFlushedAfterCloseLogger() throws Exception {
         String msgs = queueEvents();
 //        Thread.sleep(9000);
-//        TestUtil.verifyOneAndOnlyOneEventSentToSplunk(msgs);
+//        com.splunk.logging.TestUtil.verifyOneAndOnlyOneEventSentToSplunk(msgs);
 
     }
 
@@ -462,7 +460,7 @@ public final class HttpEventCollector_JavaLoggingTest {
         HashMap<String, String> userInputs = new HashMap<String, String>();
         userInputs.put("user_httpEventCollector_token", token);
         userInputs.put("user_logger_name", loggerName);
-        userInputs.put("user_eventBodySerializer", "TestEventBodySerializer");
+        userInputs.put("user_eventBodySerializer", "com.splunk.logging.TestEventBodySerializer");
 
         TestUtil.resetJavaLoggingConfiguration("logging_template.properties", "logging.properties", userInputs);
 
@@ -490,7 +488,7 @@ public final class HttpEventCollector_JavaLoggingTest {
         HashMap<String, String> userInputs = new HashMap<String, String>();
         userInputs.put("user_httpEventCollector_token", token);
         userInputs.put("user_logger_name", loggerName);
-        userInputs.put("user_eventHeaderSerializer", "TestEventHeaderSerializer");
+        userInputs.put("user_eventHeaderSerializer", "com.splunk.logging.TestEventHeaderSerializer");
 
         TestUtil.resetJavaLoggingConfiguration("logging_template.properties", "logging.properties", userInputs);
 

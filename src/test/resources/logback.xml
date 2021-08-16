@@ -58,7 +58,7 @@ under the License.
         <source>splunktest</source>
         <sourcetype>battlecat</sourcetype>
         <messageFormat>text</messageFormat>
-        <middleware>HttpEventCollectorUnitTestMiddleware</middleware>
+        <middleware>com.splunk.logging.HttpEventCollectorUnitTestMiddleware</middleware>
         <connectTimeout>5000</connectTimeout>
         <layout class="ch.qos.logback.classic.PatternLayout">
             <pattern>%msg</pattern>

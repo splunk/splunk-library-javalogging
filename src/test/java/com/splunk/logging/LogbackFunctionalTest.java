@@ -1,4 +1,4 @@
-/*
+package com.splunk.logging;/*
  * Copyright 2013-2014 Splunk, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"): you may
@@ -15,27 +15,21 @@
  */
 import org.junit.Assert;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.util.logging.Logger;
-
-public class JULFunctionalTest {
+public class LogbackFunctionalTest {
 
     /**
-     * Try writing a message via TCP to java.util.logging to validate the example configuration.
+     * Try writing a message via TCP to logback to validate the example configuration.
      */
     @Test
-    public void socketAppenderTest() throws InterruptedException {
+    public void logbackSocketAppenderTest() throws InterruptedException {
         final Util.StringContainer container = Util.readLineFromPort(Util.port, Util.timeoutInMs);
 
         String helloChina = "Hello, \u4E2D\u570B!";
 
-        Logger logger = Logger.getLogger("splunk.logging");
+        Logger logger = LoggerFactory.getLogger("splunk.logger");
         logger.info(helloChina);
 
         synchronized (container) {
@@ -43,6 +37,6 @@ public class JULFunctionalTest {
         }
 
         Assert.assertNotNull(container.value);
-        Assert.assertEquals("INFO: " + helloChina, container.value);
+        Assert.assertEquals(Thread.currentThread().getName() + " INFO: " + helloChina, container.value);
     }
 }

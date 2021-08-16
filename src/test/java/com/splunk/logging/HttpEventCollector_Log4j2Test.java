@@ -1,4 +1,4 @@
-/*
+package com.splunk.logging;/*
  * Copyright 2013-2014 Splunk, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"): you may
@@ -19,8 +19,6 @@ import java.util.*;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
-import com.splunk.logging.HttpEventCollectorErrorHandler;
-import com.splunk.logging.HttpEventCollectorEventInfo;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.core.LoggerContext;

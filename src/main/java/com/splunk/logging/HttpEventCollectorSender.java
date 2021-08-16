@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.security.cert.CertificateException;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 
@@ -43,9 +44,9 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
     private static final String HttpRawCollectorUriPath = "/services/collector/raw";
     private static final String JsonHttpContentType = "application/json; profile=urn:splunk:event:1.0; charset=utf-8";
     private static final String PlainTextHttpContentType = "plain/text; charset=utf-8";
-    private static final String SendModeSequential = "sequential";
-    private static final String SendModeSParallel = "parallel";
     private TimeoutSettings timeoutSettings = new TimeoutSettings();
+    private static final int MaxFlushRetries = 5;
+    private static final AtomicInteger FlushRetries = new AtomicInteger(0); // allow flushing up to 5 times until messages in buffer are cleared.
     private static final Gson gson = new GsonBuilder()
             .registerTypeAdapter(HttpEventCollectorEventInfo.class, new EventInfoTypeAdapter())
             .create();
@@ -62,7 +63,7 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
     {
         Sequential,
         Parallel
-    };
+    }
 
     /**
      * Recommended default values for events batching.
@@ -70,6 +71,12 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
     public static final int DefaultBatchInterval = 10 * 1000; // 10 seconds
     public static final int DefaultBatchSize = 10 * 1024; // 10KB
     public static final int DefaultBatchCount = 10; // 10 events
+
+    /**
+     * Send modes to choose from
+     */
+    public static final String SendModeSequential = "sequential";
+    public static final String SendModeSParallel = "parallel";
 
     private HttpUrl url;
     private String token;
@@ -176,11 +183,15 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
             final String exception_message,
             Serializable marker
     ) {
-        // create event info container and add it to the batch
-        HttpEventCollectorEventInfo eventInfo =
-                new HttpEventCollectorEventInfo(timeMsSinceEpoch, severity, message, logger_name, thread_name, properties, exception_message, marker);
-        eventsBatch.add(eventInfo);
-        eventsBatchSize += severity.length() + message.length();
+        // check whether message or severity are null
+        if (message != null && severity != null) {
+            // create event info container and add it to the batch
+            HttpEventCollectorEventInfo eventInfo =
+                    new HttpEventCollectorEventInfo(timeMsSinceEpoch, severity, message, logger_name, thread_name, properties, exception_message, marker);
+            eventsBatch.add(eventInfo);
+            eventsBatchSize += severity.length() + message.length();
+        }
+        // flush anyway on message since last flush could have caused exception
         if (eventsBatch.size() >= maxEventsBatchCount || eventsBatchSize > maxEventsBatchSize) {
             flush();
         }
@@ -199,7 +210,23 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
      */
     public synchronized void flush() {
         if (eventsBatch.size() > 0) {
-            postEventsAsync(eventsBatch);
+            try {
+                postEventsAsync(eventsBatch);
+            }
+            catch (Exception e) {
+                // log error, update max retries
+                HttpEventCollectorErrorHandler.error(
+                        eventsBatch,
+                        new HttpEventCollectorErrorHandler.FlushException(eventsBatch.size()));
+                if(FlushRetries.incrementAndGet() < MaxFlushRetries) {
+                    // do _not_ clear events list in this case since error could be network connection or some other fault
+                    return;
+                }
+                else {
+                    // max retries reached reset counter
+                    FlushRetries.set(0);
+                }
+            }
         }
         // Clear the batch. A new list should be created because events are
         // sending asynchronously and "previous" instance of eventsBatch object
@@ -321,7 +348,7 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
         httpClient = builder.build();
     }
 
-    private void postEventsAsync(final List<HttpEventCollectorEventInfo> events) {
+    protected void postEventsAsync(final List<HttpEventCollectorEventInfo> events) {
         this.middleware.postEvents(events,  this, new HttpEventCollectorMiddleware.IHttpSenderCallback() {
 
             @Override
@@ -386,6 +413,14 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
                 callback.failed(ex);
             }
         });
+    }
+
+    public static int getMaxFlushRetries() {
+        return MaxFlushRetries;
+    }
+
+    protected int getCurrentEventsBatchSize() {
+        return eventsBatch.size();
     }
 
     public static class TimeoutSettings {

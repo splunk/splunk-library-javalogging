@@ -1,4 +1,4 @@
-/*
+package com.splunk.logging;/*
  * Copyright 2014 Splunk, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"): you may
@@ -130,8 +130,8 @@ public class SplunkCimLogEventUnitTest {
 
         String expectedString = "\"name=name\" \"event_id=event-id\" " +
                 "\"throwable_class=java.lang.Exception\" \"throwable_message=This is a test of the Java " +
-                "emergency broadcast system.\" \"stacktrace_elements=SplunkCimLogEventUnitTest." +
-                "addThrowableWorks(SplunkCimLogEventUnitTest.java:???),";
+                "emergency broadcast system.\" \"stacktrace_elements=com.splunk.logging.SplunkCimLogEventUnitTest." +
+                "addThrowableWorks(com.splunk.logging.SplunkCimLogEventUnitTest.java:???),";
         String foundString = event.toString();
         foundString = foundString.replaceAll(":\\d+\\)", ":???)"); // Get rid of line numbers.
 
@@ -151,8 +151,8 @@ public class SplunkCimLogEventUnitTest {
 
         String expected = "\"name=name\" \"event_id=event-id\" " +
                 "\"throwable_class=java.lang.Exception\" \"throwable_message=This is a test of the Java " +
-                "emergency broadcast system.\" \"stacktrace_elements=SplunkCimLogEventUnitTest." +
-                "addThrowableWorksWithDepth(SplunkCimLogEventUnitTest.java:???)\"";
+                "emergency broadcast system.\" \"stacktrace_elements=com.splunk.logging.SplunkCimLogEventUnitTest." +
+                "addThrowableWorksWithDepth(com.splunk.logging.SplunkCimLogEventUnitTest.java:???)\"";
         Assert.assertEquals(expected, event.toString().replaceAll(":\\d+\\)", ":???)"));
     }
 

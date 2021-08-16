@@ -1,3 +1,5 @@
+package com.splunk.logging;
+
 import com.splunk.logging.HttpEventCollectorEventInfo;
 import com.splunk.logging.HttpEventCollectorMiddleware;
 

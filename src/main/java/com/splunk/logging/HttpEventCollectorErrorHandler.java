@@ -1,16 +1,14 @@
 package com.splunk.logging;
 
 /**
- * @copyright
- *
- * Copyright 2013-2015 Splunk, Inc.
- *
+ * @copyright Copyright 2013-2015 Splunk, Inc.
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License"): you may
  * not use this file except in compliance with the License. You may obtain
  * a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -35,6 +33,35 @@ import java.util.List;
  * });
  */
 public class HttpEventCollectorErrorHandler {
+
+
+    /**
+     * This exception is passed to error callback when Splunk fails to flush events
+     */
+    public static class FlushException extends Exception {
+        private int numMsg;
+        private String errorText;
+
+        /**
+         * Create an exception with number of messages that couldn't be flushed properly
+         *
+         * @param numMsg number of messages
+         */
+        public FlushException(final int numMsg) {
+            this.errorText = "There was an exception flushing [" + numMsg + "] events!";
+        }
+
+        @Override
+        public String getMessage() {
+            return String.valueOf(numMsg);
+        }
+
+
+        @Override
+        public String toString() {
+            return getMessage();
+        }
+    }
 
     /**
      * This exception is passed to error callback when Splunk server replies an error
@@ -88,7 +115,8 @@ public class HttpEventCollectorErrorHandler {
         }
 
 
-        @Override public String toString() {
+        @Override
+        public String toString() {
             return getReply();
         }
     }

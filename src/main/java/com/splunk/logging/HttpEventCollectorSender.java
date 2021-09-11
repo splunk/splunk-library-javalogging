@@ -318,6 +318,11 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
             });
         }
 
+        builder.connectTimeout(TimeoutSettings.DEFAULT_CONNECT_TIMEOUT);
+        builder.readTimeout(TimeoutSettings.DEFAULT_READ_TIMEOUT);
+        builder.writeTimeout(TimeoutSettings.DEFAULT_WRITE_TIMEOUT);
+        builder.callTimeout(TimeoutSettings.DEFAULT_CALL_TIMEOUT);
+
         httpClient = builder.build();
     }
 

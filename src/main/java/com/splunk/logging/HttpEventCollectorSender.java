@@ -28,6 +28,7 @@ import javax.net.ssl.*;
 import java.io.IOException;
 import java.io.Serializable;
 import java.security.cert.CertificateException;
+import java.time.Duration;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -318,10 +319,10 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
             });
         }
 
-        builder.connectTimeout(TimeoutSettings.DEFAULT_CONNECT_TIMEOUT);
-        builder.readTimeout(TimeoutSettings.DEFAULT_READ_TIMEOUT);
-        builder.writeTimeout(TimeoutSettings.DEFAULT_WRITE_TIMEOUT);
-        builder.callTimeout(TimeoutSettings.DEFAULT_CALL_TIMEOUT);
+        builder.connectTimeout(Duration.ofMillis(TimeoutSettings.DEFAULT_CONNECT_TIMEOUT));
+        builder.readTimeout(Duration.ofMillis(TimeoutSettings.DEFAULT_READ_TIMEOUT));
+        builder.writeTimeout(Duration.ofMillis(TimeoutSettings.DEFAULT_WRITE_TIMEOUT));
+        builder.callTimeout(Duration.ofMillis(TimeoutSettings.DEFAULT_CALL_TIMEOUT));
 
         httpClient = builder.build();
     }

@@ -28,8 +28,8 @@ import javax.net.ssl.*;
 import java.io.IOException;
 import java.io.Serializable;
 import java.security.cert.CertificateException;
-import java.time.Duration;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 
@@ -277,6 +277,11 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
 
         OkHttpClient.Builder builder = httpSharedClient.newBuilder();
 
+        builder.connectTimeout(timeoutSettings.connectTimeout, TimeUnit.MILLISECONDS)
+                .callTimeout(timeoutSettings.callTimeout, TimeUnit.MILLISECONDS)
+                .readTimeout(timeoutSettings.readTimeout, TimeUnit.MILLISECONDS)
+                .writeTimeout(timeoutSettings.writeTimeout, TimeUnit.MILLISECONDS);
+
         // limit max  number of async requests in sequential mode
         if (sendMode == SendMode.Sequential) {
             Dispatcher dispatcher = new Dispatcher();
@@ -318,11 +323,6 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
                 }
             });
         }
-
-        builder.connectTimeout(Duration.ofMillis(TimeoutSettings.DEFAULT_CONNECT_TIMEOUT));
-        builder.readTimeout(Duration.ofMillis(TimeoutSettings.DEFAULT_READ_TIMEOUT));
-        builder.writeTimeout(Duration.ofMillis(TimeoutSettings.DEFAULT_WRITE_TIMEOUT));
-        builder.callTimeout(Duration.ofMillis(TimeoutSettings.DEFAULT_CALL_TIMEOUT));
 
         httpClient = builder.build();
     }

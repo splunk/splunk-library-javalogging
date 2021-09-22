@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.security.cert.CertificateException;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 
@@ -263,8 +264,36 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
 
     private void stopHttpClient() {
         if (httpClient != null) {
-            httpClient.dispatcher().executorService().shutdown();
+            Dispatcher dispatcher = httpClient.dispatcher();
             httpClient = null;
+
+            if (timeoutSettings.terminationTimeout > 0) {
+                // wait for queued messages in the dispatcher to be promoted to the executor service
+                long start = System.currentTimeMillis();
+                while (dispatcher.queuedCallsCount() > 0 && start + timeoutSettings.terminationTimeout > System.currentTimeMillis()) {
+                    try {
+                        TimeUnit.MILLISECONDS.sleep(10);
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        break;
+                    }
+                }
+
+                // initialize the shutdown of the executor service
+                dispatcher.executorService().shutdown();
+
+                // wait for the messages in the dispatcher's executor service to be sent out
+                long awaitTerminationTimeout = timeoutSettings.terminationTimeout - (System.currentTimeMillis() - start);
+                if (awaitTerminationTimeout > 0) {
+                    try {
+                        dispatcher.executorService().awaitTermination(awaitTerminationTimeout, TimeUnit.MILLISECONDS);
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    }
+                }
+            } else {
+                dispatcher.executorService().shutdown();
+            }
         }
     }
 
@@ -393,19 +422,22 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
         public static final long DEFAULT_WRITE_TIMEOUT = 0; // 0 means no timeout
         public static final long DEFAULT_CALL_TIMEOUT = 0;
         public static final long DEFAULT_READ_TIMEOUT = 0;
+        public static final long DEFAULT_TERMINATION_TIMEOUT = 0;
 
         public long connectTimeout = DEFAULT_CONNECT_TIMEOUT;
         public long callTimeout = DEFAULT_CALL_TIMEOUT;
         public long readTimeout = DEFAULT_READ_TIMEOUT;
         public long writeTimeout = DEFAULT_WRITE_TIMEOUT;
+        public long terminationTimeout = DEFAULT_TERMINATION_TIMEOUT;
 
         public TimeoutSettings() {}
 
-        public TimeoutSettings(long connectTimeout, long callTimeout, long readTimeout, long writeTimeout) {
+        public TimeoutSettings(long connectTimeout, long callTimeout, long readTimeout, long writeTimeout, long terminationTimeout) {
             this.connectTimeout = connectTimeout;
             this.callTimeout = callTimeout;
             this.readTimeout = readTimeout;
             this.writeTimeout = writeTimeout;
+            this.terminationTimeout = terminationTimeout;
         }
     }
 }

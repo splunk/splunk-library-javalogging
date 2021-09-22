@@ -384,6 +384,14 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
         return this.timeoutSettings.writeTimeout = milliseconds;
     }
 
+    public void setTerminationTimeout(long milliseconds) {
+        this.timeoutSettings.terminationTimeout = milliseconds;
+    }
+
+    public long getTerminationTimeout(long milliseconds) {
+        return this.timeoutSettings.terminationTimeout = milliseconds;
+    }
+
     private static long parseLong(String string, int defaultValue) {
         try {
             return Long.parseLong(string);

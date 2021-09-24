@@ -1,5 +1,10 @@
 # Splunk Logging for Java Changelog
 
+## Version 1.11.0
+
+### Minor Changes
+* Added a parameter to set await termination timeout. [PR](https://github.com/splunk/splunk-library-javalogging/pull/179)
+
 ## Version 1.10.0
 
 ### Bug Fixes

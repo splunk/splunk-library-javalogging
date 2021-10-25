@@ -6,7 +6,6 @@
 package com.splunk.logging.serialization;
 
 import com.google.gson.*;
-import com.splunk.logging.EventBodySerializer;
 import com.splunk.logging.HttpEventCollectorEventInfo;
 
 import java.lang.reflect.Type;

@@ -256,7 +256,7 @@ public final class HttpEventCollector_LogbackTest {
 
 
         System.out.println("======print logEx");
-        System.out.println(logEx.toString());
+        System.out.println(logEx);
         System.out.println("======finish print logEx");
         Assert.assertEquals("Invalid token", logEx.get(1).getErrorText());
         Assert.assertEquals(4, logEx.get(1).getErrorCode());
@@ -317,9 +317,9 @@ public final class HttpEventCollector_LogbackTest {
             Assert.fail("didn't catch errors");
         Assert.assertEquals(1, errors.size());
 
-        System.out.println(logEx.toString());
+        System.out.println(logEx);
         if (!StringUtils.containsAny(logEx.toString(), "Failed to connect to", "Remote host terminated the handshake", "Connection reset"))
-            Assert.fail(String.format("Unexpected error message '%s'", logEx.toString()));
+            Assert.fail(String.format("Unexpected error message '%s'", logEx));
     }
 
     /**

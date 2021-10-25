@@ -338,7 +338,7 @@ public class HttpEventCollectorUnitTest {
         }
     }
 
-    private final String repeat(String str, int times) {
+    private String repeat(String str, int times) {
         StringBuilder sb = new StringBuilder();
         for (int i = 0 ; i < times ; i ++)
             sb.append(str);

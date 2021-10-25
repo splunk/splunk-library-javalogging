@@ -244,13 +244,10 @@ public class TcpAppender extends AppenderBase<ILoggingEvent> implements Runnable
         // Dispatch this instance of the appender.
         if (!errorPresent) {
             queue = queueSize <= 0 ? new SynchronousQueue<>() : new ArrayBlockingQueue<>(queueSize);
-            ThreadFactory factory = new ThreadFactory() {
-                @Override
-                public Thread newThread(Runnable r) {
-                    Thread t = new Thread(r, "splunk-tcp-appender");
-                    t.setDaemon(true);
-                    return t;
-                }
+            ThreadFactory factory = r -> {
+                Thread t = new Thread(r, "splunk-tcp-appender");
+                t.setDaemon(true);
+                return t;
             };
             executor = Executors.newSingleThreadExecutor(factory);
             executor.execute(this);

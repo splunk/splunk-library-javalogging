@@ -339,12 +339,7 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
                 builder.sslSocketFactory(sslSocketFactory, (X509TrustManager) trustAllCerts[0]);
             } catch (Exception ignored) { /* nop */ }
 
-            builder.hostnameVerifier(new HostnameVerifier() {
-                @Override
-                public boolean verify(String hostname, SSLSession session) {
-                    return true;
-                }
-            });
+            builder.hostnameVerifier((hostname, session) -> true);
         }
 
         httpClient = builder.build();

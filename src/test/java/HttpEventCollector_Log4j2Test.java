@@ -222,12 +222,10 @@ public final class HttpEventCollector_Log4j2Test {
         errors.clear();
         logEx.clear();
         //define error callback
-        HttpEventCollectorErrorHandler.onError(new HttpEventCollectorErrorHandler.ErrorCallback() {
-            public void error(final List<HttpEventCollectorEventInfo> data, final Exception ex) {
-                synchronized (errors) {
-                    errors.add(data);
-                    logEx.add((HttpEventCollectorErrorHandler.ServerErrorException) ex);
-                }
+        HttpEventCollectorErrorHandler.onError((data, ex) -> {
+            synchronized (errors) {
+                errors.add(data);
+                logEx.add((HttpEventCollectorErrorHandler.ServerErrorException) ex);
             }
         });
 
@@ -291,12 +289,10 @@ public final class HttpEventCollector_Log4j2Test {
         logEx.clear();
 
         //define error callback
-        HttpEventCollectorErrorHandler.onError(new HttpEventCollectorErrorHandler.ErrorCallback() {
-            public void error(final List<HttpEventCollectorEventInfo> data, final Exception ex) {
-                synchronized (errors) {
-                    errors.add(data);
-                    logEx.add((HttpEventCollectorErrorHandler.ServerErrorException) ex);
-                }
+        HttpEventCollectorErrorHandler.onError((data, ex) -> {
+            synchronized (errors) {
+                errors.add(data);
+                logEx.add((HttpEventCollectorErrorHandler.ServerErrorException) ex);
             }
         });
 

@@ -60,36 +60,33 @@ public class Util {
     public static StringContainer readLineFromPort(final int port, final int timeoutInMs) {
         final StringContainer container = new StringContainer();
 
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                ServerSocket serverSocket = null;
-                Socket socket = null;
+        new Thread(() -> {
+            ServerSocket serverSocket = null;
+            Socket socket = null;
 
-                try {
-                    serverSocket = new ServerSocket(port);
-                    serverSocket.setSoTimeout(timeoutInMs);
-                    socket = serverSocket.accept();
-                    BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-                    container.value = in.readLine();
+            try {
+                serverSocket = new ServerSocket(port);
+                serverSocket.setSoTimeout(timeoutInMs);
+                socket = serverSocket.accept();
+                BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                container.value = in.readLine();
+            } catch (IOException e) {
+                e.printStackTrace();
+            } finally {
+                if (socket != null) try {
+                    socket.close();
                 } catch (IOException e) {
                     e.printStackTrace();
-                } finally {
-                    if (socket != null) try {
-                        socket.close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
+                }
 
-                    if (serverSocket != null) try {
-                        serverSocket.close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
+                if (serverSocket != null) try {
+                    serverSocket.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
 
-                    synchronized (container) {
-                        container.notifyAll();
-                    }
+                synchronized (container) {
+                    container.notifyAll();
                 }
             }
         }).start();

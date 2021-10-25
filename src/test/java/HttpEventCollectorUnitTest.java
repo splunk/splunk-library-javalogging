@@ -149,13 +149,11 @@ public class HttpEventCollectorUnitTest {
                 );
             }
         };
-        HttpEventCollectorErrorHandler.onError(new HttpEventCollectorErrorHandler.ErrorCallback() {
-            public void error(final List<HttpEventCollectorEventInfo> data, final Exception ex) {
-                HttpEventCollectorErrorHandler.ServerErrorException serverErrorException =
-                        (HttpEventCollectorErrorHandler.ServerErrorException) ex;
-                Assert.assertTrue(serverErrorException.getReply().compareTo("{\"text\":\"error\",\"code\":4}") == 0);
-                Assert.assertTrue(serverErrorException.getErrorCode() == 4);
-            }
+        HttpEventCollectorErrorHandler.onError((data, ex) -> {
+            HttpEventCollectorErrorHandler.ServerErrorException serverErrorException =
+                    (HttpEventCollectorErrorHandler.ServerErrorException) ex;
+            Assert.assertTrue(serverErrorException.getReply().compareTo("{\"text\":\"error\",\"code\":4}") == 0);
+            Assert.assertTrue(serverErrorException.getErrorCode() == 4);
         });
         LOGGER.info("hello");
         Assert.assertTrue(HttpEventCollectorUnitTestMiddleware.eventsReceived == 1);
@@ -229,10 +227,8 @@ public class HttpEventCollectorUnitTest {
                         0, "{\"text\":\"error\",\"code\":4}");
             }
         };
-        HttpEventCollectorErrorHandler.onError(new HttpEventCollectorErrorHandler.ErrorCallback() {
-            public void error(final List<HttpEventCollectorEventInfo> data, final Exception ex) {
-                // ignore errors
-            }
+        HttpEventCollectorErrorHandler.onError((data, ex) -> {
+            // ignore errors
         });
         LOGGER.info("hello");
         // the system should make only 2 retries and stop after that

@@ -1,7 +1,7 @@
 package com.splunk.logging;
 
-/*
-  @copyright
+/**
+ * @copyright
  *
  * Copyright 2013-2015 Splunk, Inc.
  *
@@ -18,13 +18,13 @@ package com.splunk.logging;
  * under the License.
  */
 
-/*
-  A handler for java.util.logging that works with Splunk http event collector.
-
-  details
-  This is a Splunk custom java.util.logging handler that intercepts logging
-  information and forwards it to a Splunk server through http event collector.
-  @todo - link to http event collector documentation
+/**
+ * A handler for java.util.logging that works with Splunk http event collector.
+ *
+ * details
+ * This is a Splunk custom java.util.logging handler that intercepts logging
+ * information and forwards it to a Splunk server through http event collector.
+ * @todo - link to http event collector documentation
  * java.util.logging is configure by specifying java.util.logging.config.file
  * properties file. For example:
  * -Djava.util.logging.config.file=splunk-http-input.properties

@@ -157,8 +157,8 @@ public class SplunkCimLogEvent {
     private static final String THROWABLE_MESSAGE = "throwable_message";
     private static final String THROWABLE_STACKTRACE_ELEMENTS = "stacktrace_elements";
 
-    /*
-      Splunk Common Information Model(CIM) Fields
+    /**
+     * Splunk Common Information Model(CIM) Fields
      */
 
     // ------------------

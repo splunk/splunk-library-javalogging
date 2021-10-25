@@ -1,5 +1,5 @@
-/*
-  @copyright
+/**
+ * @copyright
  *
  * Copyright 2013-2015 Splunk, Inc.
  *

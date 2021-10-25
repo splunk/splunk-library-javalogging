@@ -30,7 +30,7 @@ import java.util.List;
  */
 public class HttpEventCollectorResendMiddleware
         extends HttpEventCollectorMiddleware.HttpSenderMiddleware {
-    private long retriesOnError = 0;
+    private long retriesOnError;
 
     /**
      * Create a resend middleware component.

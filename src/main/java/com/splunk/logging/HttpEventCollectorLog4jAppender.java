@@ -40,7 +40,7 @@ import org.apache.logging.log4j.core.config.plugins.PluginFactory;
 @SuppressWarnings("serial")
 public final class HttpEventCollectorLog4jAppender extends AbstractAppender
 {
-    private HttpEventCollectorSender sender = null;
+    private HttpEventCollectorSender sender;
     private final boolean includeLoggerName;
     private final boolean includeThreadName;
     private final boolean includeMDC;

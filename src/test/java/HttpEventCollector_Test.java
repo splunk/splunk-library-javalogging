@@ -81,7 +81,7 @@ public class HttpEventCollector_Test {
     }
 
     private static ServiceArgs serviceArgs;
-    private static String httpEventCollectorName = "functionalhttp";
+    private static final String httpEventCollectorName = "functionalhttp";
 
     private static String  setupHttpEventCollector(boolean batching) throws Exception {
         TestUtil.enableHttpEventCollector();
@@ -232,9 +232,9 @@ public class HttpEventCollector_Test {
     }
 
     private static class DataSender implements Runnable {
-        private String threadName;
+        private final String threadName;
         public int eventsGenerated = 0, testDurationInSecs = 300;
-        java.util.logging.Logger logger;
+        private final java.util.logging.Logger logger;
 
         public DataSender(String threadName, int testDurationInSecs, java.util.logging.Logger logger) {
             this.threadName = threadName;

@@ -15,9 +15,9 @@ import com.splunk.*;
 
 public class HttpLoggerStressTest {
     private static class DataSender implements Runnable {
-        private String threadName;
+        private final String threadName;
         public int eventsGenerated = 0, testDurationInSecs = 300;
-        Logger logger;
+        private final Logger logger;
 
         public DataSender(String threadName, int testDurationInSecs) {
             this.threadName = threadName;
@@ -93,7 +93,7 @@ public class HttpLoggerStressTest {
     }
 
     private static ServiceArgs serviceArgs;
-    private static String httpEventCollectorName = "stressHttpEventCollector";
+    private static final String httpEventCollectorName = "stressHttpEventCollector";
 
     private static void setupHttpEventCollector() throws Exception {
         String token = TestUtil.createHttpEventCollectorToken(httpEventCollectorName);

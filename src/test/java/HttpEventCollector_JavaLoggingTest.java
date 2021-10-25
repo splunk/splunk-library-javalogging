@@ -29,7 +29,8 @@ import java.util.logging.Logger;
 
 public final class HttpEventCollector_JavaLoggingTest {
 
-    private String httpEventCollectorName = "JavaLoggingTest";
+    private static final String httpEventCollectorName = "JavaLoggingTest";
+
     private final List<List<HttpEventCollectorEventInfo>> errors = new ArrayList<>();
     private final List<HttpEventCollectorErrorHandler.ServerErrorException> logEx = new ArrayList<>();
 

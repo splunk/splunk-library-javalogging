@@ -209,8 +209,7 @@ public class HttpEventCollector_Test {
         System.out.printf("\tSetting up http event collector with %s ... ", batching ? "batching" : "no batching");
         String token = setupHttpEventCollector(batching);
         System.out.printf("Set\n");
-        Boolean testPassed = true;
-        testPassed &= insertDataWithLoggerAndVerify(token, "log4j", expectedCounter, batching);
+        boolean testPassed = insertDataWithLoggerAndVerify(token, "log4j", expectedCounter, batching);
         testPassed &= insertDataWithLoggerAndVerify(token, "logback", expectedCounter, batching);
         testPassed &= insertDataWithLoggerAndVerify(token, "javautil", expectedCounter, batching);
         Assert.assertTrue(testPassed);

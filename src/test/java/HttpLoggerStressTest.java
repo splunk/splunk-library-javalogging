@@ -149,7 +149,7 @@ public class HttpLoggerStressTest {
                 System.out.printf("\tCompleted wait for iteration %d\r\n", i);
             }
         }
-        Boolean testPassed = true;
+        boolean testPassed = true;
         for (int i = 0; i < numberOfThreads; i++) {
             String arguments = String.format("search Thread%d earliest=%d| stats count", i, startTime);
             eventCount = getEventsCount(arguments);

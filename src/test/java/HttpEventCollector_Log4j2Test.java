@@ -14,7 +14,6 @@
  * under the License.
  */
 
-import java.io.*;
 import java.util.*;
 
 import com.google.gson.JsonObject;
@@ -37,7 +36,7 @@ public final class HttpEventCollector_Log4j2Test {
      * sending a message via httplogging using log4j2 to splunk
      */
     @Test
-    public void canSendEventUsingLog4j2() throws Exception, IOException, InterruptedException {
+    public void canSendEventUsingLog4j2() throws Exception {
         TestUtil.enableHttpEventCollector();
         String token = TestUtil.createHttpEventCollectorToken(httpEventCollectorName);
         String loggerName = "splunkLogger4j2";
@@ -70,7 +69,7 @@ public final class HttpEventCollector_Log4j2Test {
      * sending a message via httplogging using log4j2 to splunk and set index, source and sourcetype
      */
     @Test
-    public void canSendEventUsingLog4j2WithOptions() throws Exception, IOException, InterruptedException {
+    public void canSendEventUsingLog4j2WithOptions() throws Exception {
 
         String token = TestUtil.createHttpEventCollectorToken(httpEventCollectorName);
         String loggerName = "splunkLogger4j2WithOptions";

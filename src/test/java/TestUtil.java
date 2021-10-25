@@ -280,7 +280,7 @@ public class TestUtil {
 
             String match = FindUserInputConfiguration(lines.get(i));
             if (!match.isEmpty()) {
-                if (userInputs.keySet().contains(match))
+                if (userInputs.containsKey(match))
                     lines.set(i, lines.get(i).replace("%" + match + "%", userInputs.get(match)));
                 else
                     lines.set(i, "");

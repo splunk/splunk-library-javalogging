@@ -470,7 +470,7 @@ public class TestUtil {
                 searchQuery.append(String.format(" | search \"message.%s\"=%s", jsonEntry.getKey(), jsonEntry.getValue()));
             }
         }
-        System.err.println(searchQuery.toString());
+        System.err.println(searchQuery);
 
         return service.oneshotSearch(searchQuery.toString());
     }

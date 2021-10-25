@@ -49,13 +49,13 @@ public final class HttpEventCollector_Log4j2Test {
         List<String> msgs = new ArrayList<>();
 
         Date date = new Date();
-        String jsonMsg = String.format("{EventDate:%s, EventMsg:'this is a test event for log4j2}", date.toString());
+        String jsonMsg = String.format("{EventDate:%s, EventMsg:'this is a test event for log4j2}", date);
 
         Logger logger = context.getLogger(loggerName);
         logger.info(jsonMsg);
         msgs.add(jsonMsg);
 
-        jsonMsg = String.format("{EventDate:%s, EventMsg:'this is a test error for log4j2}", date.toString());
+        jsonMsg = String.format("{EventDate:%s, EventMsg:'this is a test error for log4j2}", date);
         logger.error(jsonMsg);
         msgs.add(jsonMsg);
 
@@ -87,13 +87,13 @@ public final class HttpEventCollector_Log4j2Test {
         List<String> msgs = new ArrayList<>();
 
         Date date = new Date();
-        String jsonMsg = String.format("{EventDate:%s, EventMsg:'this is a test event for log4j2}", date.toString());
+        String jsonMsg = String.format("{EventDate:%s, EventMsg:'this is a test event for log4j2}", date);
 
         Logger logger = context.getLogger(loggerName);
         logger.info(jsonMsg);
         msgs.add(jsonMsg);
 
-        jsonMsg = String.format("{EventDate:%s, EventMsg:'this is a test error for log4j2}", date.toString());
+        jsonMsg = String.format("{EventDate:%s, EventMsg:'this is a test error for log4j2}", date);
         logger.error(jsonMsg);
         msgs.add(jsonMsg);
 
@@ -116,7 +116,7 @@ public final class HttpEventCollector_Log4j2Test {
         userInputs.put("user_logger_name", loggerName);
         userInputs.put("user_httpEventCollector_token", token);
         LoggerContext context = TestUtil.resetLog4j2Configuration("log4j2_template.xml", "log4j2.xml", userInputs);
-        String jsonMsg = String.format("{EventDate:%s, EventMsg:'this is a test event for java logging}", new Date().toString());
+        String jsonMsg = String.format("{EventDate:%s, EventMsg:'this is a test event for java logging}", new Date());
         Logger logger = context.getLogger(loggerName);
         logger.info(jsonMsg);
 
@@ -136,22 +136,22 @@ public final class HttpEventCollector_Log4j2Test {
 
         List<String> msgs = new ArrayList<>();
 
-        jsonMsg = String.format("{EventDate:%s, EventMsg:'this is a test event for java logging1}", new Date().toString());
+        jsonMsg = String.format("{EventDate:%s, EventMsg:'this is a test event for java logging1}", new Date());
         logger.info(jsonMsg);
         msgs.add(jsonMsg);
         System.out.println("event 1");
         TestUtil.verifyNoEventSentToSplunk(msgs);
-        jsonMsg = String.format("{EventDate:%s, EventMsg:'this is a test event for java logging2}", new Date().toString());
+        jsonMsg = String.format("{EventDate:%s, EventMsg:'this is a test event for java logging2}", new Date());
         logger.info(jsonMsg);
         msgs.add(jsonMsg);
         System.out.println("event 2");
         TestUtil.verifyNoEventSentToSplunk(msgs);
-        jsonMsg = String.format("{EventDate:%s, EventMsg:'this is a test event for java logging3}", new Date().toString());
+        jsonMsg = String.format("{EventDate:%s, EventMsg:'this is a test event for java logging3}", new Date());
         logger.info(jsonMsg);
         msgs.add(jsonMsg);
         System.out.println("event 3");
         TestUtil.verifyNoEventSentToSplunk(msgs);
-        jsonMsg = String.format("{EventDate:%s, EventMsg:'this is a test event for java logging4}", new Date().toString());
+        jsonMsg = String.format("{EventDate:%s, EventMsg:'this is a test event for java logging4}", new Date());
         logger.info(jsonMsg);
         msgs.add(jsonMsg);
         System.out.println("event 4");
@@ -160,7 +160,7 @@ public final class HttpEventCollector_Log4j2Test {
         Thread.sleep(6000);
         TestUtil.verifyNoEventSentToSplunk(msgs);
 
-        jsonMsg = String.format("{EventDate:%s, EventMsg:'this is a test event for java logging5}", new Date().toString());
+        jsonMsg = String.format("{EventDate:%s, EventMsg:'this is a test event for java logging5}", new Date());
         logger.info(jsonMsg);
         msgs.add(jsonMsg);
 
@@ -190,11 +190,11 @@ public final class HttpEventCollector_Log4j2Test {
 
         List<String> msgs = new ArrayList<>();
         int size = 0;
-        String jsonMsg = String.format("{EventDate:%s, EventMsg:'test event for log4j size 1}", new Date().toString());
+        String jsonMsg = String.format("{EventDate:%s, EventMsg:'test event for log4j size 1}", new Date());
         logger.info(jsonMsg);
         size += jsonMsg.length();
         msgs.add(jsonMsg);
-        jsonMsg = String.format("{EventDate:%s, EventMsg:'test event for log4j size 2}", new Date().toString());
+        jsonMsg = String.format("{EventDate:%s, EventMsg:'test event for log4j size 2}", new Date());
         size += jsonMsg.length();
         logger.info(jsonMsg);
         msgs.add(jsonMsg);
@@ -202,7 +202,7 @@ public final class HttpEventCollector_Log4j2Test {
         Thread.sleep(6000);
         TestUtil.verifyNoEventSentToSplunk(msgs);
 
-        jsonMsg = String.format("{EventDate:%s, EventMsg:'test event for log4j size 3, adding more msg to exceed the maxsize}", new Date().toString());
+        jsonMsg = String.format("{EventDate:%s, EventMsg:'test event for log4j size 3, adding more msg to exceed the maxsize}", new Date());
         while (size + jsonMsg.length() < 550) {
             jsonMsg = String.format("%saaaaa", jsonMsg);
         }
@@ -242,14 +242,14 @@ public final class HttpEventCollector_Log4j2Test {
         //disable the token so that it becomes invalid
         TestUtil.disableHttpEventCollector(httpEventCollectorName);
         Thread.sleep(5000);
-        String jsonMsg = String.format("{EventDate:%s, EventMsg:'test event disabled token }", new Date().toString());
+        String jsonMsg = String.format("{EventDate:%s, EventMsg:'test event disabled token }", new Date());
         logger.info(jsonMsg);
         Thread.sleep(5000);
 
         //delete the token so that it becomes invalid
         TestUtil.deleteHttpEventCollectorToken(httpEventCollectorName);
         Thread.sleep(5000);
-        jsonMsg = String.format("{EventDate:%s, EventMsg:'test event deleted token}", new Date().toString());
+        jsonMsg = String.format("{EventDate:%s, EventMsg:'test event deleted token}", new Date());
         logger.info(jsonMsg);
 
         //wait for async process to return the error
@@ -310,7 +310,7 @@ public final class HttpEventCollector_Log4j2Test {
         //disable httpEventCollector endpoint
         TestUtil.disableHttpEventCollector();
         Thread.sleep(1000);
-        String jsonMsg = String.format("{EventDate:%s, EventMsg:'test event httpEventCollector disabled}", new Date().toString());
+        String jsonMsg = String.format("{EventDate:%s, EventMsg:'test event httpEventCollector disabled}", new Date());
         logger.info(jsonMsg);
 
         //wait for async process to return the error
@@ -325,7 +325,7 @@ public final class HttpEventCollector_Log4j2Test {
             Assert.fail("didn't catch errors");
         Assert.assertTrue(errors.size() >= 1);
 
-        System.out.println(logEx.toString());
+        System.out.println(logEx);
         if (!StringUtils.containsAny(logEx.toString(), "Failed to connect to", "Remote host terminated the handshake", "Connection reset"))
             Assert.fail(String.format("Unexpected error message '%s'", logEx.toString()));
     }

@@ -51,16 +51,16 @@ public final class HttpEventCollector_LogbackTest {
         List<String> msgs = new ArrayList<>();
 
         Date date = new Date();
-        String jsonMsg = String.format("{EventDate:%s, EventMsg:'this is a test event for Logback Test}", date.toString());
+        String jsonMsg = String.format("{EventDate:%s, EventMsg:'this is a test event for Logback Test}", date);
         Logger logger = LoggerFactory.getLogger(loggerName);
         logger.info(jsonMsg);
         msgs.add(jsonMsg);
 
-        jsonMsg = String.format("{EventDate:%s, EventMsg:'this is a test error for Logback Test}", date.toString());
+        jsonMsg = String.format("{EventDate:%s, EventMsg:'this is a test error for Logback Test}", date);
         logger.error(jsonMsg);
         msgs.add(jsonMsg);
 
-        jsonMsg = String.format("{EventDate:%s, EventMsg:'this is a test debug for Logback Test}", date.toString());
+        jsonMsg = String.format("{EventDate:%s, EventMsg:'this is a test debug for Logback Test}", date);
         logger.debug(jsonMsg);
         msgs.add(jsonMsg);
 
@@ -87,16 +87,16 @@ public final class HttpEventCollector_LogbackTest {
         List<String> msgs = new ArrayList<>();
 
         Date date = new Date();
-        String jsonMsg = String.format("{EventDate:%s, EventMsg:'this is a test event for Logback Test}", date.toString());
+        String jsonMsg = String.format("{EventDate:%s, EventMsg:'this is a test event for Logback Test}", date);
         Logger logger = LoggerFactory.getLogger(loggerName);
         logger.info(jsonMsg);
         msgs.add(jsonMsg);
 
-        jsonMsg = String.format("{EventDate:%s, EventMsg:'this is a test error for Logback Test}", date.toString());
+        jsonMsg = String.format("{EventDate:%s, EventMsg:'this is a test error for Logback Test}", date);
         logger.error(jsonMsg);
         msgs.add(jsonMsg);
 
-        jsonMsg = String.format("{EventDate:%s, EventMsg:'this is a test debug for Logback Test}", date.toString());
+        jsonMsg = String.format("{EventDate:%s, EventMsg:'this is a test debug for Logback Test}", date);
         logger.debug(jsonMsg);
         msgs.add(jsonMsg);
 
@@ -126,22 +126,22 @@ public final class HttpEventCollector_LogbackTest {
         Logger logger = LoggerFactory.getLogger(loggerName);
 
         List<String> msgs = new ArrayList<>();
-        String jsonMsg = String.format("{EventDate:%s, EventMsg:'this is a test event for logback 1}", new Date().toString());
+        String jsonMsg = String.format("{EventDate:%s, EventMsg:'this is a test event for logback 1}", new Date());
         logger.info(jsonMsg);
         msgs.add(jsonMsg);
         System.out.println("event 1");
         TestUtil.verifyNoEventSentToSplunk(msgs);
-        jsonMsg = String.format("{EventDate:%s, EventMsg:'this is a test event for logback 2}", new Date().toString());
+        jsonMsg = String.format("{EventDate:%s, EventMsg:'this is a test event for logback 2}", new Date());
         logger.info(jsonMsg);
         msgs.add(jsonMsg);
         System.out.println("event 2");
         TestUtil.verifyNoEventSentToSplunk(msgs);
-        jsonMsg = String.format("{EventDate:%s, EventMsg:'this is a test event for logback 3}", new Date().toString());
+        jsonMsg = String.format("{EventDate:%s, EventMsg:'this is a test event for logback 3}", new Date());
         logger.info(jsonMsg);
         msgs.add(jsonMsg);
         System.out.println("event 3");
         TestUtil.verifyNoEventSentToSplunk(msgs);
-        jsonMsg = String.format("{EventDate:%s, EventMsg:'this is a test event for logback 4}", new Date().toString());
+        jsonMsg = String.format("{EventDate:%s, EventMsg:'this is a test event for logback 4}", new Date());
         logger.info(jsonMsg);
         msgs.add(jsonMsg);
         System.out.println("event 4");
@@ -150,7 +150,7 @@ public final class HttpEventCollector_LogbackTest {
         Thread.sleep(6000);
         TestUtil.verifyNoEventSentToSplunk(msgs);
 
-        jsonMsg = String.format("{EventDate:%s, EventMsg:'this is a test event for logback 5}", new Date().toString());
+        jsonMsg = String.format("{EventDate:%s, EventMsg:'this is a test event for logback 5}", new Date());
         logger.info(jsonMsg);
         msgs.add(jsonMsg);
 
@@ -182,11 +182,11 @@ public final class HttpEventCollector_LogbackTest {
         List<String> msgs = new ArrayList<>();
 
         int size = 0;
-        String jsonMsg = String.format("{EventDate:%s, EventMsg:'test event for java logging size 1}", new Date().toString());
+        String jsonMsg = String.format("{EventDate:%s, EventMsg:'test event for java logging size 1}", new Date());
         size += jsonMsg.length();
         logger.info(jsonMsg);
         msgs.add(jsonMsg);
-        jsonMsg = String.format("{EventDate:%s, EventMsg:'test event for java logging size 2}", new Date().toString());
+        jsonMsg = String.format("{EventDate:%s, EventMsg:'test event for java logging size 2}", new Date());
         size += jsonMsg.length();
         logger.info(jsonMsg);
         msgs.add(jsonMsg);
@@ -194,7 +194,7 @@ public final class HttpEventCollector_LogbackTest {
         Thread.sleep(6000);
         TestUtil.verifyNoEventSentToSplunk(msgs);
 
-        jsonMsg = String.format("{EventDate:%s, EventMsg:'test event for java logging size 3, adding more msg to exceed the maxsize}", new Date().toString());
+        jsonMsg = String.format("{EventDate:%s, EventMsg:'test event for java logging size 3, adding more msg to exceed the maxsize}", new Date());
         while (size + jsonMsg.length() < 550) {
             jsonMsg = String.format("%saaaaa", jsonMsg);
         }
@@ -235,12 +235,12 @@ public final class HttpEventCollector_LogbackTest {
 
         //disable the token so that it becomes invalid
         TestUtil.disableHttpEventCollector(httpEventCollectorName);
-        String jsonMsg = String.format("{EventDate:%s, EventMsg:'test event disabled token }", new Date().toString());
+        String jsonMsg = String.format("{EventDate:%s, EventMsg:'test event disabled token }", new Date());
         logger.info(jsonMsg);
 
         //delete the token so that it becomes invalid
         TestUtil.deleteHttpEventCollectorToken(httpEventCollectorName);
-        jsonMsg = String.format("{EventDate:%s, EventMsg:'test event deleted token}", new Date().toString());
+        jsonMsg = String.format("{EventDate:%s, EventMsg:'test event deleted token}", new Date());
         logger.info(jsonMsg);
 
         //wait for async process to return the error
@@ -300,7 +300,7 @@ public final class HttpEventCollector_LogbackTest {
 
         //disable httpEventCollector endpoint
         TestUtil.disableHttpEventCollector();
-        String jsonMsg = String.format("{EventDate:%s, EventMsg:'test event httpEventCollector disabled}", new Date().toString());
+        String jsonMsg = String.format("{EventDate:%s, EventMsg:'test event httpEventCollector disabled}", new Date());
         logger.info(jsonMsg);
 
         //wait for async process to return the error

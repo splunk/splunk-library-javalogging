@@ -63,7 +63,7 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
     {
         Sequential,
         Parallel
-    };
+    }
 
     /**
      * Recommended default values for events batching.

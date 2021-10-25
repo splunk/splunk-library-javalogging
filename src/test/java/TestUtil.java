@@ -224,7 +224,7 @@ public class TestUtil {
         connectToSplunk();
 
         //disable logging endpoint
-        Map args = new HashMap();
+        Map<String, Object> args = new HashMap<>();
         args.put("disabled", 1);
         ResponseMessage response = service.post("/servicesNS/admin/search/data/inputs/http/http", args);
         assert response.getStatus() == 200;
@@ -237,7 +237,7 @@ public class TestUtil {
         connectToSplunk();
 
         //enable logging endpoint
-        Map args = new HashMap();
+        Map<String, Object> args = new HashMap<>();
         args.put("disabled", 0);
         ResponseMessage response = service.post("/servicesNS/admin/search/data/inputs/http/http", args);
         assert response.getStatus() == 200;
@@ -250,7 +250,7 @@ public class TestUtil {
     public static void disableHttpEventCollector(String httpEventCollectorName) throws IOException {
         connectToSplunk();
 
-        Map args = new HashMap();
+        Map<String, Object> args = new HashMap<>();
         args.put("disabled", 1);
 
         ResponseMessage response = service.post(httpEventCollectorTokenEndpointPath + "/" + httpEventCollectorName, args);

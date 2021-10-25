@@ -369,8 +369,8 @@ public class TestUtil {
                 break;
         }
 
-        resultsReader.close();
-        resultsStream.close();
+        Objects.requireNonNull(resultsReader, "resultsReader must not be null").close();
+        Objects.requireNonNull(resultsStream, "resultsStream must not be null").close();
 
         Assert.assertTrue(eventCount == 1);
     }
@@ -399,8 +399,8 @@ public class TestUtil {
                 break;
         }
 
-        resultsReader.close();
-        resultsStream.close();
+        Objects.requireNonNull(resultsReader, "resultsReader must not be null").close();
+        Objects.requireNonNull(resultsStream, "resultsStream must not be null").close();
 
         Assert.assertTrue(eventCount == 0);
     }
@@ -444,8 +444,8 @@ public class TestUtil {
                 Thread.sleep(5000);
             }
 
-            resultsReader.close();
-            resultsStream.close();
+            Objects.requireNonNull(resultsReader, "resultsReader must not be null").close();
+            Objects.requireNonNull(resultsStream, "resultsStream must not be null").close();
 
             Assert.assertEquals("Event search results did not match.", 1, eventCount);
         }
@@ -496,8 +496,8 @@ public class TestUtil {
                 break;
         }
 
-        resultsReader.close();
-        resultsStream.close();
+        Objects.requireNonNull(resultsReader, "resultsReader must not be null").close();
+        Objects.requireNonNull(resultsStream, "resultsStream must not be null").close();
 
         assert (results.size() == totalEventsCount) : String.format("expect: %d, actual: %d", totalEventsCount, results.size());
 

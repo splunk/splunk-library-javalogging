@@ -159,7 +159,7 @@ public class HttpEventCollector_Test {
             userInputs.put("user_batch_size_bytes", "12");
         }
 
-        if (loggerType == "log4j") {
+        if (Objects.equals(loggerType, "log4j")) {
             String loggerName = "splunk.log4jInsertVerify";
             userInputs.put("user_logger_name", loggerName);
             org.apache.logging.log4j.core.LoggerContext context = TestUtil.resetLog4j2Configuration("log4j2_template.xml", "log4j2.xml", userInputs);
@@ -168,7 +168,7 @@ public class HttpEventCollector_Test {
                 LOG4J.info(String.format("log4j message%d", i));
             }
         }
-        if (loggerType == "logback") {
+        if (Objects.equals(loggerType, "logback")) {
             String loggerName = "logBackLogger";
             userInputs.put("user_logger_name", loggerName);
             userInputs.put("user_defined_httpEventCollector_token", token);
@@ -178,7 +178,7 @@ public class HttpEventCollector_Test {
                 LOGBACK.info(String.format("logback message%d", i));
             }
         }
-        if (loggerType == "javautil") {
+        if (Objects.equals(loggerType, "javautil")) {
             String loggerName = batching?"splunkLogger_batching":"splunkLogger_nobatching";
             userInputs.put("user_logger_name", loggerName);
             TestUtil.resetJavaLoggingConfiguration("logging_template.properties", "logging.properties", userInputs);

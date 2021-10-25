@@ -203,7 +203,7 @@ public class HttpEventCollector_Test {
             HttpEventCollectorErrorHandler.ServerErrorException serverErrorException =
                     (HttpEventCollectorErrorHandler.ServerErrorException) ex;
             System.out.printf("ERROR: %s", ex.toString());
-            Assert.assertTrue(false);
+            Assert.fail();
         });
         int expectedCounter = 2;
         System.out.printf("\tSetting up http event collector with %s ... ", batching ? "batching" : "no batching");
@@ -265,7 +265,7 @@ public class HttpEventCollector_Test {
             HttpEventCollectorErrorHandler.ServerErrorException serverErrorException =
                     (HttpEventCollectorErrorHandler.ServerErrorException) ex;
             System.out.printf("ERROR: %s", ex.toString());
-            Assert.assertTrue(false);
+            Assert.fail();
         });
         boolean batching = false;
         System.out.printf("\tSetting up http event collector with %s ... ", batching ? "batching" : "no batching");

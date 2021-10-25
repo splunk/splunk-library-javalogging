@@ -372,7 +372,7 @@ public class TestUtil {
         Objects.requireNonNull(resultsReader, "resultsReader must not be null").close();
         Objects.requireNonNull(resultsStream, "resultsStream must not be null").close();
 
-        Assert.assertTrue(eventCount == 1);
+        Assert.assertEquals(1, eventCount);
     }
 
     public static void verifyNoEventSentToSplunk(List<String> msgs) throws IOException {
@@ -402,7 +402,7 @@ public class TestUtil {
         Objects.requireNonNull(resultsReader, "resultsReader must not be null").close();
         Objects.requireNonNull(resultsStream, "resultsStream must not be null").close();
 
-        Assert.assertTrue(eventCount == 0);
+        Assert.assertEquals(0, eventCount);
     }
 
     /*

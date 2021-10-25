@@ -148,13 +148,7 @@ public class TcpAppender extends AppenderBase<ILoggingEvent> implements Runnable
             connector = getDefaultSocketConnectorConstr().newInstance(address, port, 0, reconnectionDelay);
         }
 
-        catch (InvocationTargetException e) {
-            throwRuntimeException(e);
-        }
-        catch (InstantiationException e) {
-            throwRuntimeException(e);
-        }
-        catch (IllegalAccessException e) {
+        catch (InvocationTargetException | InstantiationException | IllegalAccessException e) {
             throwRuntimeException(e);
         }
 

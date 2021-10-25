@@ -3,7 +3,7 @@ import com.splunk.logging.HttpEventCollectorMiddleware;
 
 import java.util.List;
 
-/**
+/*
  * @copyright
  *
  * Copyright 2013-2015 Splunk, Inc.

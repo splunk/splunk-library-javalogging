@@ -245,7 +245,7 @@ public class HttpEventCollector_Test {
         public void run() {
             Date dCurrent = new Date();
             Date dEnd = new Date();
-            dEnd.setTime(dCurrent.getTime() + testDurationInSecs * 1000);
+            dEnd.setTime(dCurrent.getTime() + testDurationInSecs * 1000L);
             while (dCurrent.before(dEnd)) {
                 this.logger.info(String.format("javautil thread: %s, event: %d", this.threadName, eventsGenerated++));
                 try {

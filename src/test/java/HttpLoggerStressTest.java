@@ -28,7 +28,7 @@ public class HttpLoggerStressTest {
         public void run() {
             Date dCurrent = new Date();
             Date dEnd = new Date();
-            dEnd.setTime(dCurrent.getTime() + testDurationInSecs * 1000);
+            dEnd.setTime(dCurrent.getTime() + testDurationInSecs * 1000L);
             while(dCurrent.before(dEnd)) {
                 this.logger.info(String.format("Thread: %s, event: %d", this.threadName, eventsGenerated++));
                 dCurrent = new Date();

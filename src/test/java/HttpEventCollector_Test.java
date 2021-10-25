@@ -121,7 +121,7 @@ public class HttpEventCollector_Test {
 
         //modify the config file with the generated token
         String loggerName = "splunkLogger_disabled";
-        HashMap<String, String> userInputs = new HashMap<String, String>();
+        HashMap<String, String> userInputs = new HashMap<>();
         userInputs.put("user_httpEventCollector_token", token);
         if (batching) {
             userInputs.put("user_batch_interval", "200");
@@ -278,7 +278,7 @@ public class HttpEventCollector_Test {
         String token = setupHttpEventCollector(batching);
         System.out.printf("HTTP event collector fully set\n");
         Service service = TestUtil.connectToSplunk();
-        HashMap<String, String> userInputs = new HashMap<String, String>();
+        HashMap<String, String> userInputs = new HashMap<>();
         userInputs.put("user_httpEventCollector_token", token);
         userInputs.put("user_retries_on_error", "1000");
 

@@ -481,7 +481,7 @@ public class TestUtil {
         long startTime = System.currentTimeMillis();
         InputStream resultsStream = null;
         ResultsReaderXml resultsReader = null;
-        List<String> results = new ArrayList<String>();
+        List<String> results = new ArrayList<>();
         while (System.currentTimeMillis() - startTime < 100 * 1000)/*wait for up to 30s*/ {
             results.clear();
             String searchstr = "search index=" + index;
@@ -519,7 +519,7 @@ public class TestUtil {
      * @return the hash map
      */
     public static HashMap<String, String> buildUserInputMap(final String loggerName, final String token, final String sourceType, final String messageFormat) {
-        final HashMap<String, String> userInputs = new HashMap<String, String>();
+        final HashMap<String, String> userInputs = new HashMap<>();
         userInputs.put("user_logger_name", loggerName);
         userInputs.put("user_httpEventCollector_token", token);
         userInputs.put("user_host", "host.example.com");

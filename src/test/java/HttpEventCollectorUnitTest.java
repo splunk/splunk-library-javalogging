@@ -36,7 +36,7 @@ import java.util.logging.Logger;
 public class HttpEventCollectorUnitTest {
     @Test
     public void log4j_simple() throws Exception {
-        HashMap<String, String> userInputs = new HashMap<String, String>();
+        HashMap<String, String> userInputs = new HashMap<>();
         String loggerName = "splunk.log4jSimple";
         userInputs.put("user_logger_name", loggerName);
         userInputs.put("user_httpEventCollector_token", "11111111-2222-3333-4444-555555555555");
@@ -68,7 +68,7 @@ public class HttpEventCollectorUnitTest {
 
     @Test
     public void logback_simple() throws Exception {
-        HashMap<String, String> userInputs = new HashMap<String, String>();
+        HashMap<String, String> userInputs = new HashMap<>();
         final String loggerName = "splunk.logback";
         userInputs.put("user_logger_name", loggerName);
         userInputs.put("user_httpEventCollector_token", "11111111-2222-3333-4444-555555555555");

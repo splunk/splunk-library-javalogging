@@ -79,7 +79,7 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
     private long maxEventsBatchCount;
     private long maxEventsBatchSize;
     private Timer timer;
-    private List<HttpEventCollectorEventInfo> eventsBatch = new LinkedList<HttpEventCollectorEventInfo>();
+    private List<HttpEventCollectorEventInfo> eventsBatch = new LinkedList<>();
     private long eventsBatchSize = 0; // estimated total size of events batch
     private static final OkHttpClient httpSharedClient = new OkHttpClient(); // shared instance with the default settings
     private OkHttpClient httpClient = null; // shares the same connection pool and thread pools with the shared instance

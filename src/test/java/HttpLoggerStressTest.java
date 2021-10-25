@@ -98,7 +98,7 @@ public class HttpLoggerStressTest {
     private static void setupHttpEventCollector() throws Exception {
         String token = TestUtil.createHttpEventCollectorToken(httpEventCollectorName);
         String loggerName = "splunkStressHttpLogger";
-        HashMap<String, String> userInputs = new HashMap<String, String>();
+        HashMap<String, String> userInputs = new HashMap<>();
         userInputs.put("user_logger_name", loggerName);
         userInputs.put("user_httpEventCollector_token", token);
         userInputs.put("user_batch_size_count", "1");

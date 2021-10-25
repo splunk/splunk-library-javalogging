@@ -30,7 +30,7 @@ import org.apache.logging.log4j.Logger;
 
 public final class HttpEventCollector_Log4j2Test {
     private String httpEventCollectorName = "Log4j2Test";
-    List<List<HttpEventCollectorEventInfo>> errors = new ArrayList<List<HttpEventCollectorEventInfo>>();
+    List<List<HttpEventCollectorEventInfo>> errors = new ArrayList<>();
     List<HttpEventCollectorErrorHandler.ServerErrorException> logEx = new ArrayList<>();
 
     /**
@@ -41,12 +41,12 @@ public final class HttpEventCollector_Log4j2Test {
         TestUtil.enableHttpEventCollector();
         String token = TestUtil.createHttpEventCollectorToken(httpEventCollectorName);
         String loggerName = "splunkLogger4j2";
-        HashMap<String, String> userInputs = new HashMap<String, String>();
+        HashMap<String, String> userInputs = new HashMap<>();
         userInputs.put("user_logger_name", loggerName);
         userInputs.put("user_httpEventCollector_token", token);
         org.apache.logging.log4j.core.LoggerContext context = TestUtil.resetLog4j2Configuration("log4j2_template.xml", "log4j2.xml", userInputs);
         //use httplogger
-        List<String> msgs = new ArrayList<String>();
+        List<String> msgs = new ArrayList<>();
 
         Date date = new Date();
         String jsonMsg = String.format("{EventDate:%s, EventMsg:'this is a test event for log4j2}", date.toString());
@@ -74,7 +74,7 @@ public final class HttpEventCollector_Log4j2Test {
 
         String token = TestUtil.createHttpEventCollectorToken(httpEventCollectorName);
         String loggerName = "splunkLogger4j2WithOptions";
-        HashMap<String, String> userInputs = new HashMap<String, String>();
+        HashMap<String, String> userInputs = new HashMap<>();
         userInputs.put("user_logger_name", loggerName);
         userInputs.put("user_httpEventCollector_token", token);
         userInputs.put("user_index", "main");
@@ -84,7 +84,7 @@ public final class HttpEventCollector_Log4j2Test {
 
         org.apache.logging.log4j.core.LoggerContext context = TestUtil.resetLog4j2Configuration("log4j2_template.xml", "log4j2.xml", userInputs);
         //use httplogger
-        List<String> msgs = new ArrayList<String>();
+        List<String> msgs = new ArrayList<>();
 
         Date date = new Date();
         String jsonMsg = String.format("{EventDate:%s, EventMsg:'this is a test event for log4j2}", date.toString());
@@ -112,7 +112,7 @@ public final class HttpEventCollector_Log4j2Test {
 
         //clean out the events cache by setting send events immediately
         String loggerName = "splunkLoggerCountCleanCache";
-        HashMap<String, String> userInputs = new HashMap<String, String>();
+        HashMap<String, String> userInputs = new HashMap<>();
         userInputs.put("user_logger_name", loggerName);
         userInputs.put("user_httpEventCollector_token", token);
         LoggerContext context = TestUtil.resetLog4j2Configuration("log4j2_template.xml", "log4j2.xml", userInputs);
@@ -121,7 +121,7 @@ public final class HttpEventCollector_Log4j2Test {
         logger.info(jsonMsg);
 
         loggerName = "splunkBatchLoggerCount";
-        userInputs = new HashMap<String, String>();
+        userInputs = new HashMap<>();
         userInputs.put("user_logger_name", loggerName);
         userInputs.put("user_httpEventCollector_token", token);
         userInputs.put("user_batch_interval","0");
@@ -134,7 +134,7 @@ public final class HttpEventCollector_Log4j2Test {
         context = TestUtil.resetLog4j2Configuration("log4j2_template.xml", "log4j2.xml", userInputs);
         logger = context.getLogger(loggerName);
 
-        List<String> msgs = new ArrayList<String>();
+        List<String> msgs = new ArrayList<>();
 
         jsonMsg = String.format("{EventDate:%s, EventMsg:'this is a test event for java logging1}", new Date().toString());
         logger.info(jsonMsg);
@@ -176,7 +176,7 @@ public final class HttpEventCollector_Log4j2Test {
     public void sendBatchedEventsByBatchsize() throws Exception {
         String token = TestUtil.createHttpEventCollectorToken(httpEventCollectorName);
         String loggerName = "splunkLoggerBatchSize";
-        HashMap<String, String> userInputs = new HashMap<String, String>();
+        HashMap<String, String> userInputs = new HashMap<>();
         userInputs.put("user_logger_name", loggerName);
         userInputs.put("user_httpEventCollector_token", token);
         userInputs.put("user_batch_size_bytes", "500");
@@ -188,7 +188,7 @@ public final class HttpEventCollector_Log4j2Test {
         LoggerContext context = TestUtil.resetLog4j2Configuration("log4j2_template.xml", "log4j2.xml", userInputs);
         Logger logger = context.getLogger(loggerName);
 
-        List<String> msgs = new ArrayList<String>();
+        List<String> msgs = new ArrayList<>();
         int size = 0;
         String jsonMsg = String.format("{EventDate:%s, EventMsg:'test event for log4j size 1}", new Date().toString());
         logger.info(jsonMsg);
@@ -235,7 +235,7 @@ public final class HttpEventCollector_Log4j2Test {
         httpEventCollectorName = "wrongtoken";
         String token = TestUtil.createHttpEventCollectorToken(httpEventCollectorName);
         String loggerName = "errorHandlingInvalidTokenLog4j";
-        HashMap<String, String> userInputs = new HashMap<String, String>();
+        HashMap<String, String> userInputs = new HashMap<>();
         userInputs.put("user_logger_name", loggerName);
         userInputs.put("user_httpEventCollector_token", token);
         LoggerContext context = TestUtil.resetLog4j2Configuration("log4j2_template.xml", "log4j2.xml", userInputs);
@@ -304,7 +304,7 @@ public final class HttpEventCollector_Log4j2Test {
         httpEventCollectorName = "wrongtoken";
         String token = TestUtil.createHttpEventCollectorToken(httpEventCollectorName);
         String loggerName = "errorHandlingDisabledHttpEventCollectorEndpoint";
-        HashMap<String, String> userInputs = new HashMap<String, String>();
+        HashMap<String, String> userInputs = new HashMap<>();
         userInputs.put("user_logger_name", loggerName);
         userInputs.put("user_httpEventCollector_token", token);
         LoggerContext context = TestUtil.resetLog4j2Configuration("log4j2_template.xml", "log4j2.xml", userInputs);
@@ -345,7 +345,7 @@ public final class HttpEventCollector_Log4j2Test {
         TestUtil.createIndex(indexName);
         String token = TestUtil.createHttpEventCollectorToken(httpEventCollectorName);
         String loggerName = "splunkLogger4j2OrderOfSent";
-        HashMap<String, String> userInputs = new HashMap<String, String>();
+        HashMap<String, String> userInputs = new HashMap<>();
         userInputs.put("user_logger_name", loggerName);
         userInputs.put("user_httpEventCollector_token", token);
         userInputs.put("user_index", indexName);
@@ -354,7 +354,7 @@ public final class HttpEventCollector_Log4j2Test {
         org.apache.logging.log4j.core.LoggerContext context = TestUtil.resetLog4j2Configuration("log4j2_template.xml", "log4j2.xml", userInputs);
 
         //send multiple events and verify they are indexed in the order of sending
-        List<String> msgs = new ArrayList<String>();
+        List<String> msgs = new ArrayList<>();
         Date date = new Date();
         int totalEventsCount = 1000;
         Logger logger = context.getLogger(loggerName);
@@ -400,7 +400,7 @@ public final class HttpEventCollector_Log4j2Test {
         
         final Logger logger = context.getLogger(loggerName);
 
-        final List<String> msgs = new ArrayList<String>();
+        final List<String> msgs = new ArrayList<>();
 
         final long timeMillsec = new Date().getTime();
 

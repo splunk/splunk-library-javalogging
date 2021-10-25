@@ -61,7 +61,7 @@ public class SplunkCimLogEvent {
      * @param eventID event ID
      */
     public SplunkCimLogEvent(String eventName, String eventID) {
-        entries = new LinkedHashMap<String, Object>();
+        entries = new LinkedHashMap<>();
 
         addField(PREFIX_NAME, eventName);
         addField(PREFIX_EVENT_ID, eventID);

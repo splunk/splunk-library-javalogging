@@ -243,7 +243,7 @@ public class TcpAppender extends AppenderBase<ILoggingEvent> implements Runnable
 
         // Dispatch this instance of the appender.
         if (!errorPresent) {
-            queue = queueSize <= 0 ? new SynchronousQueue<ILoggingEvent>() : new ArrayBlockingQueue<ILoggingEvent>(queueSize);
+            queue = queueSize <= 0 ? new SynchronousQueue<>() : new ArrayBlockingQueue<>(queueSize);
             ThreadFactory factory = new ThreadFactory() {
                 @Override
                 public Thread newThread(Runnable r) {

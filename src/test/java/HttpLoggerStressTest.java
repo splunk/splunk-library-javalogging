@@ -119,7 +119,7 @@ public class HttpLoggerStressTest {
         Thread[] tList = new Thread[numberOfThreads];
         for (int i = 0; i < numberOfThreads; i++) {
             dsList[i] = new DataSender(String.format("Thread%s", i), testDurationInSecs);
-            tList[i] = new Thread(dsList[i]);;
+            tList[i] = new Thread(dsList[i]);
         }
         for (Thread t : tList)
             t.start();

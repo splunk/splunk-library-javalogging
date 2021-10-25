@@ -406,7 +406,5 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
             return defaultValue;
         }
     }
-
-
 }
 

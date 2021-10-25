@@ -30,8 +30,8 @@ import org.apache.logging.log4j.Logger;
 
 public final class HttpEventCollector_Log4j2Test {
     private String httpEventCollectorName = "Log4j2Test";
-    List<List<HttpEventCollectorEventInfo>> errors = new ArrayList<>();
-    List<HttpEventCollectorErrorHandler.ServerErrorException> logEx = new ArrayList<>();
+    private final List<List<HttpEventCollectorEventInfo>> errors = new ArrayList<>();
+    private final List<HttpEventCollectorErrorHandler.ServerErrorException> logEx = new ArrayList<>();
 
     /**
      * sending a message via httplogging using log4j2 to splunk

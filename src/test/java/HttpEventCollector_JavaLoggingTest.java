@@ -30,8 +30,8 @@ import java.util.logging.Logger;
 public final class HttpEventCollector_JavaLoggingTest {
 
     private String httpEventCollectorName = "JavaLoggingTest";
-    List<List<HttpEventCollectorEventInfo>> errors = new ArrayList<>();
-    List<HttpEventCollectorErrorHandler.ServerErrorException> logEx = new ArrayList<>();
+    private final List<List<HttpEventCollectorEventInfo>> errors = new ArrayList<>();
+    private final List<HttpEventCollectorErrorHandler.ServerErrorException> logEx = new ArrayList<>();
 
     /**
      * sending a message via httplogging using java.logging to splunk

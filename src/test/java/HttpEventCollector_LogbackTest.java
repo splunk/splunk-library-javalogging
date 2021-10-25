@@ -30,8 +30,8 @@ import org.slf4j.LoggerFactory;
 public final class HttpEventCollector_LogbackTest {
 
     private String httpEventCollectorName = "LogbackTest";
-    List<List<HttpEventCollectorEventInfo>> errors = new ArrayList<>();
-    List<HttpEventCollectorErrorHandler.ServerErrorException> logEx = new ArrayList<>();
+    private final List<List<HttpEventCollectorEventInfo>> errors = new ArrayList<>();
+    private final List<HttpEventCollectorErrorHandler.ServerErrorException> logEx = new ArrayList<>();
 
     /**
      * sending a message via httplogging using logback to splunk

@@ -258,9 +258,6 @@ public final class HttpEventCollector_Log4j2Test {
             Thread.sleep(1000);
         }
 
-        if (logEx == null)
-            Assert.fail("didn't catch errors");
-
         for (List<HttpEventCollectorEventInfo> infos : errors) {
             for (HttpEventCollectorEventInfo info : infos) {
                 System.out.println(info.getMessage());
@@ -319,8 +316,6 @@ public final class HttpEventCollector_Log4j2Test {
             Thread.sleep(1000);
         }
 
-        if (logEx == null)
-            Assert.fail("didn't catch errors");
         Assert.assertTrue(errors.size() >= 1);
 
         System.out.println(logEx);

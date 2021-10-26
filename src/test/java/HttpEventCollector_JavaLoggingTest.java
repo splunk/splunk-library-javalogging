@@ -274,9 +274,6 @@ public final class HttpEventCollector_JavaLoggingTest {
             Thread.sleep(1000);
         }
 
-        if (logEx == null)
-            Assert.fail("didn't catch errors");
-
 
         System.out.println("======print logEx");
         System.out.println(logEx);
@@ -335,8 +332,6 @@ public final class HttpEventCollector_JavaLoggingTest {
         // Enable httpEventCollector endpoint
         TestUtil.enableHttpEventCollector();
 
-        if (logEx == null)
-            Assert.fail("didn't catch errors");
         Assert.assertEquals(1, errors.size());
 
         System.out.println(logEx);

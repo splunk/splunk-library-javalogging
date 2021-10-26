@@ -251,10 +251,6 @@ public final class HttpEventCollector_LogbackTest {
             Thread.sleep(1000);
         }
 
-        if (logEx == null)
-            Assert.fail("didn't catch errors");
-
-
         System.out.println("======print logEx");
         System.out.println(logEx);
         System.out.println("======finish print logEx");
@@ -312,9 +308,7 @@ public final class HttpEventCollector_LogbackTest {
         }
 
         TestUtil.enableHttpEventCollector();
-        
-        if (logEx == null)
-            Assert.fail("didn't catch errors");
+
         Assert.assertEquals(1, errors.size());
 
         System.out.println(logEx);

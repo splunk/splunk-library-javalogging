@@ -277,7 +277,7 @@ public final class HttpEventCollector_Log4j2Test {
         System.out.println("======print logEx");
         System.out.println(logEx.toString());
         System.out.println("======finish print logEx");
-        Assert.assertEquals("Invalid token", logEx.get(1).getErrorText()); // Failing on main branch
+        Assert.assertEquals("Invalid token", logEx.get(1).getErrorText());
         Assert.assertEquals(4, logEx.get(1).getErrorCode());
 
 

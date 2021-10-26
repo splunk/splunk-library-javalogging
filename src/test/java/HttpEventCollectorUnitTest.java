@@ -23,7 +23,9 @@ import java.net.InetSocketAddress;
 import com.splunk.logging.HttpEventCollectorErrorHandler;
 import com.splunk.logging.HttpEventCollectorEventInfo;
 import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TestRule;
 import sun.rmi.runtime.Log;
 
 import java.io.ByteArrayInputStream;
@@ -34,6 +36,10 @@ import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
 public class HttpEventCollectorUnitTest {
+
+    @Rule
+    public TestRule watcher = new SplunkTestWatcher();
+
     @Test
     public void log4j_simple() throws Exception {
         HashMap<String, String> userInputs = new HashMap<String, String>();

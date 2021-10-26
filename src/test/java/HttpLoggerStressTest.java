@@ -2,6 +2,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.*;
@@ -12,6 +13,7 @@ import java.util.*;
 import java.lang.reflect.*;
 
 import com.splunk.*;
+import org.junit.rules.TestRule;
 
 public class HttpLoggerStressTest {
     private static class DataSender implements Runnable {
@@ -104,6 +106,9 @@ public class HttpLoggerStressTest {
         userInputs.put("user_batch_size_count", "1");
         TestUtil.resetLog4j2Configuration("log4j2_template.xml", "log4j2.xml", userInputs);
     }
+
+    @Rule
+    public TestRule watcher = new SplunkTestWatcher();
 
     @Test
     public void canSendEventUsingJavaLogging() throws Exception {

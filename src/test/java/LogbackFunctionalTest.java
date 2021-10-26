@@ -14,11 +14,16 @@
  * under the License.
  */
 import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TestRule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class LogbackFunctionalTest {
+
+    @Rule
+    public TestRule watcher = new SplunkTestWatcher();
 
     /**
      * Try writing a message via TCP to logback to validate the example configuration.

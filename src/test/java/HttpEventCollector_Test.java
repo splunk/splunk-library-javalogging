@@ -20,6 +20,7 @@ import ch.qos.logback.core.joran.spi.JoranException;
 import com.splunk.logging.HttpEventCollectorErrorHandler;
 import com.splunk.logging.HttpEventCollectorEventInfo;
 import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.*;
@@ -30,6 +31,7 @@ import java.util.*;
 import java.lang.reflect.*;
 
 import com.splunk.*;
+import org.junit.rules.TestRule;
 import org.slf4j.*;
 
 public class HttpEventCollector_Test {
@@ -89,6 +91,9 @@ public class HttpEventCollector_Test {
         String token=TestUtil.createHttpEventCollectorToken(httpEventCollectorName);
         return token;
     }
+
+    @Rule
+    public TestRule watcher = new SplunkTestWatcher();
 
     @Test
     public void LogToSplunkViaDifferentLoggers() throws Exception {

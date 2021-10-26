@@ -16,9 +16,14 @@
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TestRule;
 
 public class Log4jFunctionalTest {
+
+    @Rule
+    public TestRule watcher = new SplunkTestWatcher();
 
     /**
      * Try writing a message via TCP to log4j 2 to validate the example configuration.

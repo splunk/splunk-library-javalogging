@@ -16,7 +16,9 @@
 
 import com.splunk.logging.SplunkCimLogEvent;
 import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TestRule;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -25,6 +27,10 @@ import java.util.regex.Pattern;
  * Check that SplunkCimLogEvent produces what we expect it to.
  */
 public class SplunkCimLogEventUnitTest {
+
+    @Rule
+    public TestRule watcher = new SplunkTestWatcher();
+
     @Test
     public void addFieldWithCharValue() {
         SplunkCimLogEvent event = new SplunkCimLogEvent("name", "event-id");

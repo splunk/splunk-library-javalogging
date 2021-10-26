@@ -23,7 +23,9 @@ import com.splunk.logging.HttpEventCollectorEventInfo;
 
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TestRule;
 
 import java.util.logging.Logger;
 
@@ -32,6 +34,9 @@ public final class HttpEventCollector_JavaLoggingTest {
     private String httpEventCollectorName = "JavaLoggingTest";
     List<List<HttpEventCollectorEventInfo>> errors = new ArrayList<List<HttpEventCollectorEventInfo>>();
     List<HttpEventCollectorErrorHandler.ServerErrorException> logEx = new ArrayList<HttpEventCollectorErrorHandler.ServerErrorException>();
+
+    @Rule
+    public TestRule watcher = new SplunkTestWatcher();
 
     /**
      * sending a message via httplogging using java.logging to splunk
@@ -430,7 +435,6 @@ public final class HttpEventCollector_JavaLoggingTest {
         TestUtil.verifyEventsSentInOrder(prefix, totalEventsCount, indexName);
 
         TestUtil.deleteHttpEventCollectorToken(httpEventCollectorName);
-        System.out.println("====================== Test pass=========================");
     }
 
     /**

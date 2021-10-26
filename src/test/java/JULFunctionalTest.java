@@ -14,7 +14,9 @@
  * under the License.
  */
 import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TestRule;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -25,6 +27,9 @@ import java.net.Socket;
 import java.util.logging.Logger;
 
 public class JULFunctionalTest {
+
+    @Rule
+    public TestRule watcher = new SplunkTestWatcher();
 
     /**
      * Try writing a message via TCP to java.util.logging to validate the example configuration.

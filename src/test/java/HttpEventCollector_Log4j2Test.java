@@ -29,8 +29,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.apache.logging.log4j.Logger;
 import org.junit.rules.TestRule;
-import org.junit.rules.TestWatcher;
-import org.junit.runner.Description;
 
 public final class HttpEventCollector_Log4j2Test {
     private String httpEventCollectorName = "Log4j2Test";
@@ -38,20 +36,7 @@ public final class HttpEventCollector_Log4j2Test {
     List<HttpEventCollectorErrorHandler.ServerErrorException> logEx = new ArrayList<>();
 
     @Rule
-    public TestRule watcher = new TestWatcher() {
-        protected void starting(Description description) {
-            System.out.println("Starting test: " + description.getMethodName());
-        }
-
-        protected void succeeded(Description description) {
-            System.out.println("====================== Test pass=========================");
-        }
-
-        protected void finished(Description description) {
-            // GitHub pipeline is not including output from last test failure
-            System.out.flush();
-        }
-    };
+    public TestRule watcher = new SplunkTestWatcher();
 
     /**
      * sending a message via httplogging using log4j2 to splunk

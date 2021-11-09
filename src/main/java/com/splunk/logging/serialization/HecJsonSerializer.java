@@ -63,6 +63,10 @@ public class HecJsonSerializer {
         } else {
             event.put("event", info);
         }
+        if (!event.containsKey("time") && info.getTime() > 0) {
+            // We haven't figured any other time - so use the time from the event.
+            event.put("time", String.format(Locale.US, "%.3f", info.getTime()));
+        }
         return gson.toJson(event);
     }
 

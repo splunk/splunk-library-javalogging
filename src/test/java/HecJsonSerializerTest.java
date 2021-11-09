@@ -69,12 +69,7 @@ public class HecJsonSerializerTest {
     @SuppressWarnings("unchecked")
     public void itShouldPopulateTheTimeIfBodyOverrideDoesntSetTime() {
         HecJsonSerializer serializer = new HecJsonSerializer(Collections.emptyMap());
-        serializer.setEventBodySerializer(new EventBodySerializer() {
-            @Override
-            public String serializeEventBody(final HttpEventCollectorEventInfo eventInfo, final Object formattedMessage) {
-                return "XXX";
-            }
-        });
+        serializer.setEventBodySerializer((eventInfo, formattedMessage) -> "XXX");
         String result = serializer.serialize(event);
         Map<String, Object> map = (Map<String, Object>) gson.fromJson(result, Map.class);
         Assert.assertEquals("1636473405.870", map.get("time"));

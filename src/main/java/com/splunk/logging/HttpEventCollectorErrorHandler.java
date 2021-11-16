@@ -37,6 +37,26 @@ import java.util.List;
 public class HttpEventCollectorErrorHandler {
 
     /**
+     * Register error handler via full class name.
+     *
+     * When the class name is null or empty, null is registered to the <code>HttpEventCollectorErrorHandler</code>.
+     *
+     * @param errorCallbackClass the name of the class, for instance: <code>com.splunk.logging.util.StandardErrorCallback</code>
+     */
+    public static void registerClassName(String errorCallbackClass) {
+        if (errorCallbackClass == null || errorCallbackClass.trim().isEmpty()) {
+            HttpEventCollectorErrorHandler.onError(null);
+            return;
+        }
+        try {
+            ErrorCallback callback = (ErrorCallback) Class.forName(errorCallbackClass).newInstance();
+            HttpEventCollectorErrorHandler.onError(callback);
+        } catch (final Exception e) {
+            System.err.println("Warning: cannot create ErrorCallback instance: " + e);
+        }
+    }
+
+    /**
      * This exception is passed to error callback when Splunk server replies an error
      */
     @SuppressWarnings("serial")
@@ -100,10 +120,26 @@ public class HttpEventCollectorErrorHandler {
     private static ErrorCallback errorCallback;
 
     /**
-     * Register error callbacks
-     * @param callback ErrorCallback
+     * Register error callbacks.
+     *
+     * @param callback ErrorCallback Only one ErrorCallback can be registered. A new one will replace the old one.
      */
     public static void onError(ErrorCallback callback) {
+        if (callback == null) {
+            logInfo("Reset ErrorCallback to null (no error handling).");
+        }
+        else {
+            logInfo("Register ErrorCallback implementation: " + callback);
+            // onError() is called multiple times in unit tests and is also replaced intentionally.
+            // Issue a warning when it is replaced by a different kind of handler.
+            if (errorCallback != null && !errorCallback.equals(callback)) {
+                logWarn("ErrorCallback instance of '"
+                    + errorCallback.getClass().getName()
+                    + "' will be replaced by handler instance of '"
+                    + callback.getClass().getName()
+                    + "'");
+            }
+        }
         errorCallback = callback;
     }
 
@@ -116,5 +152,12 @@ public class HttpEventCollectorErrorHandler {
         if (errorCallback != null) {
             errorCallback.error(data, ex);
         }
+    }
+
+    private static void logInfo(String message) {
+        System.out.println("Info: " + message);
+    }
+    private static void logWarn(String message) {
+        System.out.println("Warning: " + message);
     }
 }

@@ -1,5 +1,9 @@
 # Splunk Logging for Java Changelog
 
+## Version 1.12.0
+
+* Added StandardErrorCallback. Register ErrorCallback implementations via logback or log4j xml config. (@stokpop)
+
 ## Version 1.11.0
 
 ### Minor Changes

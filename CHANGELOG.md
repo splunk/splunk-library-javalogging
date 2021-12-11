@@ -1,5 +1,10 @@
 # Splunk Logging for Java Changelog
 
+## Version 1.11.1
+
+### Minor Changes
+* Upgrading log4J per CVE-2021-44228. [PR](https://github.com/splunk/splunk-library-javalogging/pull/222)
+
 ## Version 1.11.0
 
 ### Minor Changes

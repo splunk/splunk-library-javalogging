@@ -8,7 +8,7 @@ jobs:
     strategy:
       matrix:
         java-version:
-          - 1.6
+          - 1.8
         os:
           - ubuntu-latest
           - windows-latest

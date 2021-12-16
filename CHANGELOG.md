@@ -1,5 +1,15 @@
 # Splunk Logging for Java Changelog
 
+## Version 1.6.2-0-1
+
+### Critial backport
+*  Upgrading log4J to 2.16 per CVE-2021-45046.
+
+## Version 1.6.2-0-0
+
+### Critial backport
+*  Upgrading log4J to 2.15 per CVE-2021-44228.
+
 ## Version 1.6.2
 
 *  Add support to allow users to define their own event body serializer for HTTP event adapter: Simply create a class implementing `com.splunk.logging.EventBodySerializer`, 

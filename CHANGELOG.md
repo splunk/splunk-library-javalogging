@@ -2,12 +2,12 @@
 
 ## Version 1.6.2-0-1
 
-### Critial backport
+### Critical backport
 *  Upgrading log4J to 2.16 per CVE-2021-45046.
 
 ## Version 1.6.2-0-0
 
-### Critial backport
+### Critical backport
 *  Upgrading log4J to 2.15 per CVE-2021-44228.
 
 ## Version 1.6.2

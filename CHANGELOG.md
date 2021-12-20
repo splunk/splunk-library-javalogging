@@ -1,5 +1,10 @@
 # Splunk Logging for Java Changelog
 
+## Version 1.6.2-0-2
+
+### Critical backport
+*  Upgrading to 2.17 per CVE-2021-45046 & CVE-2021-44228 & CVE-2021-45105.
+
 ## Version 1.6.2-0-1
 
 ### Critical backport

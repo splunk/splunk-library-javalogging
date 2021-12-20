@@ -5,19 +5,23 @@
 
     <groupId>com.splunk.logging</groupId>
     <artifactId>splunk-library-javalogging</artifactId>
-    <version>1.11.2</version>
+    <version>1.11.3</version>
     <packaging>jar</packaging>
 
     <name>Splunk Logging for Java</name>
-    <url>http://dev.splunk.com/goto/sdk-slj</url>
+    <url>https://dev.splunk.com/goto/sdk-slj</url>
 
-    <description>Library for structured, semantic logging of Common Information Model compliant events, meant for use
-        with SLF4J.
+    <description>
+        Library for structured, semantic logging of Common Information Model compliant events, meant for use with SLF4J.
     </description>
 
     <properties>
         <maven.resources.overwrite>true</maven.resources.overwrite>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+        <!-- CVE-2021-44228: https://nvd.nist.gov/vuln/detail/CVE-2021-44228 -->
+        <!-- CVE-2021-45046: https://nvd.nist.gov/vuln/detail/CVE-2021-45046 -->
+        <log4j2.version>2.17.0</log4j2.version>
     </properties>
     <profiles>
         <profile>
@@ -214,14 +218,14 @@
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-api</artifactId>
             <scope>provided</scope>
-            <version>2.16.0</version>
+            <version>${log4j2.version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-core</artifactId>
             <scope>provided</scope>
-            <version>2.16.0</version>
+            <version>${log4j2.version}</version>
         </dependency>
 
         <dependency>

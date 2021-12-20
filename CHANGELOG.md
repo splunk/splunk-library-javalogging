@@ -1,5 +1,10 @@
 # Splunk Logging for Java Changelog
 
+## Version 1.11.3
+
+### Critical Security Update
+Upgrade Log4J again v2.17.0 related to CVE-2021-45046 & CVE-2021-44228
+
 ## Version 1.11.2
 
 ### Critical Security Update

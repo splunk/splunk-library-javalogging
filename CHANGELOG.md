@@ -1,5 +1,10 @@
 # Splunk Logging for Java Changelog
 
+## Version 1.11.4
+
+### Critical Security Update
+Update Logback to version 1.2.9 per CVE-2021-42550.
+
 ## Version 1.11.3
 
 ### Critical Security Update

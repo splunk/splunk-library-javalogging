@@ -19,9 +19,16 @@
         <maven.resources.overwrite>true</maven.resources.overwrite>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-        <!-- CVE-2021-44228: https://nvd.nist.gov/vuln/detail/CVE-2021-44228 -->
-        <!-- CVE-2021-45046: https://nvd.nist.gov/vuln/detail/CVE-2021-45046 -->
-        <log4j2.version>2.17.0</log4j2.version>
+        <!-- https://logback.qos.ch/news.html -->
+        <!-- CVE-2021-42550 (Logback<1.2.8): https://nvd.nist.gov/vuln/detail/CVE-2021-42550 -->
+        <logback.version>1.2.9</logback.version>
+
+        <!-- https://logging.apache.org/log4j/2.x/security.html -->
+        <!-- CVE-2021-44228 (Log4j<2.16.0): https://nvd.nist.gov/vuln/detail/CVE-2021-44228 -->
+        <!-- CVE-2021-45046 (Log4j<2.16.0): https://nvd.nist.gov/vuln/detail/CVE-2021-45046 -->
+        <!-- CVE-2021-45105 (Log4j<2.17.0): https://nvd.nist.gov/vuln/detail/CVE-2021-45105 -->
+        <!-- CVE-2021-44832 (Log4j<2.17.1): https://nvd.nist.gov/vuln/detail/CVE-2021-44832 -->
+        <log4j2.version>2.17.1</log4j2.version>
     </properties>
     <profiles>
         <profile>

@@ -65,6 +65,9 @@ command:
 
     git clone https://github.com/splunk/splunk-library-javalogging.git
 
+### Code Reviews
+Contributions need to be reviewed by the [CODEOWNERS](.github/CODEOWNERS)
+
 ## Support
 
 The Splunk logging for Java is community-supported.

@@ -1,5 +1,14 @@
 # Splunk Logging for Java Changelog
 
+## Version 1.11.5
+### Critical Security Update
+* Bump Logback version to latest 1.2.10 @see [CVE-2021-42550 Logback<1.2.8](https://nvd.nist.gov/vuln/detail/CVE-2021-42550)
+* Bump Log4J version to latest 2.17.1 @see [CVE-2021-44832 Log4j<2.17.1](https://nvd.nist.gov/vuln/detail/CVE-2021-44832)
+### Minor Changes
+* Bump org.slf4j:slf4j-api version to latest [1.7.30](https://github.com/qos-ch/slf4j/releases/tag/v_1.7.32)
+* Bump com.squareup.okhttp3:okhttp to latest [4.9.3](https://github.com/square/okhttp/blob/master/CHANGELOG.md#version-493)
+* Bump com.google.code.gson:gson to latest [2.8.9](https://github.com/google/gson/releases/tag/gson-parent-2.8.9)
+
 ## Version 1.11.4
 
 ### Critical Security Update
@@ -8,7 +17,7 @@ Update Logback to version 1.2.9 per CVE-2021-42550.
 ## Version 1.11.3
 
 ### Critical Security Update
-Upgrade Log4J again v2.17.0 related to CVE-2021-45046 & CVE-2021-44228
+* Upgrade Log4J again v2.17.0 related to CVE-2021-45046 & CVE-2021-44228
 
 ## Version 1.11.2
 

@@ -4,6 +4,26 @@
 
 * Added StandardErrorCallback. Register ErrorCallback implementations via logback or log4j xml config. (@stokpop)
 
+## Version 1.11.4
+
+### Critical Security Update
+Update Logback to version 1.2.9 per CVE-2021-42550.
+
+## Version 1.11.3
+
+### Critical Security Update
+Upgrade Log4J again v2.17.0 related to CVE-2021-45046 & CVE-2021-44228
+
+## Version 1.11.2
+
+### Critical Security Update
+* Upgrading log4J to 2.16 per CVE-2021-45046.
+
+## Version 1.11.1
+
+### Critical Security Update
+* Upgrading log4J to 2.15 per CVE-2021-44228. [PR](https://github.com/splunk/splunk-library-javalogging/pull/222)
+
 ## Version 1.11.0
 
 ### Minor Changes

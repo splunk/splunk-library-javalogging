@@ -337,6 +337,12 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
 
         OkHttpClient.Builder builder = httpSharedClient.newBuilder();
 
+        // set timeouts
+        builder.connectTimeout(timeoutSettings.connectTimeout, TimeUnit.MILLISECONDS)
+                .callTimeout(timeoutSettings.callTimeout, TimeUnit.MILLISECONDS)
+                .readTimeout(timeoutSettings.readTimeout, TimeUnit.MILLISECONDS)
+                .writeTimeout(timeoutSettings.writeTimeout, TimeUnit.MILLISECONDS);
+
         // limit max  number of async requests in sequential mode
         if (sendMode == SendMode.Sequential) {
             Dispatcher dispatcher = new Dispatcher();
@@ -450,10 +456,10 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
     }
 
     public static class TimeoutSettings {
-        public static final long DEFAULT_CONNECT_TIMEOUT = 30000;
-        public static final long DEFAULT_WRITE_TIMEOUT = 0; // 0 means no timeout
+        public static final long DEFAULT_CONNECT_TIMEOUT = 3000;
+        public static final long DEFAULT_WRITE_TIMEOUT = 10000; // 0 means no timeout
         public static final long DEFAULT_CALL_TIMEOUT = 0;
-        public static final long DEFAULT_READ_TIMEOUT = 0;
+        public static final long DEFAULT_READ_TIMEOUT = 10000;
         public static final long DEFAULT_TERMINATION_TIMEOUT = 0;
 
         public long connectTimeout = DEFAULT_CONNECT_TIMEOUT;

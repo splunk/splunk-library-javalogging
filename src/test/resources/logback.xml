@@ -60,6 +60,7 @@ under the License.
         <messageFormat>text</messageFormat>
         <middleware>HttpEventCollectorUnitTestMiddleware</middleware>
         <connectTimeout>5000</connectTimeout>
+        <terminationTimeout>2000</terminationTimeout>
         <layout class="ch.qos.logback.classic.PatternLayout">
             <pattern>%msg</pattern>
         </layout>

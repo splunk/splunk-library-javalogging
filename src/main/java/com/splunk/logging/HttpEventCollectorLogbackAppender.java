@@ -119,6 +119,12 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
         super.start();
     }
 
+    public void flush() {
+        if (started) {
+            sender.flush();
+        }
+    }
+
     @Override
     public void stop() {
         if (!started)
@@ -382,6 +388,14 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
 
     public long getWriteTimeout(long milliseconds) {
         return this.timeoutSettings.writeTimeout = milliseconds;
+    }
+
+    public void setTerminationTimeout(long milliseconds) {
+        this.timeoutSettings.terminationTimeout = milliseconds;
+    }
+
+    public long getTerminationTimeout(long milliseconds) {
+        return this.timeoutSettings.terminationTimeout = milliseconds;
     }
 
     private static long parseLong(String string, int defaultValue) {

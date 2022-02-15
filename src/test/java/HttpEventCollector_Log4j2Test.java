@@ -343,7 +343,6 @@ public final class HttpEventCollector_Log4j2Test {
         org.apache.logging.log4j.core.LoggerContext context = TestUtil.resetLog4j2Configuration("log4j2_template.xml", "log4j2.xml", userInputs);
 
         //send multiple events and verify they are indexed in the order of sending
-        List<String> msgs = new ArrayList<>();
         Date date = new Date();
         int totalEventsCount = 1000;
         Logger logger = context.getLogger(loggerName);
@@ -351,7 +350,6 @@ public final class HttpEventCollector_Log4j2Test {
         for (int i = 0; i < totalEventsCount; i++) {
             String jsonMsg = String.format("%s %s", prefix,i);
             logger.info(jsonMsg);
-            msgs.add(jsonMsg);
         }
 
         TestUtil.verifyEventsSentInOrder(prefix,totalEventsCount,indexName);

@@ -171,7 +171,7 @@ public final class HttpEventCollector_Log4j2Test {
      * sending a message via httplogging using java.logging with batched_size_bytes
      */
     @Test
-    public void sendBatchedEventsByBatchsize() throws Exception {
+    public void sendBatchedEventsByBatchSize() throws Exception {
         String token = TestUtil.createHttpEventCollectorToken(httpEventCollectorName);
         String loggerName = "splunkLoggerBatchSize";
         HashMap<String, String> userInputs = new HashMap<>();

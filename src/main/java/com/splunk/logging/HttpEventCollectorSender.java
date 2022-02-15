@@ -1,6 +1,6 @@
 package com.splunk.logging;
 
-/**
+/*
  * @copyright
  *
  * Copyright 2013-2015 Splunk, Inc.
@@ -27,7 +27,6 @@ import okhttp3.*;
 import javax.net.ssl.*;
 import java.io.IOException;
 import java.io.Serializable;
-import java.security.cert.CertificateException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -63,7 +62,7 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
     {
         Sequential,
         Parallel
-    };
+    }
 
     /**
      * Recommended default values for events batching.
@@ -79,7 +78,7 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
     private long maxEventsBatchCount;
     private long maxEventsBatchSize;
     private Timer timer;
-    private List<HttpEventCollectorEventInfo> eventsBatch = new LinkedList<HttpEventCollectorEventInfo>();
+    private List<HttpEventCollectorEventInfo> eventsBatch = new LinkedList<>();
     private long eventsBatchSize = 0; // estimated total size of events batch
     private static final OkHttpClient httpSharedClient = new OkHttpClient(); // shared instance with the default settings
     private OkHttpClient httpClient = null; // shares the same connection pool and thread pools with the shared instance
@@ -354,11 +353,11 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
             final TrustManager[] trustAllCerts = new TrustManager[]{
                     new X509TrustManager() {
                         @Override
-                        public void checkClientTrusted(java.security.cert.X509Certificate[] chain, String authType) throws CertificateException {
+                        public void checkClientTrusted(java.security.cert.X509Certificate[] chain, String authType) {
                         }
 
                         @Override
-                        public void checkServerTrusted(java.security.cert.X509Certificate[] chain, String authType) throws CertificateException {
+                        public void checkServerTrusted(java.security.cert.X509Certificate[] chain, String authType) {
                         }
 
                         @Override
@@ -377,12 +376,7 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
                 builder.sslSocketFactory(sslSocketFactory, (X509TrustManager) trustAllCerts[0]);
             } catch (Exception ignored) { /* nop */ }
 
-            builder.hostnameVerifier(new HostnameVerifier() {
-                @Override
-                public boolean verify(String hostname, SSLSession session) {
-                    return true;
-                }
-            });
+            builder.hostnameVerifier((hostname, session) -> true);
         }
 
         httpClient = builder.build();

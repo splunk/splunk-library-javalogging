@@ -13,7 +13,6 @@ import com.splunk.logging.HttpEventCollectorEventInfo;
 import com.splunk.logging.hec.MetadataTags;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class HecJsonSerializer {
     private static final Set<String> KEYWORDS = MetadataTags.HEC_TAGS;

@@ -1,6 +1,6 @@
 package com.splunk.logging;
 
-/**
+/*
  * @copyright
  *
  * Copyright 2013-2015 Splunk, Inc.
@@ -93,7 +93,7 @@ import java.util.logging.LogRecord;
  * properties file.
  */
 public final class HttpEventCollectorLoggingHandler extends Handler {
-    private HttpEventCollectorSender sender = null;
+    private HttpEventCollectorSender sender;
     private final String IncludeLoggerNameConfTag = "include_logger_name";
     private final boolean includeLoggerName;
     private final String IncludeThreadNameConfTag = "include_thread_name";

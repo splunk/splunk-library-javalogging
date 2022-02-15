@@ -61,7 +61,7 @@ public class SplunkCimLogEvent {
      * @param eventID event ID
      */
     public SplunkCimLogEvent(String eventName, String eventID) {
-        entries = new LinkedHashMap<String, Object>();
+        entries = new LinkedHashMap<>();
 
         addField(PREFIX_NAME, eventName);
         addField(PREFIX_EVENT_ID, eventID);
@@ -157,7 +157,7 @@ public class SplunkCimLogEvent {
     private static final String THROWABLE_MESSAGE = "throwable_message";
     private static final String THROWABLE_STACKTRACE_ELEMENTS = "stacktrace_elements";
 
-    /**
+    /*
      * Splunk Common Information Model(CIM) Fields
      */
 

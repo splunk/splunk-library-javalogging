@@ -40,7 +40,7 @@ import org.apache.logging.log4j.core.config.plugins.PluginFactory;
 @SuppressWarnings("serial")
 public final class HttpEventCollectorLog4jAppender extends AbstractAppender
 {
-    private HttpEventCollectorSender sender = null;
+    private HttpEventCollectorSender sender;
     private final boolean includeLoggerName;
     private final boolean includeThreadName;
     private final boolean includeMDC;
@@ -154,10 +154,10 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
             @PluginAttribute(value = "includeException", defaultBoolean = true) final boolean includeException,
             @PluginAttribute(value = "includeMarker", defaultBoolean = true) final boolean includeMarker,
             @PluginAttribute(value = "connect_timeout", defaultLong = HttpEventCollectorSender.TimeoutSettings.DEFAULT_CONNECT_TIMEOUT) final long connectTimeout,
-            @PluginAttribute(value = "call_timeout", defaultLong = HttpEventCollectorSender.TimeoutSettings.DEFAULT_CALL_TIMEOUT) final long callTimeout,
-            @PluginAttribute(value = "read_timeout", defaultLong = HttpEventCollectorSender.TimeoutSettings.DEFAULT_READ_TIMEOUT) final long readTimeout,
-            @PluginAttribute(value = "write_timeout", defaultLong = HttpEventCollectorSender.TimeoutSettings.DEFAULT_WRITE_TIMEOUT) final long writeTimeout,
-            @PluginAttribute(value = "termination_timeout", defaultLong = HttpEventCollectorSender.TimeoutSettings.DEFAULT_TERMINATION_TIMEOUT) final long terminationTimeout,
+            @PluginAttribute(value = "call_timeout") final long callTimeout,
+            @PluginAttribute(value = "read_timeout") final long readTimeout,
+            @PluginAttribute(value = "write_timeout") final long writeTimeout,
+            @PluginAttribute(value = "termination_timeout") final long terminationTimeout,
             @PluginElement("Layout") Layout<? extends Serializable> layout,
             @PluginElement("Filter") final Filter filter
     )

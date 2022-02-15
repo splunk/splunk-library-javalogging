@@ -18,9 +18,6 @@ import com.splunk.logging.SplunkCimLogEvent;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 /**
  * Check that SplunkCimLogEvent produces what we expect it to.
  */
@@ -52,7 +49,7 @@ public class SplunkCimLogEventUnitTest {
     @Test
     public void addFieldWithIntValue() {
         SplunkCimLogEvent event = new SplunkCimLogEvent("name", "event-id");
-        event.addField("key", (int)129);
+        event.addField("key", 129);
 
         Assert.assertEquals("\"name=name\" \"event_id=event-id\" \"key=129\"", event.toString());
     }
@@ -60,7 +57,7 @@ public class SplunkCimLogEventUnitTest {
     @Test
     public void addFieldWithLongValue() {
         SplunkCimLogEvent event = new SplunkCimLogEvent("name", "event-id");
-        event.addField("key", (long)129L);
+        event.addField("key", 129L);
 
         Assert.assertEquals("\"name=name\" \"event_id=event-id\" \"key=129\"", event.toString());
     }
@@ -76,7 +73,7 @@ public class SplunkCimLogEventUnitTest {
     @Test
     public void addFieldWithDoubleValue() {
         SplunkCimLogEvent event = new SplunkCimLogEvent("name", "event-id");
-        event.addField("key", (double)129.32);
+        event.addField("key", 129.32);
 
         Assert.assertEquals("\"name=name\" \"event_id=event-id\" \"key=129.32\"", event.toString());
     }

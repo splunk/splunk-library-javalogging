@@ -1,6 +1,6 @@
 package com.splunk.logging;
 
-/**
+/*
  * @copyright
  *
  * Copyright 2013-2015 Splunk, Inc.
@@ -30,7 +30,7 @@ import java.util.List;
  */
 public class HttpEventCollectorResendMiddleware
         extends HttpEventCollectorMiddleware.HttpSenderMiddleware {
-    private long retriesOnError = 0;
+    private long retriesOnError;
 
     /**
      * Create a resend middleware component.

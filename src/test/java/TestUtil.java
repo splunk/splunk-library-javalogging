@@ -224,7 +224,7 @@ public class TestUtil {
         connectToSplunk();
 
         //disable logging endpoint
-        Map args = new HashMap();
+        Map<String, Object> args = new HashMap<>();
         args.put("disabled", 1);
         ResponseMessage response = service.post("/servicesNS/admin/search/data/inputs/http/http", args);
         assert response.getStatus() == 200;
@@ -237,7 +237,7 @@ public class TestUtil {
         connectToSplunk();
 
         //enable logging endpoint
-        Map args = new HashMap();
+        Map<String, Object> args = new HashMap<>();
         args.put("disabled", 0);
         ResponseMessage response = service.post("/servicesNS/admin/search/data/inputs/http/http", args);
         assert response.getStatus() == 200;
@@ -250,7 +250,7 @@ public class TestUtil {
     public static void disableHttpEventCollector(String httpEventCollectorName) throws IOException {
         connectToSplunk();
 
-        Map args = new HashMap();
+        Map<String, Object> args = new HashMap<>();
         args.put("disabled", 1);
 
         ResponseMessage response = service.post(httpEventCollectorTokenEndpointPath + "/" + httpEventCollectorName, args);
@@ -280,7 +280,7 @@ public class TestUtil {
 
             String match = FindUserInputConfiguration(lines.get(i));
             if (!match.isEmpty()) {
-                if (userInputs.keySet().contains(match))
+                if (userInputs.containsKey(match))
                     lines.set(i, lines.get(i).replace("%" + match + "%", userInputs.get(match)));
                 else
                     lines.set(i, "");
@@ -315,7 +315,7 @@ public class TestUtil {
     /*
         create log4j2.xml and force log4j2 context manager to reload the configurations, return context and using this context to retrieve logger instead of using LogManager
     */
-    public static org.apache.logging.log4j.core.LoggerContext resetLog4j2Configuration(String configFileTemplate, String configFile, HashMap<String, String> userInputs) throws IOException, JoranException {
+    public static org.apache.logging.log4j.core.LoggerContext resetLog4j2Configuration(String configFileTemplate, String configFile, HashMap<String, String> userInputs) throws IOException {
         String configFilePath = updateConfigFile(configFileTemplate, configFile, userInputs);
         org.apache.logging.log4j.core.LoggerContext context = new org.apache.logging.log4j.core.LoggerContext(userInputs.get("user_logger_name"));
         context.reconfigure();
@@ -340,7 +340,7 @@ public class TestUtil {
     /*
     create logging.property and force java logging  manager to reload the configurations
     */
-    public static void resetJavaLoggingConfiguration(String configFileTemplate, String configFile, HashMap<String, String> userInputs) throws IOException, JoranException {
+    public static void resetJavaLoggingConfiguration(String configFileTemplate, String configFile, HashMap<String, String> userInputs) throws IOException {
         String configFilePath = updateConfigFile(configFileTemplate, configFile, userInputs);
         FileInputStream configFileStream = new FileInputStream(configFilePath);
         LogManager.getLogManager().readConfiguration(configFileStream);
@@ -369,10 +369,10 @@ public class TestUtil {
                 break;
         }
 
-        resultsReader.close();
-        resultsStream.close();
+        Objects.requireNonNull(resultsReader, "resultsReader must not be null").close();
+        Objects.requireNonNull(resultsStream, "resultsStream must not be null").close();
 
-        Assert.assertTrue(eventCount == 1);
+        Assert.assertEquals(1, eventCount);
     }
 
     public static void verifyNoEventSentToSplunk(List<String> msgs) throws IOException {
@@ -399,10 +399,10 @@ public class TestUtil {
                 break;
         }
 
-        resultsReader.close();
-        resultsStream.close();
+        Objects.requireNonNull(resultsReader, "resultsReader must not be null").close();
+        Objects.requireNonNull(resultsStream, "resultsStream must not be null").close();
 
-        Assert.assertTrue(eventCount == 0);
+        Assert.assertEquals(0, eventCount);
     }
 
     /*
@@ -444,8 +444,8 @@ public class TestUtil {
                 Thread.sleep(5000);
             }
 
-            resultsReader.close();
-            resultsStream.close();
+            Objects.requireNonNull(resultsReader, "resultsReader must not be null").close();
+            Objects.requireNonNull(resultsStream, "resultsStream must not be null").close();
 
             Assert.assertEquals("Event search results did not match.", 1, eventCount);
         }
@@ -470,7 +470,7 @@ public class TestUtil {
                 searchQuery.append(String.format(" | search \"message.%s\"=%s", jsonEntry.getKey(), jsonEntry.getValue()));
             }
         }
-        System.err.println(searchQuery.toString());
+        System.err.println(searchQuery);
 
         return service.oneshotSearch(searchQuery.toString());
     }
@@ -481,7 +481,7 @@ public class TestUtil {
         long startTime = System.currentTimeMillis();
         InputStream resultsStream = null;
         ResultsReaderXml resultsReader = null;
-        List<String> results = new ArrayList<String>();
+        List<String> results = new ArrayList<>();
         while (System.currentTimeMillis() - startTime < 100 * 1000)/*wait for up to 30s*/ {
             results.clear();
             String searchstr = "search index=" + index;
@@ -496,8 +496,8 @@ public class TestUtil {
                 break;
         }
 
-        resultsReader.close();
-        resultsStream.close();
+        Objects.requireNonNull(resultsReader, "resultsReader must not be null").close();
+        Objects.requireNonNull(resultsStream, "resultsStream must not be null").close();
 
         assert (results.size() == totalEventsCount) : String.format("expect: %d, actual: %d", totalEventsCount, results.size());
 
@@ -519,7 +519,7 @@ public class TestUtil {
      * @return the hash map
      */
     public static HashMap<String, String> buildUserInputMap(final String loggerName, final String token, final String sourceType, final String messageFormat) {
-        final HashMap<String, String> userInputs = new HashMap<String, String>();
+        final HashMap<String, String> userInputs = new HashMap<>();
         userInputs.put("user_logger_name", loggerName);
         userInputs.put("user_httpEventCollector_token", token);
         userInputs.put("user_host", "host.example.com");

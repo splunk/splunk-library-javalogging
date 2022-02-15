@@ -148,13 +148,7 @@ public class TcpAppender extends AppenderBase<ILoggingEvent> implements Runnable
             connector = getDefaultSocketConnectorConstr().newInstance(address, port, 0, reconnectionDelay);
         }
 
-        catch (InvocationTargetException e) {
-            throwRuntimeException(e);
-        }
-        catch (InstantiationException e) {
-            throwRuntimeException(e);
-        }
-        catch (IllegalAccessException e) {
+        catch (InvocationTargetException | InstantiationException | IllegalAccessException e) {
             throwRuntimeException(e);
         }
 
@@ -243,14 +237,11 @@ public class TcpAppender extends AppenderBase<ILoggingEvent> implements Runnable
 
         // Dispatch this instance of the appender.
         if (!errorPresent) {
-            queue = queueSize <= 0 ? new SynchronousQueue<ILoggingEvent>() : new ArrayBlockingQueue<ILoggingEvent>(queueSize);
-            ThreadFactory factory = new ThreadFactory() {
-                @Override
-                public Thread newThread(Runnable r) {
-                    Thread t = new Thread(r, "splunk-tcp-appender");
-                    t.setDaemon(true);
-                    return t;
-                }
+            queue = queueSize <= 0 ? new SynchronousQueue<>() : new ArrayBlockingQueue<>(queueSize);
+            ThreadFactory factory = r -> {
+                Thread t = new Thread(r, "splunk-tcp-appender");
+                t.setDaemon(true);
+                return t;
             };
             executor = Executors.newSingleThreadExecutor(factory);
             executor.execute(this);

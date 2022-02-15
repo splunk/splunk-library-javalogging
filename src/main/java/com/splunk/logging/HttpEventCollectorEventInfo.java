@@ -1,6 +1,6 @@
 package com.splunk.logging;
 
-/**
+/*
  * @copyright
  *
  * Copyright 2013-2015 Splunk, Inc.

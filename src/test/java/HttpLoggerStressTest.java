@@ -15,9 +15,9 @@ import com.splunk.*;
 
 public class HttpLoggerStressTest {
     private static class DataSender implements Runnable {
-        private String threadName;
+        private final String threadName;
         public int eventsGenerated = 0, testDurationInSecs = 300;
-        Logger logger;
+        private final Logger logger;
 
         public DataSender(String threadName, int testDurationInSecs) {
             this.threadName = threadName;
@@ -28,7 +28,7 @@ public class HttpLoggerStressTest {
         public void run() {
             Date dCurrent = new Date();
             Date dEnd = new Date();
-            dEnd.setTime(dCurrent.getTime() + testDurationInSecs * 1000);
+            dEnd.setTime(dCurrent.getTime() + testDurationInSecs * 1000L);
             while(dCurrent.before(dEnd)) {
                 this.logger.info(String.format("Thread: %s, event: %d", this.threadName, eventsGenerated++));
                 dCurrent = new Date();
@@ -93,12 +93,12 @@ public class HttpLoggerStressTest {
     }
 
     private static ServiceArgs serviceArgs;
-    private static String httpEventCollectorName = "stressHttpEventCollector";
+    private static final String httpEventCollectorName = "stressHttpEventCollector";
 
     private static void setupHttpEventCollector() throws Exception {
         String token = TestUtil.createHttpEventCollectorToken(httpEventCollectorName);
         String loggerName = "splunkStressHttpLogger";
-        HashMap<String, String> userInputs = new HashMap<String, String>();
+        HashMap<String, String> userInputs = new HashMap<>();
         userInputs.put("user_logger_name", loggerName);
         userInputs.put("user_httpEventCollector_token", token);
         userInputs.put("user_batch_size_count", "1");
@@ -119,7 +119,7 @@ public class HttpLoggerStressTest {
         Thread[] tList = new Thread[numberOfThreads];
         for (int i = 0; i < numberOfThreads; i++) {
             dsList[i] = new DataSender(String.format("Thread%s", i), testDurationInSecs);
-            tList[i] = new Thread(dsList[i]);;
+            tList[i] = new Thread(dsList[i]);
         }
         for (Thread t : tList)
             t.start();
@@ -149,7 +149,7 @@ public class HttpLoggerStressTest {
                 System.out.printf("\tCompleted wait for iteration %d\r\n", i);
             }
         }
-        Boolean testPassed = true;
+        boolean testPassed = true;
         for (int i = 0; i < numberOfThreads; i++) {
             String arguments = String.format("search Thread%d earliest=%d| stats count", i, startTime);
             eventCount = getEventsCount(arguments);

@@ -1,6 +1,6 @@
 package com.splunk.logging;
 
-/**
+/*
  * @copyright
  *
  * Copyright 2013-2015 Splunk, Inc.
@@ -38,16 +38,16 @@ public class HttpEventCollectorMiddleware {
      * An interface that describes an abstract events sender working asynchronously.
      */
     public interface IHttpSender {
-        public void postEvents(final List<HttpEventCollectorEventInfo> events,
-                               IHttpSenderCallback callback);
+        void postEvents(final List<HttpEventCollectorEventInfo> events,
+                        IHttpSenderCallback callback);
     }
 
     /**
      * Callback methods invoked by events sender.
      */
     public interface IHttpSenderCallback {
-        public void completed(int statusCode, final String reply);
-        public void failed(final Exception ex);
+        void completed(int statusCode, final String reply);
+        void failed(final Exception ex);
     }
 
     /**

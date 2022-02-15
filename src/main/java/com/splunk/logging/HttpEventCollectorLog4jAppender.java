@@ -245,6 +245,10 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
         );
     }
 
+    public void flush() {
+        sender.flush();
+    }
+
     @Override
     public boolean stop(long timeout, TimeUnit timeUnit) {
         this.sender.close();

@@ -52,6 +52,7 @@ public class HecJsonSerializer {
             event = eventHeaderSerializer.serializeEventHeader(info, new HashMap<>(template));
         } else {
             event = new HashMap<>(template);
+            event.put("time", String.format(Locale.US, "%.3f", info.getTime()));
         }
         if (this.eventBodySerializer != null) {
             event.put("event", eventBodySerializer.serializeEventBody(info, info.getMessage()));

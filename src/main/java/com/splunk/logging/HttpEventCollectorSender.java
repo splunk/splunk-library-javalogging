@@ -195,9 +195,18 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
     }
 
     /**
-     * Flush all pending events
+     * Flush all pending events to the underlying HTTP client
+     * and then flush the HTTP client itself (keeping the client
+     * open to accept further events)
      */
     public synchronized void flush() {
+        flush(false);
+    }
+
+    /**
+     * Flush all pending events to the underlying HTTP client
+     */
+    private synchronized void flushEvents() {
         if (eventsBatch.size() > 0) {
             postEventsAsync(eventsBatch);
         }
@@ -209,9 +218,11 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
     }
 
     public synchronized void flush(boolean close) {
-        flush();
+        flushEvents();
         if (close) {
             stopHttpClient();
+        } else {
+            flushHttpClient();
         }
     }
 
@@ -221,8 +232,7 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
     void close() {
         if (timer != null)
             timer.cancel();
-        flush();
-        stopHttpClient();
+        flush(true);
         super.cancel();
     }
 
@@ -231,7 +241,7 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
      */
     @Override // TimerTask
     public void run() {
-        flush();
+        flushEvents();
     }
 
     /**
@@ -260,6 +270,28 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
         }
     }
 
+    private void flushHttpClient() {
+        flushHttpClient(timeoutSettings.terminationTimeout);
+    }
+
+    private void flushHttpClient(long timeout) {
+        if (httpClient != null && timeout > 0) {
+            Dispatcher dispatcher = httpClient.dispatcher();
+
+            long start = System.currentTimeMillis();
+
+            while (dispatcher.queuedCallsCount() > 0 &&
+                    dispatcher.runningCallsCount() > 0 &&
+                    start + timeout > System.currentTimeMillis()) {
+                try {
+                    TimeUnit.MILLISECONDS.sleep(30);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    break;
+                }
+            }
+        }
+    }
 
     private void stopHttpClient() {
         if (httpClient != null) {
@@ -303,6 +335,12 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
         }
 
         OkHttpClient.Builder builder = httpSharedClient.newBuilder();
+
+        // set timeouts
+        builder.connectTimeout(timeoutSettings.connectTimeout, TimeUnit.MILLISECONDS)
+                .callTimeout(timeoutSettings.callTimeout, TimeUnit.MILLISECONDS)
+                .readTimeout(timeoutSettings.readTimeout, TimeUnit.MILLISECONDS)
+                .writeTimeout(timeoutSettings.writeTimeout, TimeUnit.MILLISECONDS);
 
         // limit max  number of async requests in sequential mode
         if (sendMode == SendMode.Sequential) {
@@ -412,10 +450,10 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
     }
 
     public static class TimeoutSettings {
-        public static final long DEFAULT_CONNECT_TIMEOUT = 30000;
-        public static final long DEFAULT_WRITE_TIMEOUT = 0; // 0 means no timeout
+        public static final long DEFAULT_CONNECT_TIMEOUT = 3000;
+        public static final long DEFAULT_WRITE_TIMEOUT = 10000; // 0 means no timeout
         public static final long DEFAULT_CALL_TIMEOUT = 0;
-        public static final long DEFAULT_READ_TIMEOUT = 0;
+        public static final long DEFAULT_READ_TIMEOUT = 10000;
         public static final long DEFAULT_TERMINATION_TIMEOUT = 0;
 
         public long connectTimeout = DEFAULT_CONNECT_TIMEOUT;

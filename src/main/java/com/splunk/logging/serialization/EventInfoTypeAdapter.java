@@ -22,9 +22,6 @@ public class EventInfoTypeAdapter implements JsonSerializer<HttpEventCollectorEv
         // but Spring Boot does some Gradle magic that downgrades (as of 11/2019) to 1.8.5. This
         // should move to static methods once 1.8.6 has widespread adoption.
         JsonParser parser = new JsonParser();
-        if (src.getTime() > 0) {
-            event.put("time", String.format(Locale.US, "%.3f", src.getTime()));
-        }
         if (src.getSeverity() != null) {
             event.put("severity", src.getSeverity());
         }

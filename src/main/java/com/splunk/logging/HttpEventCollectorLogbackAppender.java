@@ -119,6 +119,12 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
         super.start();
     }
 
+    public void flush() {
+        if (started) {
+            sender.flush();
+        }
+    }
+
     @Override
     public void stop() {
         if (!started)

@@ -14,6 +14,7 @@
  * under the License.
  */
 
+import java.rmi.server.ExportException;
 import java.util.*;
 
 import com.google.gson.JsonObject;
@@ -30,8 +31,8 @@ import org.slf4j.LoggerFactory;
 public final class HttpEventCollector_LogbackTest {
 
     private String httpEventCollectorName = "LogbackTest";
-    List<List<HttpEventCollectorEventInfo>> errors = new ArrayList<List<HttpEventCollectorEventInfo>>();
-    List<HttpEventCollectorErrorHandler.ServerErrorException> logEx = new ArrayList<HttpEventCollectorErrorHandler.ServerErrorException>();
+    List<List<HttpEventCollectorEventInfo>> errors = new ArrayList<>();
+    List<Exception> logEx = new ArrayList<>();
 
     /**
      * sending a message via httplogging using logback to splunk
@@ -260,8 +261,10 @@ public final class HttpEventCollector_LogbackTest {
         System.out.println("======print logEx");
         System.out.println(logEx.toString());
         System.out.println("======finish print logEx");
-        Assert.assertEquals("Invalid token", logEx.get(1).getErrorText());
-        Assert.assertEquals(4, logEx.get(1).getErrorCode());
+        // in this case expect a valid http reply with a json error message
+        HttpEventCollectorErrorHandler.ServerErrorException serverErrorException = (HttpEventCollectorErrorHandler.ServerErrorException) logEx.get(1);
+        Assert.assertEquals("Invalid token", serverErrorException.getErrorText());
+        Assert.assertEquals(4, serverErrorException.getErrorCode());
 
 
         for (List<HttpEventCollectorEventInfo> infos : errors) {
@@ -286,7 +289,7 @@ public final class HttpEventCollector_LogbackTest {
             public void error(final List<HttpEventCollectorEventInfo> data, final Exception ex) {
                 synchronized (errors) {
                     errors.add(data);
-                    logEx.add((HttpEventCollectorErrorHandler.ServerErrorException) ex);
+                    logEx.add(ex);
                 }
             }
         });

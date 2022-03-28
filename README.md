@@ -26,7 +26,7 @@ If you haven't already installed Splunk, download it
 [here](http://www.splunk.com/download). For more about installing and running
 Splunk and system requirements, see [Installing & Running Splunk](http://dev.splunk.com/view/SP-CAAADRV). Splunk logging for Java is tested with Splunk Enterprise 8.0 and 8.2.0.
 
-#### Java 
+#### Java
 
 You'll need Java version 8 or higher, from [OpenJDK](https://openjdk.java.net) or [Oracle](https://www.oracle.com/technetwork/java).
 

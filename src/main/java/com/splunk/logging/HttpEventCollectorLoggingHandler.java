@@ -157,6 +157,7 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
         String eventHeaderSerializer = getConfigurationProperty("eventHeaderSerializer", "");
         String middleware = getConfigurationProperty(MiddlewareTag, null);
         String eventBodySerializer = getConfigurationProperty("eventBodySerializer", null);
+        String errorCallbackClass = getConfigurationProperty("errorCallback", null);
 
         includeLoggerName = getConfigurationBooleanProperty(IncludeLoggerNameConfTag, true);
         includeThreadName = getConfigurationBooleanProperty(IncludeThreadNameConfTag, true);
@@ -207,6 +208,16 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
                 System.out.println(ex);
             }
         }
+
+        if (errorCallbackClass != null && !errorCallbackClass.isEmpty()) {
+            try {
+                HttpEventCollectorErrorHandler.registerClassName(errorCallbackClass);
+            } catch (final Exception ex) {
+                //output error msg but not fail, it will default to use the default EventHeaderSerializer
+                System.out.println(ex);
+            }
+        }
+
 
         // plug retries middleware
         if (retriesOnError > 0) {

@@ -18,6 +18,7 @@
               middleware="%user_middleware%"
               eventBodySerializer="%user_eventBodySerializer%"
               eventHeaderSerializer="%user_eventHeaderSerializer%"
+              errorCallback="%user_errorCallback%"
                 >
 
             <PatternLayout pattern="%m"/>

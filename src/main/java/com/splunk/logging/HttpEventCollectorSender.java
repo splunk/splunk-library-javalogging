@@ -401,10 +401,8 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
             }
 
             @Override
-            public void failed(Exception ex) {
-                HttpEventCollectorErrorHandler.error(
-                        events,
-                        new HttpEventCollectorErrorHandler.ServerErrorException(ex.getMessage()));
+            public void failed(Exception exception) {
+                HttpEventCollectorErrorHandler.error(events, exception);
             }
         });
     }

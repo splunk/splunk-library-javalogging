@@ -5,7 +5,9 @@
 
     <groupId>com.splunk.logging</groupId>
     <artifactId>splunk-library-javalogging</artifactId>
-    <version>1.11.4</version>
+
+    <version>1.12.0-SNAPSHOT</version>
+
     <packaging>jar</packaging>
 
     <name>Splunk Logging for Java</name>

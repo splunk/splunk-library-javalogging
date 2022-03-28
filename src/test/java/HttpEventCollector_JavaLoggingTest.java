@@ -31,7 +31,7 @@ public final class HttpEventCollector_JavaLoggingTest {
 
     private String httpEventCollectorName = "JavaLoggingTest";
     List<List<HttpEventCollectorEventInfo>> errors = new ArrayList<List<HttpEventCollectorEventInfo>>();
-    List<HttpEventCollectorErrorHandler.ServerErrorException> logEx = new ArrayList<HttpEventCollectorErrorHandler.ServerErrorException>();
+    List<Exception> logEx = new ArrayList<>();
 
     /**
      * sending a message via httplogging using java.logging to splunk
@@ -236,12 +236,10 @@ public final class HttpEventCollector_JavaLoggingTest {
         errors.clear();
         logEx.clear();
         //define error callback
-        HttpEventCollectorErrorHandler.onError(new HttpEventCollectorErrorHandler.ErrorCallback() {
-            public void error(final List<HttpEventCollectorEventInfo> data, final Exception ex) {
-                synchronized (errors) {
-                    errors.add(data);
-                    logEx.add((HttpEventCollectorErrorHandler.ServerErrorException) ex);
-                }
+        HttpEventCollectorErrorHandler.onError((data, ex) -> {
+            synchronized (errors) {
+                errors.add(data);
+                logEx.add(ex);
             }
         });
 
@@ -282,8 +280,10 @@ public final class HttpEventCollector_JavaLoggingTest {
         System.out.println("======print logEx");
         System.out.println(logEx.toString());
         System.out.println("======finish print logEx");
-        Assert.assertEquals("Invalid token", logEx.get(1).getErrorText());
-        Assert.assertEquals(4, logEx.get(1).getErrorCode());
+        // in this case expect a valid http reply with a json error message
+        HttpEventCollectorErrorHandler.ServerErrorException serverErrorException = (HttpEventCollectorErrorHandler.ServerErrorException) logEx.get(1);
+        Assert.assertEquals("Invalid token", serverErrorException.getErrorText());
+        Assert.assertEquals(4, serverErrorException.getErrorCode());
 
 
         for (List<HttpEventCollectorEventInfo> infos : errors) {
@@ -304,12 +304,10 @@ public final class HttpEventCollector_JavaLoggingTest {
         logEx.clear();
 
         //define error callback
-        HttpEventCollectorErrorHandler.onError(new HttpEventCollectorErrorHandler.ErrorCallback() {
-            public void error(final List<HttpEventCollectorEventInfo> data, final Exception ex) {
-                synchronized (errors) {
-                    errors.add(data);
-                    logEx.add((HttpEventCollectorErrorHandler.ServerErrorException) ex);
-                }
+        HttpEventCollectorErrorHandler.onError((data, ex) -> {
+            synchronized (errors) {
+                errors.add(data);
+                logEx.add(ex);
             }
         });
 

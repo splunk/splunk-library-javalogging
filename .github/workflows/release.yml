@@ -1,6 +1,6 @@
 on:
   release:
-    types: [published]
+    types: [ published ]
 
 name: Create Release
 
@@ -17,9 +17,18 @@ jobs:
           server-username: MAVEN_USERNAME
           server-password: MAVEN_PASSWORD
           server-id: splunk-artifactory
-
+      - name: build
+        run: mvn -B package --file pom.xml
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          #          body_path: ${{ github.workflow }}-CHANGELOG.txt
+          files: ./target/*.jar
+          draft: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Deploy to Artifactory
-        run: mvn --batch-mode deploy
+        run: mvn --batch-mode deploy -DbuildVersion=1.6.2
         env:
           MAVEN_USERNAME: ${{ secrets.ARTIFACTORY_USERNAME }}
           MAVEN_PASSWORD: ${{ secrets.ARTIFACTORY_PASSWORD }}

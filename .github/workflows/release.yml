@@ -17,12 +17,11 @@ jobs:
           server-username: MAVEN_USERNAME
           server-password: MAVEN_PASSWORD
           server-id: splunk-artifactory
-      - name: build
+      - name: Build
         run: mvn -B package --file pom.xml
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
-          #          body_path: ${{ github.workflow }}-CHANGELOG.txt
           files: ./target/*.jar
           draft: true
         env:

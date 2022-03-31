@@ -1,7 +1,7 @@
 name: Java CI with Maven
 
 on:
-  [push, pull_request]
+  [ push, pull_request ]
 
 jobs:
   unit-test:

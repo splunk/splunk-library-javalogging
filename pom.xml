@@ -6,13 +6,15 @@
 
     <groupId>com.splunk.logging</groupId>
     <artifactId>splunk-library-javalogging</artifactId>
-    <version>1.6.2</version>
+    <version>1.6.3</version>
     <packaging>jar</packaging>
 
     <name>Splunk Logging for Java</name>
     <url>http://dev.splunk.com/goto/sdk-slj</url>
 
-    <description>Library for structured, semantic logging of Common Information Model compliant events, meant for use with SLF4J.</description>
+    <description>Library for structured, semantic logging of Common Information Model compliant events, meant for use
+        with SLF4J.
+    </description>
 
     <properties>
         <maven.resources.overwrite>true</maven.resources.overwrite>

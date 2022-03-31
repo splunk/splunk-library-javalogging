@@ -1,5 +1,10 @@
 # Splunk Logging for Java Changelog
 
+## Version 1.6.3
+
+### Security Update
+* Log4j version has been upgraded to **v2.17.1**.
+
 ## Version 1.6.2-0-2
 
 ### Critical backport

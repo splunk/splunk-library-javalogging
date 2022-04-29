@@ -82,7 +82,6 @@ package com.splunk.logging;
 
 import com.splunk.logging.hec.MetadataTags;
 
-import java.io.*;
 import java.util.*;
 import java.util.logging.Handler;
 import java.util.logging.LogManager;
@@ -102,6 +101,7 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
     private final String IncludeExceptionConfTag = "include_exception";
     private final boolean includeException;
 
+
     private final String BatchDelayConfTag = "batch_interval";
     private final String BatchCountConfTag = "batch_size_count";
     private final String BatchSizeConfTag = "batch_size_bytes";
@@ -116,12 +116,8 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
     private final String WriteTimeoutConfTag = "write_timeout";
     private final String TerminationTimeoutConfTag = "termination_timeout";
 
-    private Properties properties;
-
     /** HttpEventCollectorLoggingHandler c-or */
     public HttpEventCollectorLoggingHandler() {
-        readConfigurationFile();
-
         // read configuration settings
         Map<String, String> metadata = new HashMap<>();
         metadata.put(MetadataTags.HOST,
@@ -146,10 +142,10 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
         // app token
         String token = getConfigurationProperty("token", null);
 
-        // app channel
+        //app channel
         String channel = getConfigurationProperty("channel", null);
 
-        // app type
+        //app type
         String type = getConfigurationProperty("type", null);
 
         // batching properties
@@ -191,7 +187,7 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
         // plug a user middleware
         if (middleware != null && !middleware.isEmpty()) {
             try {
-                this.sender.addMiddleware((HttpEventCollectorMiddleware.HttpSenderMiddleware) (Class.forName(middleware).newInstance()));
+                this.sender.addMiddleware((HttpEventCollectorMiddleware.HttpSenderMiddleware)(Class.forName(middleware).newInstance()));
             } catch (Exception ignored) {}
         }
 
@@ -199,7 +195,7 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
             try {
                 this.sender.setEventBodySerializer((EventBodySerializer) Class.forName(eventBodySerializer).newInstance());
             } catch (final Exception ex) {
-                // output error msg but not fail, it will default to use the default EventBodySerializer
+                //output error msg but not fail, it will default to use the default EventBodySerializer
                 System.out.println(ex);
             }
         }
@@ -208,7 +204,7 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
             try {
                 this.sender.setEventHeaderSerializer((EventHeaderSerializer) Class.forName(eventHeaderSerializer).newInstance());
             } catch (final Exception ex) {
-                // output error msg but not fail, it will default to use the default EventHeaderSerializer
+                //output error msg but not fail, it will default to use the default EventHeaderSerializer
                 System.out.println(ex);
             }
         }
@@ -217,10 +213,11 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
             try {
                 HttpEventCollectorErrorHandler.registerClassName(errorCallbackClass);
             } catch (final Exception ex) {
-                // output error msg but not fail, it will default to use the default EventHeaderSerializer
+                //output error msg but not fail, it will default to use the default EventHeaderSerializer
                 System.out.println(ex);
             }
         }
+
 
         // plug retries middleware
         if (retriesOnError > 0) {
@@ -267,17 +264,15 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
         this.sender.close();
     }
 
+
     // get configuration property from java.util.logging properties file,
     // defaultValue == null means that property is mandatory
-    private String getConfigurationProperty(final String property, final String defaultValue) {
-        String key = getClass().getName() + '.' + property;
-        String value = LogManager.getLogManager().getProperty(key);
-        if (value == null && properties != null) {
-            // Try finding the value into the provided configuration, if any
-            value = properties.getProperty(property);
-        }
+    private String getConfigurationProperty(
+            final String property, final String defaultValue) {
+        String value = LogManager.getLogManager().getProperty(
+                getClass().getName() + '.' + property
+        );
         if (value == null) {
-            // Otherwise defaulting to the provided defaultValue
             value = defaultValue;
         }
         return value;
@@ -290,23 +285,8 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
     }
 
     private boolean getConfigurationBooleanProperty(
-        final String property, boolean defaultValue) {
-    return Boolean.parseBoolean(
-            getConfigurationProperty(property, String.valueOf(defaultValue)));
-    }
-
-    private void readConfigurationFile() {
-        // read configuration file if it exists
-        String configFile = System.getProperty("splunk.handler.configuration.file");
-        if (configFile != null) {
-            File configFileLocation = new File(configFile);
-            this.properties = new Properties();
-            try (FileReader fileReader = new FileReader(configFileLocation)) {
-                this.properties.load(fileReader);
-            }
-            catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
+            final String property, boolean defaultValue) {
+        return Boolean.parseBoolean(
+                getConfigurationProperty(property, String.valueOf(defaultValue)));
     }
 }

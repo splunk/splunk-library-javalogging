@@ -238,7 +238,7 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
         this.sender.send(
         		record.getMillis(),
                 record.getLevel().toString(),
-                record.getMessage(),
+                getFormatter() == null ? record.getMessage() : getFormatter().format(record),
                 includeLoggerName ? record.getLoggerName() : null,
                 includeThreadName ? String.format(Locale.US, "%d", record.getThreadID()) : null,
                 null, // no property map available

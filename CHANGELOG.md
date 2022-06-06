@@ -5,10 +5,18 @@
 ### Critical Security Update
 * Bump Log4J version to latest 2.17.2 @see [CVE-2021-44832 Log4j<2.17.1](https://nvd.nist.gov/vuln/detail/CVE-2021-44832)
 * Bump Logback version to latest 1.2.11 @see [CVE-2021-42550 Logback<1.2.8](https://nvd.nist.gov/vuln/detail/CVE-2021-42550)
+
+### Enhancements
+* Added StandardErrorCallback class. Register ErrorCallback implementations via logback or log4j xml config. (PR [#215](https://github.com/splunk/splunk-library-javalogging/pull/215))
+  * ErrorCallback class used to handle error other than Server errors.
+
 ### Minor Changes
 * Bump org.slf4j:slf4j-api version to latest [1.7.36](https://github.com/qos-ch/slf4j/releases/tag/v_1.7.36)
 * Bump com.squareup.okhttp3:okhttp to latest [4.9.3](https://square.github.io/okhttp/changelogs/changelog_4x/#version-493)
 * Bump com.google.code.gson:gson to latest [2.9.0](https://github.com/google/gson/releases/tag/gson-parent-2.9.0)
+* Flush HttpClient after flushing appenders. (PR [#207](https://github.com/splunk/splunk-library-javalogging/pull/207))
+* Timeout settings modified for OKHttpClient. (PR [#199](https://github.com/splunk/splunk-library-javalogging/pull/199))
+* Default behavior of Splunk event header & body are reverted back to v1.7.3. (PR [#198](https://github.com/splunk/splunk-library-javalogging/pull/198))
 
 ## Version 1.11.4
 

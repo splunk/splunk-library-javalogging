@@ -51,6 +51,43 @@ If you're using the Log4j 2, Simple Logging Facade for Java (SLF4J), or Logback 
 * For more about about Splunk in general, see
   [Splunk>Docs](http://docs.splunk.com/Documentation/Splunk).
 
+## Dependency Management
+
+The `splunk-library-javalogging` artifact can be accessed via Splunk's managed Maven repoitory.
+
+### Apache Maven
+
+First define the repository as follows
+
+```xml
+...
+  <repositories>
+    <repository>
+        <id>splunk-artifactory</id>
+        <name>Splunk Releases</name>
+        <url>https://splunk.jfrog.io/splunk/ext-releases-local</url>
+    </repository>
+  </repositories>
+...
+```
+
+... then reference the dependency as follows
+
+```xml
+...
+  <dependencies>
+    <dependency>
+      <groupId>com.splunk.logging</groupId>
+      <artifactId>splunk-library-javalogging</artifactId>
+      <version>${latest.version}</version>
+    </dependency>
+    ...
+  </dependencies>
+...
+```
+
+The above can be adapted to suit Other dependency management implementations as necessary.
+
 ## License
 
 Splunk logging for Java is licensed under the Apache License 2.0.

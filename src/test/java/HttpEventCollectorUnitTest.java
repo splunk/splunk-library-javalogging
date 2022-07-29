@@ -16,22 +16,16 @@
  * under the License.
  */
 
-import java.io.IOException;
-import java.io.OutputStream;
-import java.net.InetSocketAddress;
-
 import com.splunk.logging.HttpEventCollectorErrorHandler;
 import com.splunk.logging.HttpEventCollectorEventInfo;
 import org.junit.Assert;
 import org.junit.Test;
-import sun.rmi.runtime.Log;
 
 import java.io.ByteArrayInputStream;
-import java.util.Date;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.logging.LogManager;
-import java.util.logging.Logger;
 
 public class HttpEventCollectorUnitTest {
     @Test
@@ -43,19 +37,20 @@ public class HttpEventCollectorUnitTest {
         userInputs.put("user_middleware", "HttpEventCollectorUnitTestMiddleware");
         userInputs.put("user_batch_size_count", "1");
         userInputs.put("user_batch_size_bytes", "0");
-        userInputs.put("user_eventBodySerializer", "DoesNotExistButShouldNotCrashTest");
-        userInputs.put("user_eventHeaderSerializer", "DoesNotExistButShouldNotCrashTest");
+        userInputs.put("user_eventBodySerializer", "BodySerializerDoesNotExistButShouldNotCrashTest");
+        userInputs.put("user_eventHeaderSerializer", "HeaderSerializerDoesNotExistButShouldNotCrashTest");
+        userInputs.put("user_errorCallback", "ErrorCallbackHeaderSerializerDoesNotExistButShouldNotCrashTest");
         TestUtil.resetLog4j2Configuration("log4j2_template.xml", "log4j2.xml", userInputs);
         org.apache.logging.log4j.Logger LOG4J = org.apache.logging.log4j.LogManager.getLogger(loggerName);
 
         // send 3 events
-        HttpEventCollectorUnitTestMiddleware.eventsReceived = 0;
+        HttpEventCollectorUnitTestMiddleware.resetCounters();
         HttpEventCollectorUnitTestMiddleware.io = new HttpEventCollectorUnitTestMiddleware.IO() {
             @Override
             public void input(List<HttpEventCollectorEventInfo> events) {
-                Assert.assertTrue(events.size() == 1);
-                Assert.assertTrue(events.get(0).getMessage().compareTo("hello log4j") == 0);
-                Assert.assertTrue(events.get(0).getSeverity().compareTo("INFO") == 0);
+                Assert.assertEquals(1, events.size());
+                Assert.assertEquals(0, events.get(0).getMessage().compareTo("hello log4j"));
+                Assert.assertEquals(0, events.get(0).getSeverity().compareTo("INFO"));
             }
         };
         LOG4J.info("hello log4j");
@@ -63,7 +58,40 @@ public class HttpEventCollectorUnitTest {
         LOG4J.info("hello log4j");
         if (HttpEventCollectorUnitTestMiddleware.eventsReceived == 0)
             sleep(15000);
-        Assert.assertTrue(HttpEventCollectorUnitTestMiddleware.eventsReceived == 3);
+        Assert.assertEquals(3, HttpEventCollectorUnitTestMiddleware.eventsReceived);
+        Assert.assertEquals(0, HttpEventCollectorUnitTestMiddleware.eventsWithFailures);
+    }
+
+    @Test
+    public void log4j_simple_with_errorCallback() throws Exception {
+        HashMap<String, String> userInputs = new HashMap<>();
+        String loggerName = "splunk.log4jSimple";
+        userInputs.put("user_logger_name", loggerName);
+        userInputs.put("user_httpEventCollector_token", "11111111-2222-3333-4444-555555555555");
+        userInputs.put("user_middleware", "HttpEventCollectorUnitTestMiddleware");
+        userInputs.put("user_batch_size_count", "1");
+        userInputs.put("user_batch_size_bytes", "0");
+        userInputs.put("user_eventBodySerializer", "BodySerializerDoesNotExistButShouldNotCrashTest");
+        userInputs.put("user_eventHeaderSerializer", "HeaderSerializerDoesNotExistButShouldNotCrashTest");
+        userInputs.put("user_errorCallback", "com.splunk.logging.util.StandardErrorCallback");
+        TestUtil.resetLog4j2Configuration("log4j2_template.xml", "log4j2.xml", userInputs);
+        org.apache.logging.log4j.Logger LOG4J = org.apache.logging.log4j.LogManager.getLogger(loggerName);
+
+        // send 3 events
+        HttpEventCollectorUnitTestMiddleware.resetCounters();
+        HttpEventCollectorUnitTestMiddleware.io = new HttpEventCollectorUnitTestMiddleware.IO() {
+            @Override
+            public void input(List<HttpEventCollectorEventInfo> events) {
+            }
+
+            @Override
+            public HttpEventCollectorUnitTestMiddleware.HttpResponse output() {
+                throw new IllegalArgumentException("call failure");
+            }
+        };
+        LOG4J.info("hello log4j");
+        Assert.assertEquals(1, HttpEventCollectorUnitTestMiddleware.eventsReceived);
+        Assert.assertEquals(1, HttpEventCollectorUnitTestMiddleware.eventsWithFailures);
     }
 
     @Test
@@ -73,26 +101,28 @@ public class HttpEventCollectorUnitTest {
         userInputs.put("user_logger_name", loggerName);
         userInputs.put("user_httpEventCollector_token", "11111111-2222-3333-4444-555555555555");
         userInputs.put("user_middleware", "HttpEventCollectorUnitTestMiddleware");
-        userInputs.put("user_eventBodySerializer", "DoesNotExistButShouldNotCrashTest");
-        userInputs.put("user_eventHeaderSerializer", "DoesNotExistButShouldNotCrashTest");
+        userInputs.put("user_eventBodySerializer", "BodySerializerDoesNotExistButShouldNotCrashTest");
+        userInputs.put("user_eventHeaderSerializer", "HeaderSerializerDoesNotExistButShouldNotCrashTest");
+        userInputs.put("user_errorCallback", "ErrorCallbackDoesNotExistButShouldNotCrashTest");
         TestUtil.resetLogbackConfiguration("logback_template.xml", "logback.xml", userInputs);
         org.slf4j.Logger LOGBACK = org.slf4j.LoggerFactory.getLogger(loggerName);
 
         // send 3 events
-        HttpEventCollectorUnitTestMiddleware.eventsReceived = 0;
+        HttpEventCollectorUnitTestMiddleware.resetCounters();;
         HttpEventCollectorUnitTestMiddleware.io = new HttpEventCollectorUnitTestMiddleware.IO() {
             @Override
             public void input(List<HttpEventCollectorEventInfo> events) {
-                Assert.assertTrue(events.size() == 1);
-                Assert.assertTrue(events.get(0).getMessage().compareTo("hello logback") == 0);
-                Assert.assertTrue(events.get(0).getSeverity().compareTo("ERROR") == 0);
-                Assert.assertTrue(events.get(0).getLoggerName().compareTo(loggerName) == 0);
+                Assert.assertEquals(1, events.size());
+                Assert.assertEquals(0, events.get(0).getMessage().compareTo("hello logback"));
+                Assert.assertEquals(0, events.get(0).getSeverity().compareTo("ERROR"));
+                Assert.assertEquals(0, events.get(0).getLoggerName().compareTo(loggerName));
             }
         };
         LOGBACK.error("hello logback");
         LOGBACK.error("hello logback");
         LOGBACK.error("hello logback");
-        Assert.assertTrue(HttpEventCollectorUnitTestMiddleware.eventsReceived == 3);
+        Assert.assertEquals(3, HttpEventCollectorUnitTestMiddleware.eventsReceived);
+        Assert.assertEquals(0, HttpEventCollectorUnitTestMiddleware.eventsWithFailures);
     }
 
     @Test
@@ -106,24 +136,26 @@ public class HttpEventCollectorUnitTest {
             "com.splunk.logging.HttpEventCollectorLoggingHandler.batch_size_bytes=0\n" +
             "com.splunk.logging.HttpEventCollectorLoggingHandler.batch_interval=0\n" +
             "com.splunk.logging.HttpEventCollectorLoggingHandler.middleware=HttpEventCollectorUnitTestMiddleware\n" +
-            "com.splunk.logging.HttpEventCollectorLoggingHandler.eventBodySerializer=DoesNotExistButShouldNotCrashTest\n" +
-            "com.splunk.logging.HttpEventCollectorLoggingHandler.eventHeaderSerializer=DoesNotExistButShouldNotCrashTest\n"
+            "com.splunk.logging.HttpEventCollectorLoggingHandler.errorCallback=com.splunk.logging.util.StandardErrorCallback\n" +
+            "com.splunk.logging.HttpEventCollectorLoggingHandler.eventBodySerializer=BodySerializerDoesNotExistButShouldNotCrashTest\n" +
+            "com.splunk.logging.HttpEventCollectorLoggingHandler.eventHeaderSerializer=HeaderSerializerDoesNotExistButShouldNotCrashTest\n"
         );
 
         // send 3 events
-        HttpEventCollectorUnitTestMiddleware.eventsReceived = 0;
+        HttpEventCollectorUnitTestMiddleware.resetCounters();
         HttpEventCollectorUnitTestMiddleware.io = new HttpEventCollectorUnitTestMiddleware.IO() {
             @Override
             public void input(List<HttpEventCollectorEventInfo> events) {
-                Assert.assertTrue(events.size() == 1);
-                Assert.assertTrue(events.get(0).getMessage().compareTo("hello java logger") == 0);
-                Assert.assertTrue(events.get(0).getSeverity().compareTo("WARNING") == 0);
+                Assert.assertEquals(1, events.size());
+                Assert.assertEquals(0, events.get(0).getMessage().compareTo("hello java logger"));
+                Assert.assertEquals(0, events.get(0).getSeverity().compareTo("WARNING"));
             }
         };
         LOGGER.warning("hello java logger");
         LOGGER.warning("hello java logger");
         LOGGER.warning("hello java logger");
-        Assert.assertTrue(HttpEventCollectorUnitTestMiddleware.eventsReceived == 3);
+        Assert.assertEquals(3, HttpEventCollectorUnitTestMiddleware.eventsReceived);
+        Assert.assertEquals(0, HttpEventCollectorUnitTestMiddleware.eventsWithFailures);
     }
 
     @Test
@@ -140,7 +172,7 @@ public class HttpEventCollectorUnitTest {
         );
 
         // mimic server 404
-        HttpEventCollectorUnitTestMiddleware.eventsReceived = 0;
+        HttpEventCollectorUnitTestMiddleware.resetCounters();
         HttpEventCollectorUnitTestMiddleware.io = new HttpEventCollectorUnitTestMiddleware.IO() {
             @Override
             public HttpEventCollectorUnitTestMiddleware.HttpResponse output() {
@@ -149,16 +181,15 @@ public class HttpEventCollectorUnitTest {
                 );
             }
         };
-        HttpEventCollectorErrorHandler.onError(new HttpEventCollectorErrorHandler.ErrorCallback() {
-            public void error(final List<HttpEventCollectorEventInfo> data, final Exception ex) {
-                HttpEventCollectorErrorHandler.ServerErrorException serverErrorException =
-                        (HttpEventCollectorErrorHandler.ServerErrorException) ex;
-                Assert.assertTrue(serverErrorException.getReply().compareTo("{\"text\":\"error\",\"code\":4}") == 0);
-                Assert.assertTrue(serverErrorException.getErrorCode() == 4);
-            }
+        HttpEventCollectorErrorHandler.onError((data, ex) -> {
+            HttpEventCollectorErrorHandler.ServerErrorException serverErrorException =
+                    (HttpEventCollectorErrorHandler.ServerErrorException) ex;
+            Assert.assertEquals(0, serverErrorException.getReply().compareTo("{\"text\":\"error\",\"code\":4}"));
+            Assert.assertEquals(4, serverErrorException.getErrorCode());
         });
         LOGGER.info("hello");
-        Assert.assertTrue(HttpEventCollectorUnitTestMiddleware.eventsReceived == 1);
+        Assert.assertEquals(1, HttpEventCollectorUnitTestMiddleware.eventsReceived);
+        Assert.assertEquals(1, HttpEventCollectorUnitTestMiddleware.eventsWithFailures);
     }
 
     @Test
@@ -175,13 +206,13 @@ public class HttpEventCollectorUnitTest {
             "com.splunk.logging.HttpEventCollectorLoggingHandler.retries_on_error=2\n"
         );
 
-        HttpEventCollectorUnitTestMiddleware.eventsReceived = 0;
+        HttpEventCollectorUnitTestMiddleware.resetCounters();
         HttpEventCollectorUnitTestMiddleware.io = new HttpEventCollectorUnitTestMiddleware.IO() {
             int retries = 0;
             @Override
             public void input(List<HttpEventCollectorEventInfo> events) {
-                Assert.assertTrue(events.get(0).getMessage().compareTo("hello") == 0);
-                Assert.assertTrue(events.get(0).getSeverity().compareTo("INFO") == 0);
+                Assert.assertEquals(0, events.get(0).getMessage().compareTo("hello"));
+                Assert.assertEquals(0, events.get(0).getSeverity().compareTo("INFO"));
             }
             @Override
             public HttpEventCollectorUnitTestMiddleware.HttpResponse output() {
@@ -198,7 +229,8 @@ public class HttpEventCollectorUnitTest {
         };
         LOGGER.info("hello");
         // the system should make 2 retries
-        Assert.assertTrue(HttpEventCollectorUnitTestMiddleware.eventsReceived == 2);
+        Assert.assertEquals(2, HttpEventCollectorUnitTestMiddleware.eventsReceived);
+        Assert.assertEquals(1, HttpEventCollectorUnitTestMiddleware.eventsWithFailures);
     }
 
     @Test
@@ -215,12 +247,12 @@ public class HttpEventCollectorUnitTest {
             "com.splunk.logging.HttpEventCollectorLoggingHandler.retries_on_error=2\n"
         );
 
-        HttpEventCollectorUnitTestMiddleware.eventsReceived = 0;
+        HttpEventCollectorUnitTestMiddleware.resetCounters();
         HttpEventCollectorUnitTestMiddleware.io = new HttpEventCollectorUnitTestMiddleware.IO() {
             @Override
             public void input(List<HttpEventCollectorEventInfo> events) {
-                Assert.assertTrue(events.get(0).getMessage().compareTo("hello") == 0);
-                Assert.assertTrue(events.get(0).getSeverity().compareTo("INFO") == 0);
+                Assert.assertEquals(0, events.get(0).getMessage().compareTo("hello"));
+                Assert.assertEquals(0, events.get(0).getSeverity().compareTo("INFO"));
             }
             @Override
             public HttpEventCollectorUnitTestMiddleware.HttpResponse output() {
@@ -236,7 +268,7 @@ public class HttpEventCollectorUnitTest {
         });
         LOGGER.info("hello");
         // the system should make only 2 retries and stop after that
-        Assert.assertTrue(HttpEventCollectorUnitTestMiddleware.eventsReceived == 3);
+        Assert.assertEquals(3, HttpEventCollectorUnitTestMiddleware.eventsReceived);
     }
 
     @Test
@@ -250,20 +282,21 @@ public class HttpEventCollectorUnitTest {
             "com.splunk.logging.HttpEventCollectorLoggingHandler.batch_size_count=3\n"
         );
 
-        HttpEventCollectorUnitTestMiddleware.eventsReceived = 0;
+        HttpEventCollectorUnitTestMiddleware.resetCounters();
         HttpEventCollectorUnitTestMiddleware.io = new HttpEventCollectorUnitTestMiddleware.IO() {
             @Override
             public void input(List<HttpEventCollectorEventInfo> events) {
-                Assert.assertTrue(events.size() == 3);
-                Assert.assertTrue(events.get(0).getMessage().compareTo("one") == 0);
-                Assert.assertTrue(events.get(1).getMessage().compareTo("two") == 0);
-                Assert.assertTrue(events.get(2).getMessage().compareTo("three") == 0);
+                Assert.assertEquals(3, events.size());
+                Assert.assertEquals(0, events.get(0).getMessage().compareTo("one"));
+                Assert.assertEquals(0, events.get(1).getMessage().compareTo("two"));
+                Assert.assertEquals(0, events.get(2).getMessage().compareTo("three"));
             }
         };
         LOGGER.info("one");
         LOGGER.info("two");
         LOGGER.info("three");
-        Assert.assertTrue(HttpEventCollectorUnitTestMiddleware.eventsReceived == 3);
+        Assert.assertEquals(3, HttpEventCollectorUnitTestMiddleware.eventsReceived);
+        Assert.assertEquals(0, HttpEventCollectorUnitTestMiddleware.eventsWithFailures);
     }
 
     @Test
@@ -276,7 +309,7 @@ public class HttpEventCollectorUnitTest {
                 "com.splunk.logging.HttpEventCollectorLoggingHandler.middleware=HttpEventCollectorUnitTestMiddleware\n"
         );
         final int DefaultBatchCount = 10;
-        HttpEventCollectorUnitTestMiddleware.eventsReceived = 0;
+        HttpEventCollectorUnitTestMiddleware.resetCounters();
         HttpEventCollectorUnitTestMiddleware.io = new HttpEventCollectorUnitTestMiddleware.IO() {
             @Override
             public void input(List<HttpEventCollectorEventInfo> events) {
@@ -286,7 +319,8 @@ public class HttpEventCollectorUnitTest {
         for (int i = 0; i < DefaultBatchCount * 100; i ++) {
             LOGGER.info("*");
         }
-        Assert.assertTrue(HttpEventCollectorUnitTestMiddleware.eventsReceived == DefaultBatchCount * 100);
+        Assert.assertEquals(DefaultBatchCount * 100, HttpEventCollectorUnitTestMiddleware.eventsReceived);
+        Assert.assertEquals(0, HttpEventCollectorUnitTestMiddleware.eventsWithFailures);
     }
 
     @Test
@@ -299,17 +333,18 @@ public class HttpEventCollectorUnitTest {
                 "com.splunk.logging.HttpEventCollectorLoggingHandler.middleware=HttpEventCollectorUnitTestMiddleware\n"
         );
         final int DefaultBatchSize = 10 * 1024;
-        HttpEventCollectorUnitTestMiddleware.eventsReceived = 0;
+        HttpEventCollectorUnitTestMiddleware.resetCounters();
         HttpEventCollectorUnitTestMiddleware.io = new HttpEventCollectorUnitTestMiddleware.IO() {
             @Override
             public void input(List<HttpEventCollectorEventInfo> events) {
-                Assert.assertTrue(events.size() == 1);
+                Assert.assertEquals(1, events.size());
             }
         };
         for (int i = 0; i < 10; i ++) {
             LOGGER.info(repeat("x", DefaultBatchSize));
         }
-        Assert.assertTrue(HttpEventCollectorUnitTestMiddleware.eventsReceived == 10);
+        Assert.assertEquals(10, HttpEventCollectorUnitTestMiddleware.eventsReceived);
+        Assert.assertEquals(0, HttpEventCollectorUnitTestMiddleware.eventsWithFailures);
     }
 
     @Test
@@ -322,18 +357,20 @@ public class HttpEventCollectorUnitTest {
                 "com.splunk.logging.HttpEventCollectorLoggingHandler.middleware=HttpEventCollectorUnitTestMiddleware\n"
         );
         final int DefaultInterval = 10000;
-        HttpEventCollectorUnitTestMiddleware.eventsReceived = 0;
+        HttpEventCollectorUnitTestMiddleware.resetCounters();
         HttpEventCollectorUnitTestMiddleware.io = new HttpEventCollectorUnitTestMiddleware.IO() {
             @Override
             public void input(List<HttpEventCollectorEventInfo> events) {
-                Assert.assertTrue(events.size() == 1);
+                Assert.assertEquals(1, events.size());
             }
         };
         LOGGER.info("=|:-)");
         sleep(DefaultInterval / 2);
         Assert.assertTrue(HttpEventCollectorUnitTestMiddleware.eventsReceived == 0);
+        Assert.assertEquals(0, HttpEventCollectorUnitTestMiddleware.eventsWithFailures);
         sleep(DefaultInterval);
         Assert.assertTrue(HttpEventCollectorUnitTestMiddleware.eventsReceived == 1);
+        Assert.assertEquals(0, HttpEventCollectorUnitTestMiddleware.eventsWithFailures);
     }
 
     //--------------------------------------------------------------------------

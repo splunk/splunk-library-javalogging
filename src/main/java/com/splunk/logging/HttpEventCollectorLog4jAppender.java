@@ -148,6 +148,7 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
             @PluginAttribute("disableCertificateValidation") final String disableCertificateValidation,
             @PluginAttribute("eventBodySerializer") final String eventBodySerializer,
             @PluginAttribute("eventHeaderSerializer") final String eventHeaderSerializer,
+            @PluginAttribute("errorCallback") final String errorCallback,
             @PluginAttribute(value = "includeLoggerName", defaultBoolean = true) final boolean includeLoggerName,
             @PluginAttribute(value = "includeThreadName", defaultBoolean = true) final boolean includeThreadName,
             @PluginAttribute(value = "includeMDC", defaultBoolean = true) final boolean includeMDC,
@@ -157,6 +158,7 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
             @PluginAttribute(value = "call_timeout", defaultLong = HttpEventCollectorSender.TimeoutSettings.DEFAULT_CALL_TIMEOUT) final long callTimeout,
             @PluginAttribute(value = "read_timeout", defaultLong = HttpEventCollectorSender.TimeoutSettings.DEFAULT_READ_TIMEOUT) final long readTimeout,
             @PluginAttribute(value = "write_timeout", defaultLong = HttpEventCollectorSender.TimeoutSettings.DEFAULT_WRITE_TIMEOUT) final long writeTimeout,
+            @PluginAttribute(value = "termination_timeout", defaultLong = HttpEventCollectorSender.TimeoutSettings.DEFAULT_TERMINATION_TIMEOUT) final long terminationTimeout,
             @PluginElement("Layout") Layout<? extends Serializable> layout,
             @PluginElement("Filter") final Filter filter
     )
@@ -202,6 +204,10 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
                     .build();
         }
 
+        if (errorCallback != null) {
+            HttpEventCollectorErrorHandler.registerClassName(errorCallback);
+        }
+
         final boolean ignoreExceptionsBool = Boolean.getBoolean(ignoreExceptions);
 
         return new HttpEventCollectorLog4jAppender(
@@ -219,7 +225,7 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
                 disableCertificateValidation,
                 eventBodySerializer,
                 eventHeaderSerializer,
-                new HttpEventCollectorSender.TimeoutSettings(connectTimeout, callTimeout, readTimeout, writeTimeout)
+                new HttpEventCollectorSender.TimeoutSettings(connectTimeout, callTimeout, readTimeout, writeTimeout, terminationTimeout)
         );
     }
 
@@ -233,6 +239,7 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
     {
         // if an exception was thrown
         this.sender.send(
+        		event.getTimeMillis(),
                 event.getLevel().toString(),
                 getLayout().toSerializable(event).toString(),
                 includeLoggerName ? event.getLoggerName() : null,
@@ -241,6 +248,10 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
                 (!includeException || event.getThrown() == null) ? null : event.getThrown().getMessage(),
                 includeMarker ? event.getMarker() : null
         );
+    }
+
+    public void flush() {
+        sender.flush();
     }
 
     @Override

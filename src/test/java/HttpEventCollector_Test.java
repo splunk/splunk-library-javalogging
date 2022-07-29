@@ -200,13 +200,11 @@ public class HttpEventCollector_Test {
     }
 
     private void LogToSplunk(boolean batching) throws Exception {
-        HttpEventCollectorErrorHandler.onError(new HttpEventCollectorErrorHandler.ErrorCallback() {
-            public void error(final List<HttpEventCollectorEventInfo> data, final Exception ex) {
-                HttpEventCollectorErrorHandler.ServerErrorException serverErrorException =
-                        (HttpEventCollectorErrorHandler.ServerErrorException) ex;
-                System.out.printf("ERROR: %s", ex.toString());
-                Assert.assertTrue(false);
-            }
+        HttpEventCollectorErrorHandler.onError((data, ex) -> {
+            HttpEventCollectorErrorHandler.ServerErrorException serverErrorException =
+                    (HttpEventCollectorErrorHandler.ServerErrorException) ex;
+            System.out.printf("ERROR: %s", ex.toString());
+            Assert.assertTrue(false);
         });
         int expectedCounter = 2;
         System.out.printf("\tSetting up http event collector with %s ... ", batching ? "batching" : "no batching");
@@ -265,13 +263,11 @@ public class HttpEventCollector_Test {
     @Test
     public  void ResendDataToSplunk() throws  Exception
     {
-        HttpEventCollectorErrorHandler.onError(new HttpEventCollectorErrorHandler.ErrorCallback() {
-            public void error(final List<HttpEventCollectorEventInfo> data, final Exception ex) {
-                HttpEventCollectorErrorHandler.ServerErrorException serverErrorException =
-                        (HttpEventCollectorErrorHandler.ServerErrorException) ex;
-                System.out.printf("ERROR: %s", ex.toString());
-                Assert.assertTrue(false);
-            }
+        HttpEventCollectorErrorHandler.onError((data, ex) -> {
+            HttpEventCollectorErrorHandler.ServerErrorException serverErrorException =
+                    (HttpEventCollectorErrorHandler.ServerErrorException) ex;
+            System.out.printf("ERROR: %s", ex.toString());
+            Assert.assertTrue(false);
         });
         boolean batching = false;
         System.out.printf("\tSetting up http event collector with %s ... ", batching ? "batching" : "no batching");

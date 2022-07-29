@@ -31,11 +31,22 @@ public class HttpEventCollectorUnitTestMiddleware extends HttpEventCollectorMidd
                            HttpEventCollectorMiddleware.IHttpSenderCallback callback) {
         eventsReceived += events.size();
         io.input(events);
-        HttpResponse response = io.output();
-        if (response.status > 0)
-            callback.completed(response.status, response.reply);
-        else
-            callback.failed(new Exception(response.reply));
+        try {
+            HttpResponse response = io.output();
+            if (response.status > 0) {
+                // this is what actually happens within the callback completed
+                // but then we cannot count the eventsWithFailures
+                if (response.status != 200) { eventsWithFailures = eventsWithFailures + 1;}
+                callback.completed(response.status, response.reply);
+            }
+            else {
+                eventsWithFailures = eventsWithFailures + 1;
+                callback.failed(new Exception(response.reply));
+            }
+        } catch (Exception exception) {
+            eventsWithFailures = eventsWithFailures + 1;
+            callback.failed(exception);
+        }
     }
 
     public static class HttpResponse {
@@ -56,4 +67,10 @@ public class HttpEventCollectorUnitTestMiddleware extends HttpEventCollectorMidd
     public static IO io = new IO();
 
     public static int eventsReceived = 0;
+    public static int eventsWithFailures = 0;
+
+    public static void resetCounters() {
+        eventsReceived = 0;
+        eventsWithFailures = 0;
+    }
 }

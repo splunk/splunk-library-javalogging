@@ -47,6 +47,7 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
     private String _middleware;
     private String _eventBodySerializer;
     private String _eventHeaderSerializer;
+    private String _errorCallback;
     private long _batchInterval = 0;
     private long _batchCount = 0;
     private long _batchSize = 0;
@@ -107,6 +108,10 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
             } catch (final Exception ignored) {}
         }
 
+        if (_errorCallback != null && !_errorCallback.isEmpty()) {
+            HttpEventCollectorErrorHandler.registerClassName(_errorCallback);
+        }
+
         // plug resend middleware
         if (_retriesOnError > 0) {
             this.sender.addMiddleware(new HttpEventCollectorResendMiddleware(_retriesOnError));
@@ -117,6 +122,12 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
         }
 
         super.start();
+    }
+
+    public void flush() {
+        if (started) {
+            sender.flush();
+        }
     }
 
     @Override
@@ -145,6 +156,7 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
         MarkerConverter c = new MarkerConverter();
         if (this.started) {
             this.sender.send(
+            		event.getTimeStamp(),
                     event.getLevel().toString(),
                     _layout.doLayout((E) event),
                     _includeLoggerName ? event.getLoggerName() : null,
@@ -304,6 +316,10 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
         return _eventHeaderSerializer;
     }
 
+    public String getErrorHandler(String errorHandlerClass) {
+        return this._errorCallback;
+    }
+
     public void setDisableCertificateValidation(String disableCertificateValidation) {
         this._disableCertificateValidation = disableCertificateValidation;
     }
@@ -350,6 +366,14 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
         this._eventHeaderSerializer = eventHeaderSerializer;
     }
 
+    public void setErrorCallback(String errorHandlerClass) {
+        this._errorCallback = errorHandlerClass;
+    }
+
+    public String getErrorCallback() {
+        return this._errorCallback;
+    }
+
     public void setConnectTimeout(long milliseconds) {
         this.timeoutSettings.connectTimeout = milliseconds;
     }
@@ -381,6 +405,14 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
 
     public long getWriteTimeout(long milliseconds) {
         return this.timeoutSettings.writeTimeout = milliseconds;
+    }
+
+    public void setTerminationTimeout(long milliseconds) {
+        this.timeoutSettings.terminationTimeout = milliseconds;
+    }
+
+    public long getTerminationTimeout(long milliseconds) {
+        return this.timeoutSettings.terminationTimeout = milliseconds;
     }
 
     private static long parseLong(String string, int defaultValue) {

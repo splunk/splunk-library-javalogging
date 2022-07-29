@@ -114,6 +114,7 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
     private final String CallTimeoutConfTag = "call_timeout";
     private final String ReadTimeoutConfTag = "read_timeout";
     private final String WriteTimeoutConfTag = "write_timeout";
+    private final String TerminationTimeoutConfTag = "termination_timeout";
 
     /** HttpEventCollectorLoggingHandler c-or */
     public HttpEventCollectorLoggingHandler() {
@@ -156,6 +157,7 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
         String eventHeaderSerializer = getConfigurationProperty("eventHeaderSerializer", "");
         String middleware = getConfigurationProperty(MiddlewareTag, null);
         String eventBodySerializer = getConfigurationProperty("eventBodySerializer", null);
+        String errorCallbackClass = getConfigurationProperty("errorCallback", null);
 
         includeLoggerName = getConfigurationBooleanProperty(IncludeLoggerNameConfTag, true);
         includeThreadName = getConfigurationBooleanProperty(IncludeThreadNameConfTag, true);
@@ -165,7 +167,8 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
             getConfigurationNumericProperty(ConnectTimeoutConfTag, HttpEventCollectorSender.TimeoutSettings.DEFAULT_CONNECT_TIMEOUT),
             getConfigurationNumericProperty(CallTimeoutConfTag, HttpEventCollectorSender.TimeoutSettings.DEFAULT_CALL_TIMEOUT),
             getConfigurationNumericProperty(ReadTimeoutConfTag, HttpEventCollectorSender.TimeoutSettings.DEFAULT_READ_TIMEOUT),
-            getConfigurationNumericProperty(WriteTimeoutConfTag, HttpEventCollectorSender.TimeoutSettings.DEFAULT_WRITE_TIMEOUT)
+            getConfigurationNumericProperty(WriteTimeoutConfTag, HttpEventCollectorSender.TimeoutSettings.DEFAULT_WRITE_TIMEOUT),
+            getConfigurationNumericProperty(TerminationTimeoutConfTag, HttpEventCollectorSender.TimeoutSettings.DEFAULT_TERMINATION_TIMEOUT)
         );
 
         if ("raw".equalsIgnoreCase(type)) {
@@ -206,6 +209,16 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
             }
         }
 
+        if (errorCallbackClass != null && !errorCallbackClass.isEmpty()) {
+            try {
+                HttpEventCollectorErrorHandler.registerClassName(errorCallbackClass);
+            } catch (final Exception ex) {
+                //output error msg but not fail, it will default to use the default EventHeaderSerializer
+                System.out.println(ex);
+            }
+        }
+
+
         // plug retries middleware
         if (retriesOnError > 0) {
             this.sender.addMiddleware(new HttpEventCollectorResendMiddleware(retriesOnError));
@@ -223,6 +236,7 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
     @Override
     public void publish(LogRecord record) {
         this.sender.send(
+        		record.getMillis(),
                 record.getLevel().toString(),
                 record.getMessage(),
                 includeLoggerName ? record.getLoggerName() : null,

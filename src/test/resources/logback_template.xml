@@ -18,6 +18,7 @@
         <middleware>%user_middleware%</middleware>
         <eventBodySerializer>%user_eventBodySerializer%</eventBodySerializer>
         <eventHeaderSerializer>%user_eventHeaderSerializer%</eventHeaderSerializer>
+        <errorCallback>%user_errorCallback%</errorCallback>
 
         <layout class="ch.qos.logback.classic.PatternLayout">
             <pattern>%msg</pattern>

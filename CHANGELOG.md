@@ -1,5 +1,65 @@
 # Splunk Logging for Java Changelog
 
+## Version 1.11.5
+
+### Critical Security Update
+* Bump Log4J version to latest 2.17.2 @see [CVE-2021-44832 Log4j<2.17.1](https://nvd.nist.gov/vuln/detail/CVE-2021-44832)
+* Bump Logback version to latest 1.2.11 @see [CVE-2021-42550 Logback<1.2.8](https://nvd.nist.gov/vuln/detail/CVE-2021-42550)
+
+### Enhancements
+* Added StandardErrorCallback class. Register ErrorCallback implementations via logback or log4j xml config. (PR [#215](https://github.com/splunk/splunk-library-javalogging/pull/215))
+  * ErrorCallback class used to handle error other than Server errors.
+
+### Minor Changes
+* Bump org.slf4j:slf4j-api version to latest [1.7.36](https://github.com/qos-ch/slf4j/releases/tag/v_1.7.36)
+* Bump com.squareup.okhttp3:okhttp to latest [4.9.3](https://square.github.io/okhttp/changelogs/changelog_4x/#version-493)
+* Bump com.google.code.gson:gson to latest [2.9.0](https://github.com/google/gson/releases/tag/gson-parent-2.9.0)
+* Flush HttpClient after flushing appenders. (PR [#207](https://github.com/splunk/splunk-library-javalogging/pull/207))
+* Timeout settings modified for OKHttpClient. (PR [#199](https://github.com/splunk/splunk-library-javalogging/pull/199))
+* Default behavior of Splunk event header & body are reverted back to v1.7.3. (PR [#198](https://github.com/splunk/splunk-library-javalogging/pull/198))
+
+## Version 1.11.4
+
+### Critical Security Update
+* Update Logback to version 1.2.9 per CVE-2021-42550.
+
+## Version 1.11.3
+
+### Critical Security Update
+* Upgrade Log4J again v2.17.0 related to CVE-2021-45046 & CVE-2021-44228
+
+## Version 1.11.2
+
+### Critical Security Update
+* Upgrading log4J to 2.16 per CVE-2021-45046.
+
+## Version 1.11.1
+
+### Critical Security Update
+* Upgrading log4J to 2.15 per CVE-2021-44228. [PR](https://github.com/splunk/splunk-library-javalogging/pull/222)
+
+## Version 1.11.0
+
+### Minor Changes
+* Added a parameter to set await termination timeout. [PR](https://github.com/splunk/splunk-library-javalogging/pull/179)
+
+## Version 1.10.0
+
+### Bug Fixes
+
+* Fixed issue causing delayed time when using AsyncAppender (GitHub issue [#186](https://github.com/splunk/splunk-javascript-logging/issues/186))
+  * Now the timestamp is being recorded at the time when log event "occurs" instead of the time when log event is being "sent"
+
+### Minor Changes
+
+* Updated the project to use make conventions to spin up local dockerized instances.
+* Upgrade version of okhttp to 4.9.1.
+* Upgrade version of slf4j to 1.7.30.
+* Upgrade version of gson to 2.8.7.
+* Upgrade version of junit to 4.13.2.
+* Upgrade version of commons to 3.12.
+
+ 
 ## Version 1.9.0
 
 * Resolve an issue with TcpAppender losing events when busy (@avdv)

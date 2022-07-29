@@ -1,6 +1,6 @@
 # Splunk Logging for Java
 
-#### Version 1.9.0
+#### Version 1.11.5
 
 Splunk logging for Java enables you to log events to HTTP Event Collector or to a TCP input on a Splunk Enterprise instance within your Java applications. You can use three major Java logging frameworks: [Logback](http://logback.qos.ch), [Log4j 2](http://logging.apache.org/log4j/2.x/), and [java.util.logging](https://docs.oracle.com/javase/7/docs/api/java/util/logging/package-summary.html). Splunk logging for Java is also enabled for [Simple Logging Facade for Java (SLF4J)](http://www.slf4j.org).
 
@@ -24,18 +24,18 @@ Here's what you need to get going with Splunk logging for Java.
 
 If you haven't already installed Splunk, download it
 [here](http://www.splunk.com/download). For more about installing and running
-Splunk and system requirements, see [Installing & Running Splunk](http://dev.splunk.com/view/SP-CAAADRV). Splunk logging for Java is tested with Splunk Enterprise 7.0 and 7.2.
+Splunk and system requirements, see [Installing & Running Splunk](http://dev.splunk.com/view/SP-CAAADRV). Splunk logging for Java is tested with Splunk Enterprise 8.0 and 8.2.0.
 
-#### Java 
+#### Java
 
 You'll need Java version 8 or higher, from [OpenJDK](https://openjdk.java.net) or [Oracle](https://www.oracle.com/technetwork/java).
 
 #### Logging frameworks
 
 If you're using the Log4j 2, Simple Logging Facade for Java (SLF4J), or Logback logging frameworks in conjunction with Splunk logging for Java there are additional compatibility requirements. For more about logging framework requirements, see [Enable logging to HEC](https://dev.splunk.com/enterprise/docs/devtools/java/logging-java/howtouseloggingjava/enableloghttpjava/) and [Enable logging to TCP inputs](https://dev.splunk.com/enterprise/docs/devtools/java/logging-java/howtouseloggingjava/enablelogtcpjava). These frameworks require:
-* Log4j version 2.12.1
-* SLF4J version 1.7.29
-* Logback version 1.2.3
+* Log4j version 2.17.2
+* SLF4J version 1.7.36
+* Logback version 1.2.11
 
 ## Documentation and resources
 
@@ -50,6 +50,43 @@ If you're using the Log4j 2, Simple Logging Facade for Java (SLF4J), or Logback 
 
 * For more about about Splunk in general, see
   [Splunk>Docs](http://docs.splunk.com/Documentation/Splunk).
+
+## Dependency Management
+
+The `splunk-library-javalogging` artifact can be accessed via Splunk's managed Maven repoitory.
+
+### Apache Maven
+
+First define the repository as follows
+
+```xml
+...
+  <repositories>
+    <repository>
+        <id>splunk-artifactory</id>
+        <name>Splunk Releases</name>
+        <url>https://splunk.jfrog.io/splunk/ext-releases-local</url>
+    </repository>
+  </repositories>
+...
+```
+
+... then reference the dependency as follows
+
+```xml
+...
+  <dependencies>
+    <dependency>
+      <groupId>com.splunk.logging</groupId>
+      <artifactId>splunk-library-javalogging</artifactId>
+      <version>${latest.version}</version>
+    </dependency>
+    ...
+  </dependencies>
+...
+```
+
+The above can be adapted to suit Other dependency management implementations as necessary.
 
 ## License
 

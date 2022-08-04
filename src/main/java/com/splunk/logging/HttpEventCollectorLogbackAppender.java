@@ -17,11 +17,15 @@ package com.splunk.logging;
 
 import ch.qos.logback.classic.pattern.MarkerConverter;
 import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.classic.spi.StackTraceElementProxy;
 import ch.qos.logback.core.AppenderBase;
 import ch.qos.logback.core.Layout;
+import com.google.gson.Gson;
 import com.splunk.logging.hec.MetadataTags;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * Logback Appender which writes its events to Splunk http event collector rest endpoint.
@@ -153,6 +157,21 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
             event.getCallerData();
         }
 
+        // Wrapping exception throws in a map to showcase exception details in events.
+        Map<Object, Object> exceptionDetailMap = new LinkedHashMap<>();
+        if (event.getThrowableProxy() != null) {
+            StackTraceElementProxy[] elements = event.getThrowableProxy().getStackTraceElementProxyArray();
+            exceptionDetailMap.put("detailMessage", event.getThrowableProxy().getMessage());
+            exceptionDetailMap.put("exceptionClass", event.getThrowableProxy().getClassName());
+
+            // Retrieving first element from elements array is because the throws exception detail would be available as a first element.
+            if (elements != null && elements.length > 0 && elements[0] != null) {
+                exceptionDetailMap.put("fileName", elements[0].getStackTraceElement().getFileName());
+                exceptionDetailMap.put("lineNumber", String.valueOf(elements[0].getStackTraceElement().getLineNumber()));
+                exceptionDetailMap.put("methodName", elements[0].getStackTraceElement().getMethodName());
+            }
+        }
+
         MarkerConverter c = new MarkerConverter();
         if (this.started) {
             this.sender.send(
@@ -162,7 +181,7 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
                     _includeLoggerName ? event.getLoggerName() : null,
                     _includeThreadName ? event.getThreadName() : null,
                     _includeMDC ? event.getMDCPropertyMap() : null,
-                    (!_includeException || event.getThrowableProxy() == null) ? null : event.getThrowableProxy().getMessage(),
+                    (!_includeException || event.getThrowableProxy() == null) ? null : new Gson().toJson(exceptionDetailMap),
                     c.convert(event)
             );
         }

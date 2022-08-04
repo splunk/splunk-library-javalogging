@@ -80,9 +80,13 @@ package com.splunk.logging;
  * com.splunk.logging.HttpEventCollectorLoggingHandler.send_mode=sequential
  */
 
+import com.google.gson.Gson;
 import com.splunk.logging.hec.MetadataTags;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Locale;
+import java.util.Map;
 import java.util.logging.Handler;
 import java.util.logging.LogManager;
 import java.util.logging.LogRecord;
@@ -235,14 +239,30 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
      */
     @Override
     public void publish(LogRecord record) {
+
+        // Wrapping exception throws in a map to showcase exception details in events.
+        Map<Object, Object> exceptionDetailMap = new LinkedHashMap<>();
+        if (record.getThrown() != null) {
+            StackTraceElement[] elements = record.getThrown().getStackTrace();
+            exceptionDetailMap.put("detailMessage", record.getThrown().getMessage());
+            exceptionDetailMap.put("exceptionClass", record.getThrown().getClass().toString());
+
+            // Retrieving first element from elements array is because the throws exception detail would be available as a first element.
+            if (elements != null && elements.length > 0 && elements[0] != null) {
+                exceptionDetailMap.put("fileName", elements[0].getFileName());
+                exceptionDetailMap.put("lineNumber", String.valueOf(elements[0].getLineNumber()));
+                exceptionDetailMap.put("methodName", elements[0].getMethodName());
+            }
+        }
+
         this.sender.send(
-        		record.getMillis(),
+                record.getMillis(),
                 record.getLevel().toString(),
                 record.getMessage(),
                 includeLoggerName ? record.getLoggerName() : null,
                 includeThreadName ? String.format(Locale.US, "%d", record.getThreadID()) : null,
                 null, // no property map available
-                (!includeException || record.getThrown() == null) ? null : record.getThrown().getMessage(),
+                (!includeException || record.getThrown() == null) ? null : new Gson().toJson(exceptionDetailMap),
                 null // no marker available
         );
     }

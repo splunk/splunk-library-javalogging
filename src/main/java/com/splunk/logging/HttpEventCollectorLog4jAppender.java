@@ -15,23 +15,27 @@ package com.splunk.logging;
  * under the License.
  */
 
-import java.io.Serializable;
-import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
-
+import com.google.gson.Gson;
 import com.splunk.logging.hec.MetadataTags;
-import org.apache.logging.log4j.core.appender.AbstractAppender;
 import org.apache.logging.log4j.core.Filter;
 import org.apache.logging.log4j.core.Layout;
-import org.apache.logging.log4j.core.config.Property;
-import org.apache.logging.log4j.core.layout.PatternLayout;
 import org.apache.logging.log4j.core.LogEvent;
+import org.apache.logging.log4j.core.appender.AbstractAppender;
+import org.apache.logging.log4j.core.config.Property;
 import org.apache.logging.log4j.core.config.plugins.Plugin;
 import org.apache.logging.log4j.core.config.plugins.PluginAttribute;
 import org.apache.logging.log4j.core.config.plugins.PluginElement;
 import org.apache.logging.log4j.core.config.plugins.PluginFactory;
+import org.apache.logging.log4j.core.impl.MutableLogEvent;
+import org.apache.logging.log4j.core.layout.PatternLayout;
+
+import java.io.Serializable;
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Splunk Http Appender.
@@ -237,15 +241,32 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
     @Override
     public void append(final LogEvent event)
     {
+        boolean isExceptionThrown = false;
+        // Wrapping exception throws in a map to showcase exception details in events.
+        Map<String, String> exceptionDetailMap = new LinkedHashMap<>();
+        if (event.getThrown() != null) {
+            Throwable throwable = event.getThrown();
+            isExceptionThrown = true;
+            exceptionDetailMap.put("detailMessage", throwable.getMessage());
+            exceptionDetailMap.put("exceptionClass", throwable.getClass().toString());
+
+        } else if ((((MutableLogEvent) event).getParameters()).length > 0) {
+            isExceptionThrown = true;
+            exceptionDetailMap.put("exceptionClass", Arrays.toString(Arrays.stream(((MutableLogEvent) event).getParameters()).toArray()));
+        }
+        exceptionDetailMap.put("fileName", event.getSource().getFileName());
+        exceptionDetailMap.put("lineNumber", String.valueOf(event.getSource().getLineNumber()));
+        exceptionDetailMap.put("methodName", event.getSource().getMethodName());
+
         // if an exception was thrown
         this.sender.send(
-        		event.getTimeMillis(),
+                event.getTimeMillis(),
                 event.getLevel().toString(),
                 getLayout().toSerializable(event).toString(),
                 includeLoggerName ? event.getLoggerName() : null,
                 includeThreadName ? event.getThreadName() : null,
                 includeMDC ? event.getContextData().toMap() : null,
-                (!includeException || event.getThrown() == null) ? null : event.getThrown().getMessage(),
+                (includeException && isExceptionThrown) ? new Gson().toJson(exceptionDetailMap) : null,
                 includeMarker ? event.getMarker() : null
         );
     }

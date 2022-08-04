@@ -242,7 +242,7 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
     public void append(final LogEvent event)
     {
         boolean isExceptionThrown = false;
-        // Wrapping exception throws in a map to showcase exception details in events.
+        // Exception thrown in application is wrapped with relevant information instead of just a message.
         Map<String, String> exceptionDetailMap = new LinkedHashMap<>();
         if (event.getThrown() != null) {
             Throwable throwable = event.getThrown();

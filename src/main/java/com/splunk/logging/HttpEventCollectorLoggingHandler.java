@@ -240,7 +240,7 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
     @Override
     public void publish(LogRecord record) {
 
-        // Wrapping exception throws in a map to showcase exception details in events.
+        // Exception thrown in application is wrapped with relevant information instead of just a message.
         Map<Object, Object> exceptionDetailMap = new LinkedHashMap<>();
         if (record.getThrown() != null) {
             StackTraceElement[] elements = record.getThrown().getStackTrace();

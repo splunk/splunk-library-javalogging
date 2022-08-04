@@ -157,7 +157,7 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
             event.getCallerData();
         }
 
-        // Wrapping exception throws in a map to showcase exception details in events.
+        // Exception thrown in application is wrapped with relevant information instead of just a message.
         Map<Object, Object> exceptionDetailMap = new LinkedHashMap<>();
         if (event.getThrowableProxy() != null) {
             StackTraceElementProxy[] elements = event.getThrowableProxy().getStackTraceElementProxyArray();

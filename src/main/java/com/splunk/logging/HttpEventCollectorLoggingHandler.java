@@ -83,13 +83,8 @@ package com.splunk.logging;
 import com.google.gson.Gson;
 import com.splunk.logging.hec.MetadataTags;
 
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Locale;
-import java.util.Map;
-import java.util.logging.Handler;
-import java.util.logging.LogManager;
-import java.util.logging.LogRecord;
+import java.util.*;
+import java.util.logging.*;
 
 /**
  * An input handler for Splunk http event collector. This handler can be used by
@@ -98,27 +93,27 @@ import java.util.logging.LogRecord;
  */
 public final class HttpEventCollectorLoggingHandler extends Handler {
     private HttpEventCollectorSender sender = null;
-    private final String IncludeLoggerNameConfTag = "include_logger_name";
+    private final String includeLoggerNameConfTag = "include_logger_name";
     private final boolean includeLoggerName;
-    private final String IncludeThreadNameConfTag = "include_thread_name";
+    private final String includeThreadNameConfTag = "include_thread_name";
     private final boolean includeThreadName;
-    private final String IncludeExceptionConfTag = "include_exception";
-    private final boolean includeException;
+    private final String includeExceptionConfTag = "include_exception";
+    private boolean includeException;
 
 
-    private final String BatchDelayConfTag = "batch_interval";
-    private final String BatchCountConfTag = "batch_size_count";
-    private final String BatchSizeConfTag = "batch_size_bytes";
-    private final String RetriesOnErrorTag = "retries_on_error";
-    private final String UrlConfTag = "url";
-    private final String SendModeTag = "send_mode";
-    private final String MiddlewareTag = "middleware";
+    private final String batchDelayConfTag = "batch_interval";
+    private final String batchCountConfTag = "batch_size_count";
+    private final String batchSizeConfTag = "batch_size_bytes";
+    private final String retriesOnErrorTag = "retries_on_error";
+    private final String urlConfTag = "url";
+    private final String sendModeTag = "send_mode";
+    private final String middlewareTag = "middleware";
 
-    private final String ConnectTimeoutConfTag = "connect_timeout";
-    private final String CallTimeoutConfTag = "call_timeout";
-    private final String ReadTimeoutConfTag = "read_timeout";
-    private final String WriteTimeoutConfTag = "write_timeout";
-    private final String TerminationTimeoutConfTag = "termination_timeout";
+    private final String connectTimeoutConfTag = "connect_timeout";
+    private final String callTimeoutConfTag = "call_timeout";
+    private final String readTimeoutConfTag = "read_timeout";
+    private final String writeTimeoutConfTag = "write_timeout";
+    private final String terminationTimeoutConfTag = "termination_timeout";
 
     /** HttpEventCollectorLoggingHandler c-or */
     public HttpEventCollectorLoggingHandler() {
@@ -141,7 +136,7 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
             getConfigurationProperty(MetadataTags.MESSAGEFORMAT, null));
 
         // http event collector endpoint properties
-        String url = getConfigurationProperty(UrlConfTag, null);
+        String url = getConfigurationProperty(urlConfTag, null);
 
         // app token
         String token = getConfigurationProperty("token", null);
@@ -153,26 +148,26 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
         String type = getConfigurationProperty("type", null);
 
         // batching properties
-        long delay = getConfigurationNumericProperty(BatchDelayConfTag, HttpEventCollectorSender.DefaultBatchInterval);
-        long batchCount = getConfigurationNumericProperty(BatchCountConfTag, HttpEventCollectorSender.DefaultBatchCount);
-        long batchSize = getConfigurationNumericProperty(BatchSizeConfTag, HttpEventCollectorSender.DefaultBatchSize);
-        long retriesOnError = getConfigurationNumericProperty(RetriesOnErrorTag, 0);
-        String sendMode = getConfigurationProperty(SendModeTag, "sequential");
+        long delay = getConfigurationNumericProperty(batchDelayConfTag, HttpEventCollectorSender.DefaultBatchInterval);
+        long batchCount = getConfigurationNumericProperty(batchCountConfTag, HttpEventCollectorSender.DefaultBatchCount);
+        long batchSize = getConfigurationNumericProperty(batchSizeConfTag, HttpEventCollectorSender.DefaultBatchSize);
+        long retriesOnError = getConfigurationNumericProperty(retriesOnErrorTag, 0);
+        String sendMode = getConfigurationProperty(sendModeTag, "sequential");
         String eventHeaderSerializer = getConfigurationProperty("eventHeaderSerializer", "");
-        String middleware = getConfigurationProperty(MiddlewareTag, null);
+        String middleware = getConfigurationProperty(middlewareTag, null);
         String eventBodySerializer = getConfigurationProperty("eventBodySerializer", null);
         String errorCallbackClass = getConfigurationProperty("errorCallback", null);
 
-        includeLoggerName = getConfigurationBooleanProperty(IncludeLoggerNameConfTag, true);
-        includeThreadName = getConfigurationBooleanProperty(IncludeThreadNameConfTag, true);
-        includeException = getConfigurationBooleanProperty(IncludeExceptionConfTag, true);
+        includeLoggerName = getConfigurationBooleanProperty(includeLoggerNameConfTag, true);
+        includeThreadName = getConfigurationBooleanProperty(includeThreadNameConfTag, true);
+        includeException = getConfigurationBooleanProperty(includeExceptionConfTag, true);
 
         HttpEventCollectorSender.TimeoutSettings timeoutSettings = new HttpEventCollectorSender.TimeoutSettings(
-            getConfigurationNumericProperty(ConnectTimeoutConfTag, HttpEventCollectorSender.TimeoutSettings.DEFAULT_CONNECT_TIMEOUT),
-            getConfigurationNumericProperty(CallTimeoutConfTag, HttpEventCollectorSender.TimeoutSettings.DEFAULT_CALL_TIMEOUT),
-            getConfigurationNumericProperty(ReadTimeoutConfTag, HttpEventCollectorSender.TimeoutSettings.DEFAULT_READ_TIMEOUT),
-            getConfigurationNumericProperty(WriteTimeoutConfTag, HttpEventCollectorSender.TimeoutSettings.DEFAULT_WRITE_TIMEOUT),
-            getConfigurationNumericProperty(TerminationTimeoutConfTag, HttpEventCollectorSender.TimeoutSettings.DEFAULT_TERMINATION_TIMEOUT)
+            getConfigurationNumericProperty(connectTimeoutConfTag, HttpEventCollectorSender.TimeoutSettings.DEFAULT_CONNECT_TIMEOUT),
+            getConfigurationNumericProperty(callTimeoutConfTag, HttpEventCollectorSender.TimeoutSettings.DEFAULT_CALL_TIMEOUT),
+            getConfigurationNumericProperty(readTimeoutConfTag, HttpEventCollectorSender.TimeoutSettings.DEFAULT_READ_TIMEOUT),
+            getConfigurationNumericProperty(writeTimeoutConfTag, HttpEventCollectorSender.TimeoutSettings.DEFAULT_WRITE_TIMEOUT),
+            getConfigurationNumericProperty(terminationTimeoutConfTag, HttpEventCollectorSender.TimeoutSettings.DEFAULT_TERMINATION_TIMEOUT)
         );
 
         if ("raw".equalsIgnoreCase(type)) {
@@ -240,9 +235,15 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
     @Override
     public void publish(LogRecord record) {
 
-        // Exception thrown in application is wrapped with relevant information instead of just a message.
-        Map<Object, Object> exceptionDetailMap = new LinkedHashMap<>();
-        if (record.getThrown() != null) {
+        boolean isExceptionOccured = false;
+        String exceptionDetail = null;
+        /*
+        Exception details are only populated when any SEVERE error occurred & exception is actually thrown
+         */
+        if (Level.SEVERE.equals(record.getLevel()) && record.getThrown() != null) {
+
+            // Exception thrown in application is wrapped with relevant information instead of just a message.
+            Map<Object, Object> exceptionDetailMap = new LinkedHashMap<>();
             StackTraceElement[] elements = record.getThrown().getStackTrace();
             exceptionDetailMap.put("detailMessage", record.getThrown().getMessage());
             exceptionDetailMap.put("exceptionClass", record.getThrown().getClass().toString());
@@ -253,6 +254,8 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
                 exceptionDetailMap.put("lineNumber", String.valueOf(elements[0].getLineNumber()));
                 exceptionDetailMap.put("methodName", elements[0].getMethodName());
             }
+            exceptionDetail = new Gson().toJson(exceptionDetailMap);
+            isExceptionOccured = true;
         }
 
         this.sender.send(
@@ -262,7 +265,7 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
                 includeLoggerName ? record.getLoggerName() : null,
                 includeThreadName ? String.format(Locale.US, "%d", record.getThreadID()) : null,
                 null, // no property map available
-                (!includeException || record.getThrown() == null) ? null : new Gson().toJson(exceptionDetailMap),
+                (includeException && isExceptionOccured) ? exceptionDetail : null,
                 null // no marker available
         );
     }

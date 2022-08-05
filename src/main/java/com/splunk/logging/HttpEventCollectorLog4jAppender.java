@@ -17,6 +17,7 @@ package com.splunk.logging;
 
 import com.google.gson.Gson;
 import com.splunk.logging.hec.MetadataTags;
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.Filter;
 import org.apache.logging.log4j.core.Layout;
 import org.apache.logging.log4j.core.LogEvent;
@@ -239,24 +240,9 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
      * @param event The Log event.
      */
     @Override
-    public void append(final LogEvent event)
-    {
-        boolean isExceptionThrown = false;
-        // Exception thrown in application is wrapped with relevant information instead of just a message.
-        Map<String, String> exceptionDetailMap = new LinkedHashMap<>();
-        if (event.getThrown() != null) {
-            Throwable throwable = event.getThrown();
-            isExceptionThrown = true;
-            exceptionDetailMap.put("detailMessage", throwable.getMessage());
-            exceptionDetailMap.put("exceptionClass", throwable.getClass().toString());
+    public void append(final LogEvent event) {
 
-        } else if ((((MutableLogEvent) event).getParameters()).length > 0) {
-            isExceptionThrown = true;
-            exceptionDetailMap.put("exceptionClass", Arrays.toString(Arrays.stream(((MutableLogEvent) event).getParameters()).toArray()));
-        }
-        exceptionDetailMap.put("fileName", event.getSource().getFileName());
-        exceptionDetailMap.put("lineNumber", String.valueOf(event.getSource().getLineNumber()));
-        exceptionDetailMap.put("methodName", event.getSource().getMethodName());
+        String exceptionDetail = generateErrorDetail(event);
 
         // if an exception was thrown
         this.sender.send(
@@ -266,9 +252,46 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
                 includeLoggerName ? event.getLoggerName() : null,
                 includeThreadName ? event.getThreadName() : null,
                 includeMDC ? event.getContextData().toMap() : null,
-                (includeException && isExceptionThrown) ? new Gson().toJson(exceptionDetailMap) : null,
+                includeException ? exceptionDetail : null,
                 includeMarker ? event.getMarker() : null
         );
+
+    }
+
+    /**
+     * Method used to generate proper exception message if any exception encountered.
+     *
+     * @param event
+     * @return the processed string of all exception detail
+     */
+    private String generateErrorDetail(final LogEvent event) {
+
+        String exceptionDetail = null;
+
+        /*
+        Exception details are only populated when any ERROR OR FATAL event occurred
+         */
+        if (Level.ERROR.equals(event.getLevel()) || Level.FATAL.equals(event.getLevel())) {
+            if (event.getThrown() == null && (((MutableLogEvent) event).getParameters()).length <= 0) {
+                return exceptionDetail;
+            }
+            // Exception thrown in application is wrapped with relevant information instead of just a message.
+            Map<String, String> exceptionDetailMap = new LinkedHashMap<>();
+            if (event.getThrown() != null) {
+                Throwable throwable = event.getThrown();
+                exceptionDetailMap.put("detailMessage", throwable.getMessage());
+                exceptionDetailMap.put("exceptionClass", throwable.getClass().toString());
+
+            } else if ((((MutableLogEvent) event).getParameters()).length > 0) {
+                exceptionDetailMap.put("exceptionClass", Arrays.toString(Arrays.stream(((MutableLogEvent) event).getParameters()).toArray()));
+            }
+
+            exceptionDetailMap.put("fileName", event.getSource().getFileName());
+            exceptionDetailMap.put("methodName", event.getSource().getMethodName());
+            exceptionDetailMap.put("lineNumber", String.valueOf(event.getSource().getLineNumber()));
+            exceptionDetail = new Gson().toJson(exceptionDetailMap);
+        }
+        return exceptionDetail;
     }
 
     public void flush() {

@@ -15,6 +15,7 @@ package com.splunk.logging;
  * under the License.
  */
 
+import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.pattern.MarkerConverter;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.classic.spi.StackTraceElementProxy;
@@ -157,9 +158,16 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
             event.getCallerData();
         }
 
-        // Exception thrown in application is wrapped with relevant information instead of just a message.
-        Map<Object, Object> exceptionDetailMap = new LinkedHashMap<>();
-        if (event.getThrowableProxy() != null) {
+        boolean isExceptionOccured = false;
+        String exceptionDetail = null;
+
+        /*
+        Exception details are only populated when any ERROR encountered & exception is actually thrown
+         */
+        if (Level.ERROR.isGreaterOrEqual(event.getLevel()) && event.getThrowableProxy() != null) {
+            // Exception thrown in application is wrapped with relevant information instead of just a message.
+            Map<Object, Object> exceptionDetailMap = new LinkedHashMap<>();
+
             StackTraceElementProxy[] elements = event.getThrowableProxy().getStackTraceElementProxyArray();
             exceptionDetailMap.put("detailMessage", event.getThrowableProxy().getMessage());
             exceptionDetailMap.put("exceptionClass", event.getThrowableProxy().getClassName());
@@ -170,6 +178,9 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
                 exceptionDetailMap.put("lineNumber", String.valueOf(elements[0].getStackTraceElement().getLineNumber()));
                 exceptionDetailMap.put("methodName", elements[0].getStackTraceElement().getMethodName());
             }
+
+            exceptionDetail = new Gson().toJson(exceptionDetailMap);
+            isExceptionOccured = true;
         }
 
         MarkerConverter c = new MarkerConverter();
@@ -181,7 +192,7 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
                     _includeLoggerName ? event.getLoggerName() : null,
                     _includeThreadName ? event.getThreadName() : null,
                     _includeMDC ? event.getMDCPropertyMap() : null,
-                    (!_includeException || event.getThrowableProxy() == null) ? null : new Gson().toJson(exceptionDetailMap),
+                    (_includeException && isExceptionOccured) ? exceptionDetail : null,
                     c.convert(event)
             );
         }

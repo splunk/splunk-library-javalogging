@@ -83,7 +83,10 @@ package com.splunk.logging;
 import com.google.gson.Gson;
 import com.splunk.logging.hec.MetadataTags;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Locale;
+import java.util.Map;
 import java.util.logging.*;
 
 /**
@@ -258,10 +261,19 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
             isExceptionOccured = true;
         }
 
+        /*
+        Initializing a formatter for Java Util Logging.
+        This will be used when placeholders are used for event logging in log methods.
+         */
+        Formatter messageFormatter = getFormatter();
+        if (messageFormatter == null) {
+            messageFormatter = new SimpleFormatter();
+        }
+
         this.sender.send(
                 record.getMillis(),
                 record.getLevel().toString(),
-                record.getMessage(),
+                messageFormatter.formatMessage(record),
                 includeLoggerName ? record.getLoggerName() : null,
                 includeThreadName ? String.format(Locale.US, "%d", record.getThreadID()) : null,
                 null, // no property map available

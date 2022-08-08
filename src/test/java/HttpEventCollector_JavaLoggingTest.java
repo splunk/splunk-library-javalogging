@@ -14,17 +14,18 @@
  * under the License.
  */
 
-import java.util.*;
-
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import com.splunk.logging.HttpEventCollectorErrorHandler;
 import com.splunk.logging.HttpEventCollectorEventInfo;
-
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
 import java.util.logging.Logger;
 
 public final class HttpEventCollector_JavaLoggingTest {

@@ -15,11 +15,10 @@
               batch_size_count="%user_batch_size_count%"
               disableCertificateValidation="true"
               send_mode="%user_send_mode%"
-              middleware="user_middleware"
               eventBodySerializer="%user_eventBodySerializer%"
               eventHeaderSerializer="%user_eventHeaderSerializer%"
                 >
-            <Log4jTestMiddleware level="%user_eventLevel%"/>
+            <Log4jTestMiddleware level="%user_eventLevel%" />
             <PatternLayout pattern="%m"/>
         </SplunkHttp>
 
@@ -28,7 +27,7 @@
     <!-- Define a logger named 'testSplunkLog4j' which writes to the socket appender we defined above. -->
     <Loggers>
         <Root level="INFO"/>
-        <Logger name="%user_logger_name%" level="info">
+        <Logger name="%user_logger_name%" level="DEBUG">
             <AppenderRef ref="httpconf"/>
         </Logger>
     </Loggers>

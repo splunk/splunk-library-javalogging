@@ -52,7 +52,8 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
     public static final String HEADER_SERIALIZER_TYPE = "eventHeaderSerializer";
     public static final String MIDDLEWARE_TYPE        = "middleware";
 
-    public static class Builder extends AbstractAppender.Builder<Builder> {
+    public static class Builder extends AbstractAppender.Builder<Builder>
+            implements org.apache.logging.log4j.core.util.Builder<HttpEventCollectorLog4jAppender> {
 
         @PluginBuilderAttribute
         private String url;

@@ -15,8 +15,15 @@ package com.splunk.logging;
  * under the License.
  */
 
-import com.google.gson.Gson;
-import com.splunk.logging.hec.MetadataTags;
+import java.io.Serializable;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.Filter;
 import org.apache.logging.log4j.core.Layout;
@@ -24,19 +31,15 @@ import org.apache.logging.log4j.core.LogEvent;
 import org.apache.logging.log4j.core.appender.AbstractAppender;
 import org.apache.logging.log4j.core.config.Property;
 import org.apache.logging.log4j.core.config.plugins.Plugin;
-import org.apache.logging.log4j.core.config.plugins.PluginAttribute;
+import org.apache.logging.log4j.core.config.plugins.PluginBuilderAttribute;
+import org.apache.logging.log4j.core.config.plugins.PluginBuilderFactory;
 import org.apache.logging.log4j.core.config.plugins.PluginElement;
-import org.apache.logging.log4j.core.config.plugins.PluginFactory;
 import org.apache.logging.log4j.core.impl.MutableLogEvent;
 import org.apache.logging.log4j.core.layout.PatternLayout;
 
-import java.io.Serializable;
-import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
+import com.google.gson.Gson;
+import com.splunk.logging.HttpEventCollectorMiddleware.HttpSenderMiddleware;
+import com.splunk.logging.hec.MetadataTags;
 
 /**
  * Splunk Http Appender.
@@ -45,6 +48,337 @@ import java.util.concurrent.TimeUnit;
 @SuppressWarnings("serial")
 public final class HttpEventCollectorLog4jAppender extends AbstractAppender
 {
+    public static final String BODY_SERIALIZER_TYPE   = "eventBodySerializer";
+    public static final String HEADER_SERIALIZER_TYPE = "eventHeaderSerializer";
+    public static final String MIDDLEWARE_TYPE        = "middleware";
+
+    public static class Builder extends AbstractAppender.Builder<Builder> {
+
+        @PluginBuilderAttribute
+        private String url;
+        @PluginBuilderAttribute
+        private String token;
+        @PluginBuilderAttribute
+        private String channel;
+        @PluginBuilderAttribute
+        private String type;
+        @PluginBuilderAttribute
+        private String source;
+        @PluginBuilderAttribute
+        private String sourcetype;
+        @PluginBuilderAttribute
+        private String messageFormat;
+        @PluginBuilderAttribute
+        private String host;
+        @PluginBuilderAttribute
+        private String index;
+        @PluginBuilderAttribute("batch_size_bytes")
+        private String batchSize;
+        @PluginBuilderAttribute("batch_size_count")
+        private String batchCount;
+        @PluginBuilderAttribute("batch_interval")
+        private String batchInterval;
+        @PluginBuilderAttribute("retries_on_error")
+        private String retriesOnError;
+        @PluginBuilderAttribute("send_mode")
+        private String sendMode;
+        @PluginElement(MIDDLEWARE_TYPE)
+        HttpSenderMiddleware middleware;
+        @PluginBuilderAttribute("middleware")
+        private String middlewareClassName;
+        @PluginBuilderAttribute
+        private String disableCertificateValidation;
+        @PluginElement(BODY_SERIALIZER_TYPE)
+        EventBodySerializer eventBodySerializer;
+        @PluginBuilderAttribute("eventBodySerializer")
+        private String eventBodySerializerClassName;
+        @PluginElement(HEADER_SERIALIZER_TYPE)
+        EventHeaderSerializer eventHeaderSerializer;
+        @PluginBuilderAttribute("eventHeaderSerializer")
+        private String eventHeaderSerializerClassName;
+        @PluginBuilderAttribute
+        private String errorCallback;
+        @PluginBuilderAttribute
+        private boolean includeLoggerName = true;
+        @PluginBuilderAttribute
+        private boolean includeThreadName = true;
+        @PluginBuilderAttribute
+        private boolean includeMDC = true;
+        @PluginBuilderAttribute
+        private boolean includeException = true;
+        @PluginBuilderAttribute
+        private boolean includeMarker = true;
+        @PluginBuilderAttribute("connect_timeout")
+        private long connectTimeout = HttpEventCollectorSender.TimeoutSettings.DEFAULT_CONNECT_TIMEOUT;
+        @PluginBuilderAttribute("call_timeout")
+        private long callTimeout = HttpEventCollectorSender.TimeoutSettings.DEFAULT_CALL_TIMEOUT;
+        @PluginBuilderAttribute("read_timeout")
+        private long readTimeout = HttpEventCollectorSender.TimeoutSettings.DEFAULT_READ_TIMEOUT;
+        @PluginBuilderAttribute("write_timeout") private long writeTimeout = HttpEventCollectorSender.TimeoutSettings.DEFAULT_WRITE_TIMEOUT;
+        @PluginBuilderAttribute("termination_timeout")
+        private long terminationTimeout = HttpEventCollectorSender.TimeoutSettings.DEFAULT_TERMINATION_TIMEOUT;
+
+        public Builder setUrl(String url) {
+            this.url = url;
+            return this;
+        }
+
+        public Builder setToken(String token) {
+            this.token = token;
+            return this;
+        }
+
+        public Builder setChannel(String channel) {
+            this.channel = channel;
+            return this;
+        }
+
+        public Builder setType(String type) {
+            this.type = type;
+            return this;
+        }
+
+        public Builder setSource(String source) {
+            this.source = source;
+            return this;
+        }
+
+        public Builder setSourcetype(String sourcetype) {
+            this.sourcetype = sourcetype;
+            return this;
+        }
+
+        public Builder setMessageFormat(String messageFormat) {
+            this.messageFormat = messageFormat;
+            return this;
+        }
+
+        public Builder setHost(String host) {
+            this.host = host;
+            return this;
+        }
+
+        public Builder setIndex(String index) {
+            this.index = index;
+            return this;
+        }
+
+        public Builder setBatchSize(String batchSize) {
+            this.batchSize = batchSize;
+            return this;
+        }
+
+        public Builder setBatchCount(String batchCount) {
+            this.batchCount = batchCount;
+            return this;
+        }
+
+        public Builder setBatchInterval(String batchInterval) {
+            this.batchInterval = batchInterval;
+            return this;
+        }
+
+        public Builder setRetriesOnError(String retriesOnError) {
+            this.retriesOnError = retriesOnError;
+            return this;
+        }
+
+        public Builder setSendMode(String sendMode) {
+            this.sendMode = sendMode;
+            return this;
+        }
+
+        public Builder setMiddleware(HttpSenderMiddleware middleware) {
+            this.middleware = middleware;
+            return this;
+        }
+
+        public Builder setMiddlewareClassName(String middlewareClassName) {
+            this.middlewareClassName = middlewareClassName;
+            return this;
+        }
+
+        public Builder setDisableCertificateValidation(String disableCertificateValidation) {
+            this.disableCertificateValidation = disableCertificateValidation;
+            return this;
+        }
+
+        public Builder setEventBodySerializer(EventBodySerializer eventBodySerializer) {
+            this.eventBodySerializer = eventBodySerializer;
+            return this;
+        }
+
+        public Builder setEventBodySerializerClassName(String eventBodySerializerClassName) {
+            this.eventBodySerializerClassName = eventBodySerializerClassName;
+            return this;
+        }
+
+        public Builder setEventHeaderSerializer(EventHeaderSerializer eventHeaderSerializer) {
+            this.eventHeaderSerializer = eventHeaderSerializer;
+            return this;
+        }
+
+        public Builder setEventHeaderSerializerClassName(String eventHeaderSerializerClassName) {
+            this.eventHeaderSerializerClassName = eventHeaderSerializerClassName;
+            return this;
+        }
+
+        public Builder setErrorCallback(String errorCallback) {
+            this.errorCallback = errorCallback;
+            return this;
+        }
+
+        public Builder setIncludeLoggerName(boolean includeLoggerName) {
+            this.includeLoggerName = includeLoggerName;
+            return this;
+        }
+
+        public Builder setIncludeThreadName(boolean includeThreadName) {
+            this.includeThreadName = includeThreadName;
+            return this;
+        }
+
+        public Builder setIncludeMDC(boolean includeMDC) {
+            this.includeMDC = includeMDC;
+            return this;
+        }
+
+        public Builder setIncludeException(boolean includeException) {
+            this.includeException = includeException;
+            return this;
+        }
+
+        public Builder setIncludeMarker(boolean includeMarker) {
+            this.includeMarker = includeMarker;
+            return this;
+        }
+
+        public Builder setConnectTimeout(long connectTimeout) {
+            this.connectTimeout = connectTimeout;
+            return this;
+        }
+
+        public Builder setCallTimeout(long callTimeout) {
+            this.callTimeout = callTimeout;
+            return this;
+        }
+
+        public Builder setReadTimeout(long readTimeout) {
+            this.readTimeout = readTimeout;
+            return this;
+        }
+
+        public Builder setWriteTimeout(long writeTimeout) {
+            this.writeTimeout = writeTimeout;
+            return this;
+        }
+
+        public Builder setTerminationTimeout(long terminationTimeout) {
+            this.terminationTimeout = terminationTimeout;
+            return this;
+        }
+
+        public Layout<? extends Serializable> getOrCreateLayout() {
+            return getOrCreateLayout(StandardCharsets.UTF_8);
+        }
+
+        public Layout<? extends Serializable> getOrCreateLayout(final Charset charset) {
+            final Layout<? extends Serializable> layout = getLayout();
+            if (layout == null) {
+                return PatternLayout.newBuilder()
+                        .withPattern("%m")
+                        .withCharset(charset)
+                        .withAlwaysWriteExceptions(true)
+                        .withNoConsoleNoAnsi(false)
+                        .withConfiguration(getConfiguration())
+                        .build();
+            }
+            return layout;
+        }
+
+        public HttpEventCollectorLog4jAppender build() {
+            {
+                // The raw endpoint presumes that a single post is a single event.
+                // The batch size should be 1 if "type" is raw, and we should error if batch
+                // configuration is specified.
+                int clampedBatchCountDefault = HttpEventCollectorSender.DefaultBatchCount;
+
+                if ("raw".equalsIgnoreCase(type)) {
+                    if (batchSize != null || batchCount != null || batchInterval != null) {
+                        LOGGER.error("batch configuration is not compatible with the raw endpoint");
+                        return null;
+                    }
+                    clampedBatchCountDefault = 1;
+                }
+
+                if (getName() == null)
+                {
+                    LOGGER.error("No name provided for HttpEventCollectorLog4jAppender");
+                    return null;
+                }
+
+                if (url == null)
+                {
+                    LOGGER.error("No Splunk URL provided for HttpEventCollectorLog4jAppender");
+                    return null;
+                }
+
+                if (token == null)
+                {
+                    LOGGER.error("No token provided for HttpEventCollectorLog4jAppender");
+                    return null;
+                }
+
+                // Fallback on instantiating classes
+                if (middleware == null && middlewareClassName != null && !middlewareClassName.isEmpty()) {
+                    try {
+                        middleware = (HttpSenderMiddleware) Class.forName(middlewareClassName).newInstance();
+                    } catch (Exception e) {
+                        LOGGER.warn("The middleware {} could not be instantiated.", middlewareClassName, e);
+                    }
+                }
+
+                if (eventBodySerializer == null && eventBodySerializerClassName != null && !eventBodySerializerClassName.isEmpty()) {
+                    try {
+                        eventBodySerializer = (EventBodySerializer) Class.forName(eventBodySerializerClassName).newInstance();
+                    } catch (final Exception e) {
+                        LOGGER.warn("The event body serializer {} could not be instantiated.", eventBodySerializerClassName, e);
+                    }
+                }
+
+                if (eventHeaderSerializer == null && eventHeaderSerializerClassName != null && !eventHeaderSerializerClassName.isEmpty()) {
+                    try {
+                        eventHeaderSerializer = (EventHeaderSerializer) Class.forName(eventHeaderSerializerClassName).newInstance();
+                    } catch (final Exception e) {
+                        LOGGER.warn("The event header serializer {} could not be instantiated.", eventHeaderSerializerClassName, e);
+                    }
+                }
+
+                if (errorCallback != null) {
+                    HttpEventCollectorErrorHandler.registerClassName(errorCallback);
+                }
+
+                return new HttpEventCollectorLog4jAppender(
+                        getName(), url, token,  channel, type,
+                        source, sourcetype, messageFormat, host, index,
+                        getFilter(), getOrCreateLayout(),
+                        includeLoggerName, includeThreadName, includeMDC, includeException, includeMarker,
+                        isIgnoreExceptions(),
+                        parseInt(batchInterval, HttpEventCollectorSender.DefaultBatchInterval),
+                        parseInt(batchCount, clampedBatchCountDefault),
+                        parseInt(batchSize, HttpEventCollectorSender.DefaultBatchSize),
+                        parseInt(retriesOnError, 0),
+                        sendMode,
+                        middleware,
+                        disableCertificateValidation,
+                        eventBodySerializer,
+                        eventHeaderSerializer,
+                        new HttpEventCollectorSender.TimeoutSettings(connectTimeout, callTimeout, readTimeout, writeTimeout, terminationTimeout)
+                );
+            }
+        }
+    }
+
     private HttpEventCollectorSender sender = null;
     private final boolean includeLoggerName;
     private final boolean includeThreadName;
@@ -75,10 +409,10 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
                                             long batchSize,
                                             long retriesOnError,
                                             String sendMode,
-                                            String middleware,
+                                            final HttpSenderMiddleware middleware,
                                             final String disableCertificateValidation,
-                                            final String eventBodySerializer,
-                                            final String eventHeaderSerializer,
+                                            final EventBodySerializer eventBodySerializer,
+                                            final EventHeaderSerializer eventHeaderSerializer,
                                             HttpEventCollectorSender.TimeoutSettings timeoutSettings)
     {
         super(name, filter, layout, ignoreExceptions, Property.EMPTY_ARRAY);
@@ -92,22 +426,16 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
         this.sender = new HttpEventCollectorSender(url, token, channel, type, batchInterval, batchCount, batchSize, sendMode, metadata, timeoutSettings);
 
         // plug a user middleware
-        if (middleware != null && !middleware.isEmpty()) {
-            try {
-                this.sender.addMiddleware((HttpEventCollectorMiddleware.HttpSenderMiddleware)(Class.forName(middleware).newInstance()));
-            } catch (Exception ignored) {}
+        if (middleware != null) {
+            this.sender.addMiddleware(middleware);
         }
 
-        if (eventBodySerializer != null && !eventBodySerializer.isEmpty()) {
-            try {
-                this.sender.setEventBodySerializer((EventBodySerializer) Class.forName(eventBodySerializer).newInstance());
-            } catch (final Exception ignored) {}
+        if (eventBodySerializer != null) {
+            this.sender.setEventBodySerializer(eventBodySerializer);
         }
 
-        if (eventHeaderSerializer != null && !eventHeaderSerializer.isEmpty()) {
-            try {
-                this.sender.setEventHeaderSerializer((EventHeaderSerializer) Class.forName(eventHeaderSerializer).newInstance());
-            } catch (final Exception ignored) {}
+        if (eventHeaderSerializer != null) {
+            this.sender.setEventHeaderSerializer(eventHeaderSerializer);
         }
 
         // plug resend middleware
@@ -126,112 +454,87 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
         this.includeMarker = includeMarker;
     }
 
+    @PluginBuilderFactory
+    public static Builder newBuilder() {
+        return new Builder();
+    }
+
     /**
      * Create a Http Appender.
      * @return The Http Appender.
      */
-    @PluginFactory
+    @Deprecated
     public static HttpEventCollectorLog4jAppender createAppender(
             // @formatter:off
-            @PluginAttribute("url") final String url,
-            @PluginAttribute("token") final String token,
-            @PluginAttribute("channel") final String channel,
-            @PluginAttribute("type") final String type,
-            @PluginAttribute("name") final String name,
-            @PluginAttribute("source") final String source,
-            @PluginAttribute("sourcetype") final String sourcetype,
-            @PluginAttribute("messageFormat") final String messageFormat,
-            @PluginAttribute("host") final String host,
-            @PluginAttribute("index") final String index,
-            @PluginAttribute(value = "ignoreExceptions", defaultBoolean = true) final String ignoreExceptions,
-            @PluginAttribute("batch_size_bytes") final String batchSize,
-            @PluginAttribute("batch_size_count") final String batchCount,
-            @PluginAttribute("batch_interval") final String batchInterval,
-            @PluginAttribute("retries_on_error") final String retriesOnError,
-            @PluginAttribute("send_mode") final String sendMode,
-            @PluginAttribute("middleware") final String middleware,
-            @PluginAttribute("disableCertificateValidation") final String disableCertificateValidation,
-            @PluginAttribute("eventBodySerializer") final String eventBodySerializer,
-            @PluginAttribute("eventHeaderSerializer") final String eventHeaderSerializer,
-            @PluginAttribute("errorCallback") final String errorCallback,
-            @PluginAttribute(value = "includeLoggerName", defaultBoolean = true) final boolean includeLoggerName,
-            @PluginAttribute(value = "includeThreadName", defaultBoolean = true) final boolean includeThreadName,
-            @PluginAttribute(value = "includeMDC", defaultBoolean = true) final boolean includeMDC,
-            @PluginAttribute(value = "includeException", defaultBoolean = true) final boolean includeException,
-            @PluginAttribute(value = "includeMarker", defaultBoolean = true) final boolean includeMarker,
-            @PluginAttribute(value = "connect_timeout", defaultLong = HttpEventCollectorSender.TimeoutSettings.DEFAULT_CONNECT_TIMEOUT) final long connectTimeout,
-            @PluginAttribute(value = "call_timeout", defaultLong = HttpEventCollectorSender.TimeoutSettings.DEFAULT_CALL_TIMEOUT) final long callTimeout,
-            @PluginAttribute(value = "read_timeout", defaultLong = HttpEventCollectorSender.TimeoutSettings.DEFAULT_READ_TIMEOUT) final long readTimeout,
-            @PluginAttribute(value = "write_timeout", defaultLong = HttpEventCollectorSender.TimeoutSettings.DEFAULT_WRITE_TIMEOUT) final long writeTimeout,
-            @PluginAttribute(value = "termination_timeout", defaultLong = HttpEventCollectorSender.TimeoutSettings.DEFAULT_TERMINATION_TIMEOUT) final long terminationTimeout,
-            @PluginElement("Layout") Layout<? extends Serializable> layout,
-            @PluginElement("Filter") final Filter filter
+            final String url,
+            final String token,
+            final String channel,
+            final String type,
+            final String name,
+            final String source,
+            final String sourcetype,
+            final String messageFormat,
+            final String host,
+            final String index,
+            final String ignoreExceptions,
+            final String batchSize,
+            final String batchCount,
+            final String batchInterval,
+            final String retriesOnError,
+            final String sendMode,
+            final String middleware,
+            final String disableCertificateValidation,
+            final String eventBodySerializer,
+            final String eventHeaderSerializer,
+            final String errorCallback,
+            final boolean includeLoggerName,
+            final boolean includeThreadName,
+            final boolean includeMDC,
+            final boolean includeException,
+            final boolean includeMarker,
+            final long connectTimeout,
+            final long callTimeout,
+            final long readTimeout,
+            final long writeTimeout,
+            final long terminationTimeout,
+            Layout<? extends Serializable> layout,
+            final Filter filter
     )
     {
-        // The raw endpoint presumes that a single post is a single event.
-        // The batch size should be 1 if "type" is raw, and we should error if batch
-        // configuration is specified.
-        int clampedBatchCountDefault = HttpEventCollectorSender.DefaultBatchCount;
-
-        if ("raw".equalsIgnoreCase(type)) {
-            if (batchSize != null || batchCount != null || batchInterval != null) {
-                LOGGER.error("batch configuration is not compatible with the raw endpoint");
-                return null;
-            }
-            clampedBatchCountDefault = 1;
-        }
-
-        if (name == null)
-        {
-            LOGGER.error("No name provided for HttpEventCollectorLog4jAppender");
-            return null;
-        }
-
-        if (url == null)
-        {
-            LOGGER.error("No Splunk URL provided for HttpEventCollectorLog4jAppender");
-            return null;
-        }
-
-        if (token == null)
-        {
-            LOGGER.error("No token provided for HttpEventCollectorLog4jAppender");
-            return null;
-        }
-
-        if (layout == null)
-        {
-            layout = PatternLayout.newBuilder()
-                    .withPattern("%m")
-                    .withCharset(StandardCharsets.UTF_8)
-                    .withAlwaysWriteExceptions(true)
-                    .withNoConsoleNoAnsi(false)
-                    .build();
-        }
-
-        if (errorCallback != null) {
-            HttpEventCollectorErrorHandler.registerClassName(errorCallback);
-        }
-
-        final boolean ignoreExceptionsBool = Boolean.getBoolean(ignoreExceptions);
-
-        return new HttpEventCollectorLog4jAppender(
-                name, url, token,  channel, type,
-                source, sourcetype, messageFormat, host, index,
-                filter, layout,
-                includeLoggerName, includeThreadName, includeMDC, includeException, includeMarker,
-                ignoreExceptionsBool,
-                parseInt(batchInterval, HttpEventCollectorSender.DefaultBatchInterval),
-                parseInt(batchCount, clampedBatchCountDefault),
-                parseInt(batchSize, HttpEventCollectorSender.DefaultBatchSize),
-                parseInt(retriesOnError, 0),
-                sendMode,
-                middleware,
-                disableCertificateValidation,
-                eventBodySerializer,
-                eventHeaderSerializer,
-                new HttpEventCollectorSender.TimeoutSettings(connectTimeout, callTimeout, readTimeout, writeTimeout, terminationTimeout)
-        );
+        return newBuilder().setUrl(url)
+                .setToken(token)
+                .setChannel(channel)
+                .setType(type)
+                .setName(name)
+                .setSource(source)
+                .setSourcetype(sourcetype)
+                .setMessageFormat(messageFormat)
+                .setHost(host)
+                .setIndex(index)
+                .setIgnoreExceptions(Boolean.getBoolean(ignoreExceptions))
+                .setBatchSize(batchSize)
+                .setBatchCount(batchCount)
+                .setBatchInterval(batchInterval)
+                .setRetriesOnError(retriesOnError)
+                .setSendMode(sendMode)
+                .setMiddlewareClassName(middleware)
+                .setDisableCertificateValidation(disableCertificateValidation)
+                .setEventBodySerializerClassName(eventBodySerializer)
+                .setEventHeaderSerializerClassName(eventHeaderSerializer)
+                .setErrorCallback(errorCallback)
+                .setIncludeLoggerName(includeLoggerName)
+                .setIncludeThreadName(includeThreadName)
+                .setIncludeMDC(includeMDC)
+                .setIncludeException(includeException)
+                .setIncludeMarker(includeMarker)
+                .setConnectTimeout(connectTimeout)
+                .setCallTimeout(callTimeout)
+                .setReadTimeout(readTimeout)
+                .setWriteTimeout(writeTimeout)
+                .setTerminationTimeout(terminationTimeout)
+                .setLayout(layout)
+                .setFilter(filter)
+                .build();
     }
 
 

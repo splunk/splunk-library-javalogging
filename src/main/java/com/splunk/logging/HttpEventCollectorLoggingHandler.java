@@ -240,6 +240,9 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
 
         boolean isExceptionOccured = false;
         String exceptionDetail = null;
+        String formatConfiguration = null;
+        String formattedMessage = null;
+        Object messageFormatter;
         /*
         Exception details are only populated when any SEVERE error occurred & exception is actually thrown
          */
@@ -265,15 +268,28 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
         Initializing a formatter for Java Util Logging.
         This will be used when placeholders are used for event logging in log methods.
          */
-        Formatter messageFormatter = getFormatter();
-        if (messageFormatter == null) {
-            messageFormatter = new SimpleFormatter();
+
+        formatConfiguration = getConfigurationProperty("formatter", null);
+
+        if (formatConfiguration != null) {
+            try {
+                messageFormatter = Class.forName(formatConfiguration).newInstance();
+                formattedMessage = ((Formatter) messageFormatter).format(record);
+            } catch (ClassNotFoundException | IllegalAccessException | InstantiationException e) {
+                throw new RuntimeException(e);
+            }
+        } else {
+            messageFormatter = getFormatter();
+            if (messageFormatter == null) {
+                messageFormatter = new SimpleFormatter();
+            }
+            formattedMessage = ((Formatter) messageFormatter).formatMessage(record);
         }
 
         this.sender.send(
                 record.getMillis(),
                 record.getLevel().toString(),
-                messageFormatter.formatMessage(record),
+                formattedMessage,
                 includeLoggerName ? record.getLoggerName() : null,
                 includeThreadName ? String.format(Locale.US, "%d", record.getThreadID()) : null,
                 null, // no property map available

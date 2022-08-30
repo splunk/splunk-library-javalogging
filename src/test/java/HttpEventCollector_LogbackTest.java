@@ -70,6 +70,43 @@ public final class HttpEventCollector_LogbackTest {
     }
 
     /**
+     * Sending a commented string messages via httplogging using logback to Splunk
+     *
+     * @throws Exception
+     */
+    @Test
+    public void canSendCommentedEventStringUsingLogback() throws Exception {
+        TestUtil.enableHttpEventCollector();
+        String token = TestUtil.createHttpEventCollectorToken(httpEventCollectorName);
+
+        String loggerName = "logBackLoggerWithCommentedEventMessages";
+        HashMap<String, String> userInputs = new HashMap<>();
+        userInputs.put("user_logger_name", loggerName);
+        userInputs.put("user_httpEventCollector_token", token);
+        userInputs.put("user_defined_httpEventCollector_token", token);
+        TestUtil.resetLogbackConfiguration("logback_template.xml", "logback.xml", userInputs);
+
+        List<String> messages = new ArrayList<>();
+
+        Date date = new Date();
+        Logger logger = LoggerFactory.getLogger(loggerName);
+        String commentedEventMessage = "// This is a single line commented string. Dated: " + date.toString();
+        logger.info(commentedEventMessage);
+        messages.add(commentedEventMessage);
+
+        commentedEventMessage = "/* This is a document type commented string. */ Dated: " + date.toString();
+        logger.error(commentedEventMessage);
+        messages.add(commentedEventMessage);
+
+        commentedEventMessage = "## This is a normal commented string. Dated: " + date.toString();
+        logger.warn(commentedEventMessage);
+        messages.add(commentedEventMessage);
+
+        TestUtil.verifyEventsSentToSplunk(messages);
+        TestUtil.deleteHttpEventCollectorToken(httpEventCollectorName);
+    }
+
+    /**
      * sending a message via httplogging using logback to splunk
      */
     @Test

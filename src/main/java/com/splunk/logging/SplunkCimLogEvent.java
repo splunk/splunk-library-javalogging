@@ -137,7 +137,7 @@ public class SplunkCimLogEvent {
             key = DOUBLE_QUOTE.matcher(key).replaceAll("\\\\\"");
             value = DOUBLE_QUOTE.matcher(value).replaceAll("\\\\\"");
 
-            output.append(QUOTE).append(key).append(KVDELIM).append(value).append(QUOTE);
+            output.append(key).append(KVDELIM).append(QUOTE).append(value).append(QUOTE);
         }
 
         return output.toString();

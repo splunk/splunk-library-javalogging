@@ -18,6 +18,8 @@ package com.splunk.logging;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.AppenderBase;
 import ch.qos.logback.core.Layout;
+import ch.qos.logback.core.encoder.Encoder;
+import ch.qos.logback.core.encoder.LayoutWrappingEncoder;
 import ch.qos.logback.core.net.DefaultSocketConnector;
 import ch.qos.logback.core.net.SocketConnector;
 import ch.qos.logback.core.util.CloseUtil;
@@ -52,7 +54,10 @@ public class TcpAppender extends AppenderBase<ILoggingEvent> implements Runnable
     private int port;
     private InetAddress address;
 
-    private Layout<ILoggingEvent> layout;
+    /**
+     * Layout is replaced with Encoder because Logback has deprecated the use of Layout directly to format message.
+     */
+    private Encoder<ILoggingEvent> encoder;
     private ExecutorService executor;
     private Future<Socket> connectorTask;
 
@@ -122,7 +127,7 @@ public class TcpAppender extends AppenderBase<ILoggingEvent> implements Runnable
 
                     while (true) {
                         ILoggingEvent event = queue.take();
-                        String formatted = layout.doLayout(event);
+                        String formatted = new String(encoder.encode(event));
                         writer.write(formatted);
                         writer.flush();
                     }
@@ -219,8 +224,8 @@ public class TcpAppender extends AppenderBase<ILoggingEvent> implements Runnable
             addError("Queue size must be non-negative");
         }
 
-        if (this.layout == null) {
-            addError("No layout set for the appender named [" + name + "].");
+        if (this.encoder == null) {
+            addError("No encoder set for the appender named [" + name + "].");
             errorPresent = true;
         }
 
@@ -311,8 +316,21 @@ public class TcpAppender extends AppenderBase<ILoggingEvent> implements Runnable
     public void setQueueSize(int queueSize) { this.queueSize = queueSize; }
     public int getQueueSize() { return this.queueSize; }
 
-    public void setLayout(Layout<ILoggingEvent> layout) { this.layout = layout; }
-    public Layout<ILoggingEvent> getLayout() { return this.layout; }
+    public void setLayout(Layout<ILoggingEvent> layout) {
+        this.addWarn("This appender no longer admits a layout as a sub-component, set an encoder instead.");
+        this.addWarn("To ensure compatibility, wrapping your layout in LayoutWrappingEncoder.");
+        this.addWarn("See also http://logback.qos.ch/codes.html#layoutInsteadOfEncoder for details");
+
+        LayoutWrappingEncoder<ILoggingEvent> layoutWrappingEncoder = new LayoutWrappingEncoder();
+        layoutWrappingEncoder.setLayout(layout);
+        layoutWrappingEncoder.setContext(this.context);
+        this.encoder = layoutWrappingEncoder;
+    }
+    public Encoder<ILoggingEvent> getEncoder() { return this.encoder; }
+
+    public void setEncoder(Encoder<ILoggingEvent> encoder) {
+        this.encoder = encoder;
+    }
 
     /**
      * The <b>eventDelayLimit</b> takes a non-negative integer representing the

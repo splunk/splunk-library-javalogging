@@ -39,9 +39,9 @@ under the License.
     <appender name="socket" class="com.splunk.logging.TcpAppender">
         <RemoteHost>127.0.0.1</RemoteHost>
         <Port>15000</Port>
-        <layout class="ch.qos.logback.classic.PatternLayout">
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
             <pattern>%thread %level: %msg%n</pattern>
-        </layout>
+        </encoder>
     </appender>
 
     <logger name="splunk.logger" additivity="false" level="INFO">

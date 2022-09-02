@@ -1,5 +1,20 @@
 # Splunk Logging for Java Changelog
 
+## Version 1.11.6
+
+### Enhancements
+* Sending Java Throwable object instead of exception message in event.
+* Formatter support added in formatting event message in Java Util Logging.
+  * Any message formatter can be added from properties file.
+  * By default, SimpleFormatter is used to format event message.
+* Layout (deprecated) in socket appender configuration (TcpAppender) is replaced with Encoder.
+
+### Minor Changes
+* Starting a new Dispatcher always for OkHttpClient builder. (PR [#193](https://github.com/splunk/splunk-library-javalogging/pull/193))
+* README file modified with dependency management guidance. (PR [#217](https://github.com/splunk/splunk-library-javalogging/pull/217))
+* JsonHttpContentType in HttpEventCollectorSender is fixed based on [RFC7231](https://httpwg.org/specs/rfc7231.html#media.type) specs. (PR [#256](https://github.com/splunk/splunk-library-javalogging/pull/256))
+* Event message strings starting with commenting characters (#, // & /**/) are allowed. 
+
 ## Version 1.11.5
 
 ### Critical Security Update

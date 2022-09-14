@@ -83,8 +83,8 @@ public class HttpEventCollectorErrorHandlerTest extends TestCase {
         List<HttpEventCollectorEventInfo> data = new ArrayList<>();
         Map<String, String> map = new HashMap<>();
         map.put("name", "value");
-        data.add(new HttpEventCollectorEventInfo(0, "FATAL", "message", "logger-name", "thread-name", map, "exception-message", "marker"));
-        data.add(new HttpEventCollectorEventInfo(1, "INFO", "message", "logger-name", "thread-name", map, "exception-message", "marker"));
+        data.add(new HttpEventCollectorEventInfo(0, "FATAL", "message", "logger-name", "thread-name", map, "exception-message", "marker", false));
+        data.add(new HttpEventCollectorEventInfo(1, "INFO", "message", "logger-name", "thread-name", map, "exception-message", "marker", false));
         return data;
     }
 }

@@ -11,12 +11,34 @@ import com.splunk.logging.HttpEventCollectorEventInfo;
 import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 public class EventInfoTypeAdapter implements JsonSerializer<HttpEventCollectorEventInfo> {
 
     @Override
     public JsonElement serialize(HttpEventCollectorEventInfo src, Type typeOfSrc, JsonSerializationContext context) {
         Map<String, Object> event = new HashMap<>();
+
+        /*
+        When layout other than Pattern Layout is used then this block will get executed.
+         */
+        if (src.isLayoutSerializerEnabled()) {
+            // Always put a message, even if it's empty.
+            try {
+                JsonElement parsed = JsonParser.parseString(src.getMessage());
+                JsonObject jsonObject = parsed.getAsJsonObject();
+                Set<String> keySet = jsonObject.keySet();
+
+                for (String key : keySet) {
+                    event.put(key, jsonObject.get(key));
+                }
+
+                return context.serialize(event);
+            } catch (JsonSyntaxException e) {
+                // No action performed here when json parsing fails.
+                // Message will be automatically serialized based on default method mentioned below.
+            }
+        }
 
         if (src.getSeverity() != null) {
             event.put("severity", src.getSeverity());

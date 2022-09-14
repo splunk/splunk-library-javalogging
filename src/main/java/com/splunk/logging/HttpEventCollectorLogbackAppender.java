@@ -16,6 +16,7 @@ package com.splunk.logging;
  */
 
 import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.PatternLayout;
 import ch.qos.logback.classic.pattern.MarkerConverter;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.classic.spi.StackTraceElementProxy;
@@ -183,6 +184,9 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
             isExceptionOccured = true;
         }
 
+        // This flag will be true when some other layout is used instead of PatternLayout.
+        boolean enableLayoutSerializer = !_layout.getClass().equals(PatternLayout.class);
+
         MarkerConverter c = new MarkerConverter();
         if (this.started) {
             this.sender.send(
@@ -193,7 +197,8 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
                     _includeThreadName ? event.getThreadName() : null,
                     _includeMDC ? event.getMDCPropertyMap() : null,
                     (_includeException && isExceptionOccured) ? exceptionDetail : null,
-                    c.convert(event)
+                    c.convert(event),
+                    enableLayoutSerializer
             );
         }
     }

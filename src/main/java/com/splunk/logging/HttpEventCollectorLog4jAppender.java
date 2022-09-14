@@ -243,6 +243,8 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
     public void append(final LogEvent event) {
 
         String exceptionDetail = generateErrorDetail(event);
+        // This flag will be true when some other layout is used instead of PatternLayout.
+        boolean enableLayoutSerializer = !getLayout().getClass().equals(PatternLayout.class);
 
         // if an exception was thrown
         this.sender.send(
@@ -253,7 +255,8 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
                 includeThreadName ? event.getThreadName() : null,
                 includeMDC ? event.getContextData().toMap() : null,
                 includeException ? exceptionDetail : null,
-                includeMarker ? event.getMarker() : null
+                includeMarker ? event.getMarker() : null,
+                enableLayoutSerializer
         );
 
     }

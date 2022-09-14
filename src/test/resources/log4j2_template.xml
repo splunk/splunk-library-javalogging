@@ -22,6 +22,19 @@
                 >
 
             <PatternLayout pattern="%m"/>
+            <!--
+            <JsonLayout
+                    compact="true"
+                    eventEol="true"
+                    propertiesAsList="true"
+                    includeStacktrace="true"
+                    locationInfo="true"
+                    objectMessageAsJsonObject="true"
+            >
+                <KeyValuePair key="applicationInstance_1" value="QA1"/>
+                <KeyValuePair key="applicationInstance_2" value="QA2"/>
+            </JsonLayout>
+            -->
         </SplunkHttp>
 
     </Appenders>

@@ -269,12 +269,14 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
         This will be used when placeholders are used for event logging in log methods.
          */
 
+        boolean enableLayoutSerializer = false;
         formatConfiguration = getConfigurationProperty("formatter", null);
 
         if (formatConfiguration != null) {
             try {
                 messageFormatter = Class.forName(formatConfiguration).newInstance();
                 formattedMessage = ((Formatter) messageFormatter).format(record);
+                enableLayoutSerializer = true;
             } catch (ClassNotFoundException | IllegalAccessException | InstantiationException e) {
                 throw new RuntimeException(e);
             }
@@ -294,7 +296,8 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
                 includeThreadName ? String.format(Locale.US, "%d", record.getThreadID()) : null,
                 null, // no property map available
                 (includeException && isExceptionOccured) ? exceptionDetail : null,
-                null // no marker available
+                null, // no marker available
+                enableLayoutSerializer
         );
     }
 

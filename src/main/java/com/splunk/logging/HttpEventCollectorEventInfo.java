@@ -33,6 +33,7 @@ public class HttpEventCollectorEventInfo {
     private final Map<String, String> properties;
     private final String exception_message;
     private final Serializable marker;
+    private boolean enableLayoutSerializer;
 
     /**
      * Create a new HttpEventCollectorEventInfo container
@@ -44,6 +45,7 @@ public class HttpEventCollectorEventInfo {
      * @param properties additional properties for this event
      * @param exception_message text of an exception to log
      * @param marker event marker
+     * @param enableLayoutSerializer flag of applying layout specific serializer
      */
     public HttpEventCollectorEventInfo(
     		final long timeMsSinceEpoch,
@@ -53,7 +55,8 @@ public class HttpEventCollectorEventInfo {
             final String thread_name,
             final Map<String, String> properties,
             final String exception_message,
-            final Serializable marker
+            final Serializable marker,
+            final boolean enableLayoutSerializer
     ) {
         this.time = timeMsSinceEpoch / 1000.0;
         this.severity = severity;
@@ -63,6 +66,7 @@ public class HttpEventCollectorEventInfo {
         this.properties = properties;
         this.exception_message = exception_message;
         this.marker = marker;
+        this.enableLayoutSerializer = enableLayoutSerializer;
     }
 
     /**
@@ -110,4 +114,6 @@ public class HttpEventCollectorEventInfo {
      * @return event marker
      */
     public Serializable getMarker() { return marker; }
+
+    public boolean isLayoutSerializerEnabled() { return enableLayoutSerializer; }
 }

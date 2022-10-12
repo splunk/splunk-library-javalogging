@@ -67,6 +67,34 @@ public final class HttpEventCollector_Log4j2Test {
     }
 
     /**
+     * sending a message via httplogging using log4j2 to splunk
+     */
+    @Test
+    public void canSendExceptionUsingLog4j2() throws Exception {
+        TestUtil.enableHttpEventCollector();
+        String token = TestUtil.createHttpEventCollectorToken(httpEventCollectorName);
+        String loggerName = "splunkLogger4j2";
+        HashMap<String, String> userInputs = new HashMap<>();
+        userInputs.put("user_logger_name", loggerName);
+        userInputs.put("user_httpEventCollector_token", token);
+        org.apache.logging.log4j.core.LoggerContext context = TestUtil.resetLog4j2Configuration("log4j2_template.xml", "log4j2.xml", userInputs);
+        //use httplogger
+        List<String> msgs = new ArrayList<>();
+
+        Date date = new Date();
+
+        Logger logger = context.getLogger(loggerName);
+        String jsonMsg = String.format("{EventDate:%s, EventMsg:'this is a test error for log4j2}", date);
+        logger.error(jsonMsg, new RuntimeException("This is RuntimeException"));
+        msgs.add(jsonMsg);
+
+        TestUtil.verifyEventsSentToSplunk(msgs);
+
+        TestUtil.deleteHttpEventCollectorToken(httpEventCollectorName);
+        System.out.println("====================== Test pass=========================");
+    }
+
+    /**
      * Sending a message via httplogging using log4j2 to Splunk.
      *
      * @throws Exception

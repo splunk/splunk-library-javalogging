@@ -71,6 +71,33 @@ public final class HttpEventCollector_LogbackTest {
     }
 
     /**
+     * sending a message via httplogging using logback to splunk
+     */
+    @Test
+    public void canSendExceptionUsingLogback() throws Exception {
+        TestUtil.enableHttpEventCollector();
+        String token = TestUtil.createHttpEventCollectorToken(httpEventCollectorName);
+
+        String loggerName = "logBackLogger";
+        HashMap<String, String> userInputs = new HashMap<String, String>();
+        userInputs.put("user_logger_name", loggerName);
+        userInputs.put("user_httpEventCollector_token", token);
+        userInputs.put("user_defined_httpEventCollector_token", token);
+        TestUtil.resetLogbackConfiguration("logback_template.xml", "logback.xml", userInputs);
+
+        List<String> msgs = new ArrayList<String>();
+
+        Date date = new Date();
+        String jsonMsg = String.format("{EventDate:%s, EventMsg:'this is a test event for Logback Test}", date.toString());
+        Logger logger = LoggerFactory.getLogger(loggerName);
+        logger.error(jsonMsg, new RuntimeException("This is RuntimeException"));
+        msgs.add(jsonMsg);
+
+        TestUtil.verifyEventsSentToSplunk(msgs);
+        TestUtil.deleteHttpEventCollectorToken(httpEventCollectorName);
+    }
+
+    /**
      * Sending a commented string messages via httplogging using logback to Splunk
      *
      * @throws Exception

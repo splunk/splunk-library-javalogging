@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public final class HttpEventCollector_JavaLoggingTest {
@@ -54,6 +55,32 @@ public final class HttpEventCollector_JavaLoggingTest {
 
         Logger logger = Logger.getLogger(loggerName);
         logger.info(jsonMsg);
+
+        TestUtil.verifyOneAndOnlyOneEventSentToSplunk(jsonMsg);
+
+        TestUtil.deleteHttpEventCollectorToken(httpEventCollectorName);
+    }
+
+    /**
+     * sending a message via httplogging using java.logging to splunk
+     */
+    @Test
+    public void canSendExceptionUsingJavaLogging() throws Exception {
+        TestUtil.enableHttpEventCollector();
+
+        String token = TestUtil.createHttpEventCollectorToken(httpEventCollectorName);
+
+        String loggerName = "splunkLoggerNoOptions";
+        HashMap<String, String> userInputs = new HashMap<String, String>();
+        userInputs.put("user_httpEventCollector_token", token);
+        userInputs.put("user_logger_name", loggerName);
+        TestUtil.resetJavaLoggingConfiguration("logging_template.properties", "logging.properties", userInputs);
+
+        Date date = new Date();
+        String jsonMsg = String.format("{EventDate:%s, EventMsg:'this is a test event for java logging canSendEventUsingJavaLogging}", date.toString());
+
+        Logger logger = Logger.getLogger(loggerName);
+        logger.log(Level.SEVERE, jsonMsg, new RuntimeException("This is RuntimeException"));
 
         TestUtil.verifyOneAndOnlyOneEventSentToSplunk(jsonMsg);
 

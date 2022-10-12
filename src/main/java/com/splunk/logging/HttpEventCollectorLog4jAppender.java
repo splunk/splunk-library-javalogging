@@ -266,30 +266,35 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
      */
     private String generateErrorDetail(final LogEvent event) {
 
-        String exceptionDetail = null;
+        String exceptionDetail = "";
 
         /*
         Exception details are only populated when any ERROR OR FATAL event occurred
          */
-        if (Level.ERROR.equals(event.getLevel()) || Level.FATAL.equals(event.getLevel())) {
-            if (event.getThrown() == null && (((MutableLogEvent) event).getParameters()).length <= 0) {
-                return exceptionDetail;
-            }
+        try {
             // Exception thrown in application is wrapped with relevant information instead of just a message.
             Map<String, String> exceptionDetailMap = new LinkedHashMap<>();
-            if (event.getThrown() != null) {
+
+            if (Level.ERROR.equals(event.getLevel()) || Level.FATAL.equals(event.getLevel())) {
                 Throwable throwable = event.getThrown();
+                if (throwable == null) {
+                    return exceptionDetail;
+                }
+
                 exceptionDetailMap.put("detailMessage", throwable.getMessage());
                 exceptionDetailMap.put("exceptionClass", throwable.getClass().toString());
 
-            } else if ((((MutableLogEvent) event).getParameters()).length > 0) {
-                exceptionDetailMap.put("exceptionClass", Arrays.toString(Arrays.stream(((MutableLogEvent) event).getParameters()).toArray()));
+                StackTraceElement[] elements = throwable.getStackTrace();
+                // Retrieving first element from elements array is because the throws exception detail would be available as a first element.
+                if (elements != null && elements.length > 0 && elements[0] != null) {
+                    exceptionDetailMap.put("fileName", elements[0].getFileName());
+                    exceptionDetailMap.put("methodName", elements[0].getMethodName());
+                    exceptionDetailMap.put("lineNumber", String.valueOf(elements[0].getLineNumber()));
+                }
+                exceptionDetail = new Gson().toJson(exceptionDetailMap);
             }
-
-            exceptionDetailMap.put("fileName", event.getSource().getFileName());
-            exceptionDetailMap.put("methodName", event.getSource().getMethodName());
-            exceptionDetailMap.put("lineNumber", String.valueOf(event.getSource().getLineNumber()));
-            exceptionDetail = new Gson().toJson(exceptionDetailMap);
+        } catch (Exception e) {
+            // No action here
         }
         return exceptionDetail;
     }

@@ -18,6 +18,7 @@ package com.splunk.logging;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.pattern.MarkerConverter;
 import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.classic.spi.IThrowableProxy;
 import ch.qos.logback.classic.spi.StackTraceElementProxy;
 import ch.qos.logback.core.AppenderBase;
 import ch.qos.logback.core.Layout;
@@ -164,23 +165,28 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
         /*
         Exception details are only populated when any ERROR encountered & exception is actually thrown
          */
-        if (Level.ERROR.isGreaterOrEqual(event.getLevel()) && event.getThrowableProxy() != null) {
-            // Exception thrown in application is wrapped with relevant information instead of just a message.
-            Map<Object, Object> exceptionDetailMap = new LinkedHashMap<>();
+        try {
+            IThrowableProxy throwableProxy = event.getThrowableProxy();
+            if (Level.ERROR.isGreaterOrEqual(event.getLevel()) && throwableProxy != null) {
+                // Exception thrown in application is wrapped with relevant information instead of just a message.
+                Map<Object, Object> exceptionDetailMap = new LinkedHashMap<>();
 
-            StackTraceElementProxy[] elements = event.getThrowableProxy().getStackTraceElementProxyArray();
-            exceptionDetailMap.put("detailMessage", event.getThrowableProxy().getMessage());
-            exceptionDetailMap.put("exceptionClass", event.getThrowableProxy().getClassName());
+                exceptionDetailMap.put("detailMessage", throwableProxy.getMessage());
+                exceptionDetailMap.put("exceptionClass", throwableProxy.getClassName());
 
-            // Retrieving first element from elements array is because the throws exception detail would be available as a first element.
-            if (elements != null && elements.length > 0 && elements[0] != null) {
-                exceptionDetailMap.put("fileName", elements[0].getStackTraceElement().getFileName());
-                exceptionDetailMap.put("lineNumber", String.valueOf(elements[0].getStackTraceElement().getLineNumber()));
-                exceptionDetailMap.put("methodName", elements[0].getStackTraceElement().getMethodName());
+                // Retrieving first element from elements array is because the throws exception detail would be available as a first element.
+                StackTraceElementProxy[] elements = throwableProxy.getStackTraceElementProxyArray();
+                if (elements != null && elements.length > 0 && elements[0] != null) {
+                    exceptionDetailMap.put("fileName", elements[0].getStackTraceElement().getFileName());
+                    exceptionDetailMap.put("methodName", elements[0].getStackTraceElement().getMethodName());
+                    exceptionDetailMap.put("lineNumber", String.valueOf(elements[0].getStackTraceElement().getLineNumber()));
+                }
+
+                exceptionDetail = new Gson().toJson(exceptionDetailMap);
+                isExceptionOccured = true;
             }
-
-            exceptionDetail = new Gson().toJson(exceptionDetailMap);
-            isExceptionOccured = true;
+        } catch (Exception e) {
+            // No actions here
         }
 
         MarkerConverter c = new MarkerConverter();

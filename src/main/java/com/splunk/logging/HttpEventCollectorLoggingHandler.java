@@ -243,25 +243,31 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
         String formatConfiguration = null;
         String formattedMessage = null;
         Object messageFormatter;
+
         /*
-        Exception details are only populated when any SEVERE error occurred & exception is actually thrown
+            Exception details are only populated when any SEVERE error occurred & exception is actually thrown
          */
-        if (Level.SEVERE.equals(record.getLevel()) && record.getThrown() != null) {
+        try {
+            Throwable throwable = record.getThrown();
+            if (Level.SEVERE.equals(record.getLevel()) && throwable != null) {
 
-            // Exception thrown in application is wrapped with relevant information instead of just a message.
-            Map<Object, Object> exceptionDetailMap = new LinkedHashMap<>();
-            StackTraceElement[] elements = record.getThrown().getStackTrace();
-            exceptionDetailMap.put("detailMessage", record.getThrown().getMessage());
-            exceptionDetailMap.put("exceptionClass", record.getThrown().getClass().toString());
+                // Exception thrown in application is wrapped with relevant information instead of just a message.
+                Map<Object, Object> exceptionDetailMap = new LinkedHashMap<>();
+                exceptionDetailMap.put("detailMessage", throwable.getMessage());
+                exceptionDetailMap.put("exceptionClass", throwable.getClass().toString());
 
-            // Retrieving first element from elements array is because the throws exception detail would be available as a first element.
-            if (elements != null && elements.length > 0 && elements[0] != null) {
-                exceptionDetailMap.put("fileName", elements[0].getFileName());
-                exceptionDetailMap.put("lineNumber", String.valueOf(elements[0].getLineNumber()));
-                exceptionDetailMap.put("methodName", elements[0].getMethodName());
+                // Retrieving first element from elements array is because the throws exception detail would be available as a first element.
+                StackTraceElement[] elements = throwable.getStackTrace();
+                if (elements != null && elements.length > 0 && elements[0] != null) {
+                    exceptionDetailMap.put("fileName", elements[0].getFileName());
+                    exceptionDetailMap.put("methodName", elements[0].getMethodName());
+                    exceptionDetailMap.put("lineNumber", String.valueOf(elements[0].getLineNumber()));
+                }
+                exceptionDetail = new Gson().toJson(exceptionDetailMap);
+                isExceptionOccured = true;
             }
-            exceptionDetail = new Gson().toJson(exceptionDetailMap);
-            isExceptionOccured = true;
+        } catch (Exception e) {
+            // No actions here.
         }
 
         /*
@@ -275,8 +281,12 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
             try {
                 messageFormatter = Class.forName(formatConfiguration).newInstance();
                 formattedMessage = ((Formatter) messageFormatter).format(record);
-            } catch (ClassNotFoundException | IllegalAccessException | InstantiationException e) {
-                throw new RuntimeException(e);
+            } catch (Exception e) {
+                messageFormatter = getFormatter();
+                if (messageFormatter == null) {
+                    messageFormatter = new SimpleFormatter();
+                }
+                formattedMessage = ((Formatter) messageFormatter).formatMessage(record);
             }
         } else {
             messageFormatter = getFormatter();

@@ -1,5 +1,10 @@
 # Splunk Logging for Java Changelog
 
+## Version 1.11.7
+
+### Bug Fixes
+* ClassCastException for Log4j Appender was fixed. (Github Issue [#259](https://github.com/splunk/splunk-library-javalogging/issues/259))
+
 ## Version 1.11.6
 
 ### Enhancements

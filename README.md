@@ -108,11 +108,3 @@ The Splunk logging for Java is community-supported.
 
 1. You can find help through our community on [Splunk Answers](http://answers.splunk.com/) (use the "logging-library-java" tag to identify your questions).
 2. File issues on [GitHub](https://github.com/splunk/splunk-library-javalogging/issues).
-
-## Contact us
-
-You can [contact support][contact] if you have Splunk related questions.
-
-You can reach the Dev Platform team at [devinfo@splunk.com](mailto:devinfo@splunk.com).
-
-[contact]:                  https://www.splunk.com/en_us/support-and-services.html

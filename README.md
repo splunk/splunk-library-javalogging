@@ -106,5 +106,5 @@ command:
 
 The Splunk logging for Java is community-supported.
 
-1. You can find help through our community on [Splunk Answers](http://answers.splunk.com/) (use the "logging-library-java" tag to identify your questions).
+1. You can find help through our community on [Splunk Answers](https://community.splunk.com/t5/tag/logging-library-java/tg-p) (use the "logging-library-java" tag to identify your questions).
 2. File issues on [GitHub](https://github.com/splunk/splunk-library-javalogging/issues).

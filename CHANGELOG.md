@@ -1,5 +1,10 @@
 # Splunk Logging for Java Changelog
 
+## Version 1.11.8
+
+### Minor Changes
+* Force okio version and upgrade okhttp3 to latest stable release to address CVE-2023-3635
+
 ## Version 1.11.7
 
 ### Bug Fixes

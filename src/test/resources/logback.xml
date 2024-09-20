@@ -57,13 +57,11 @@ under the License.
         <token>11111111-2222-3333-4444-555555555555</token>
         <source>splunktest</source>
         <sourcetype>battlecat</sourcetype>
-        <messageFormat>text</messageFormat>
+        <messageFormat>json</messageFormat>
         <middleware>HttpEventCollectorUnitTestMiddleware</middleware>
         <connectTimeout>5000</connectTimeout>
         <terminationTimeout>2000</terminationTimeout>
-        <layout class="ch.qos.logback.classic.PatternLayout">
-            <pattern>%msg</pattern>
-        </layout>
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder" />
     </appender>
 
     <logger name="splunk.logger" additivity="false" level="INFO">

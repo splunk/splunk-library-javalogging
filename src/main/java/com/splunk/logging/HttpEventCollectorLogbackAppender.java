@@ -22,19 +22,27 @@ import ch.qos.logback.classic.spi.IThrowableProxy;
 import ch.qos.logback.classic.spi.StackTraceElementProxy;
 import ch.qos.logback.core.AppenderBase;
 import ch.qos.logback.core.Layout;
+import ch.qos.logback.core.encoder.Encoder;
+import ch.qos.logback.core.encoder.LayoutWrappingEncoder;
+import ch.qos.logback.core.spi.DeferredProcessingAware;
 import com.google.gson.Gson;
 import com.splunk.logging.hec.MetadataTags;
 
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
  * Logback Appender which writes its events to Splunk http event collector rest endpoint.
+ * <b>Remarks: </b>
+ * {@link ch.qos.logback.core.spi.DeferredProcessingAware} is the super-interface of all loggable events.
  */
-public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
+public class HttpEventCollectorLogbackAppender<E extends DeferredProcessingAware>
+        extends AppenderBase<E> {
+
     private HttpEventCollectorSender sender = null;
-    private Layout<E> _layout;
+    private Encoder<E> _encoder;
     private boolean _includeLoggerName = true;
     private boolean _includeThreadName = true;
     private boolean _includeMDC = true;
@@ -59,11 +67,17 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
     private long _batchSize = 0;
     private String _sendMode;
     private long _retriesOnError = 0;
-    private Map<String, String> _metadata = new HashMap<>();
+    private final Map<String, String> _metadata = new HashMap<>();
     private boolean _batchingConfigured = false;
 
 
-    private HttpEventCollectorSender.TimeoutSettings timeoutSettings = new HttpEventCollectorSender.TimeoutSettings();
+    private final HttpEventCollectorSender.TimeoutSettings timeoutSettings = new HttpEventCollectorSender.TimeoutSettings();
+
+    private static class EncodeFailException extends Exception {
+        EncodeFailException(Throwable cause) {
+            super(cause);
+        }
+    }
 
     @Override
     public void start() {
@@ -90,6 +104,16 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
         // This should have been caught at configuration time, but double-check at start
         if ("raw".equalsIgnoreCase(_type) && _batchingConfigured) {
             throw new IllegalArgumentException("Batching configuration and sending type of raw are incompatible.");
+        }
+
+        // encoder
+        if (this._encoder == null) {
+            addError("No encoder set for the appender named [" + name + "].");
+        } else {
+            _encoder.setContext(this.context);
+            if (!_encoder.isStarted()) {
+                _encoder.start();
+            }
         }
 
         this.sender = new HttpEventCollectorSender(
@@ -141,6 +165,7 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
         if (!started)
             return;
         this.sender.close();
+        _encoder.stop();
         super.stop();
     }
 
@@ -153,6 +178,19 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
         }
     }
 
+    private String encodeMessage(E message) throws EncodeFailException {
+        byte[] encoded;
+
+        try {
+            encoded = _encoder.encode(message);
+        } catch (Exception e) {
+            throw new EncodeFailException(e);
+        }
+
+        return new String(encoded, StandardCharsets.UTF_8);
+    }
+
+    @SuppressWarnings("unchecked")
     private void sendEvent(ILoggingEvent event) {
         event.prepareForDeferredProcessing();
         if (event.hasCallerData()) {
@@ -189,31 +227,32 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
             // No actions here
         }
 
-        MarkerConverter c = new MarkerConverter();
         if (this.started) {
-            this.sender.send(
-            		event.getTimeStamp(),
-                    event.getLevel().toString(),
-                    _layout.doLayout((E) event),
-                    _includeLoggerName ? event.getLoggerName() : null,
-                    _includeThreadName ? event.getThreadName() : null,
-                    _includeMDC ? event.getMDCPropertyMap() : null,
-                    (_includeException && isExceptionOccured) ? exceptionDetail : null,
-                    c.convert(event)
-            );
+            MarkerConverter c = new MarkerConverter();
+            try {
+                this.sender.send(
+                        event.getTimeStamp(),
+                        event.getLevel().toString(),
+                        this.encodeMessage((E) event), // Fine. E is super of ILoggingEvent
+                        _includeLoggerName ? event.getLoggerName() : null,
+                        _includeThreadName ? event.getThreadName() : null,
+                        _includeMDC ? event.getMDCPropertyMap() : null,
+                        (_includeException && isExceptionOccured) ? exceptionDetail : null,
+                        c.convert(event)
+                );
+            } catch (EncodeFailException e) {
+                addWarn("Failed to encode event. Dropping event.", e.getCause());
+            }
         }
     }
 
     // send non ILoggingEvent such as ch.qos.logback.access.spi.IAccessEvent
     private void sendEvent(E e) {
-        String message = _layout.doLayout(e);
-        if (message == null) {
-            throw new IllegalArgumentException(String.format(
-                    "The logback layout %s is probably incorrect, " +
-                            "and fails to format the message.",
-                    _layout.toString()));
+        try {
+            this.sender.send(this.encodeMessage(e));
+        } catch (EncodeFailException ex) {
+            addWarn("Failed to encode event. Dropping event.", ex.getCause());
         }
-        this.sender.send(message);
     }
 
     public void setUrl(String url) {
@@ -261,11 +300,22 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
     }
 
     public void setLayout(Layout<E> layout) {
-        this._layout = layout;
+        this.addWarn("This appender no longer admits a layout as a sub-component, set an encoder instead.");
+        this.addWarn("To ensure compatibility, wrapping your layout in LayoutWrappingEncoder.");
+        this.addWarn("See also http://logback.qos.ch/codes.html#layoutInsteadOfEncoder for details");
+
+        LayoutWrappingEncoder<E> layoutWrappingEncoder = new LayoutWrappingEncoder<>();
+        layoutWrappingEncoder.setLayout(layout);
+        layoutWrappingEncoder.setContext(this.context);
+        this._encoder = layoutWrappingEncoder;
     }
 
-    public Layout<E> getLayout() {
-        return this._layout;
+    public Encoder<E> getEncoder() {
+        return this._encoder;
+    }
+
+    public void setEncoder(Encoder<E> encoder) {
+        this._encoder = encoder;
     }
 
     public boolean getIncludeLoggerName() {

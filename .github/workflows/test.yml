@@ -41,20 +41,6 @@ jobs:
     runs-on: ubuntu-latest
     container: maven:3-jdk-8
 
-    services:
-      splunk:
-        image: splunk/splunk:${{matrix.splunk-version}}
-        env:
-          SPLUNK_START_ARGS: --accept-license
-          SPLUNK_PASSWORD: changed!
-        ports:
-          - 8089
-          - 8088
-          - 5555
-          - 15000
-          - 10667
-          - 10668/udp
-
     steps:
       - uses: actions/checkout@v2
       - name: Set up JDK
@@ -73,3 +59,4 @@ jobs:
         env:
           SPLUNK_PASSWORD: changed!
           SPLUNK_HOST: splunk
+          USE_IMAGE_VERSION: ${{matrix.splunk-version}}

@@ -30,6 +30,7 @@ import java.util.HashMap;
 import java.util.List;
 
 public final class HttpEventCollector_Log4j2Test {
+
     private String httpEventCollectorName = "Log4j2Test";
     final List<List<HttpEventCollectorEventInfo>> errors = new ArrayList<>();
     final List<Exception> logEx = new ArrayList<>();

@@ -17,22 +17,25 @@
  */
 
 import ch.qos.logback.core.joran.spi.JoranException;
+import com.splunk.*;
 import com.splunk.logging.HttpEventCollectorErrorHandler;
 import com.splunk.logging.HttpEventCollectorEventInfo;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.lang.reflect.Method;
 import java.net.URI;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.util.*;
-import java.lang.reflect.*;
-
-import com.splunk.*;
-import org.slf4j.*;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
 
 public class HttpEventCollector_Test {
+
     public static void addPath(String s) throws Exception {
         File f = new File(s);
         URI u = f.toURI();

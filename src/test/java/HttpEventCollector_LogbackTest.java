@@ -14,18 +14,33 @@
  * under the License.
  */
 
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.LoggerContext;
+import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
+import ch.qos.logback.classic.spi.ILoggingEvent;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import com.splunk.logging.HttpEventCollectorErrorHandler;
 import com.splunk.logging.HttpEventCollectorEventInfo;
+import com.splunk.logging.HttpEventCollectorLogbackAppender;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Assert;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSession;
+import javax.net.ssl.SSLSocket;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
+import java.security.KeyStore;
+import java.security.cert.Certificate;
+import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 
@@ -489,5 +504,148 @@ public final class HttpEventCollector_LogbackTest {
 
         TestUtil.verifyEventsSentToSplunk(msgs);
         TestUtil.deleteHttpEventCollectorToken(httpEventCollectorName);
+    }
+
+    /**
+     * Test sending events over HTTPS to Splunk with a custom TrustStore containing Splunk's self-signed certificate.
+     * This test extracts Splunk's certificate automatically and uses it to establish a trusted connection.
+     */
+    @Test
+    public void canSendEventWithCustomTrustStore() throws Exception {
+        TestUtil.enableHttpEventCollector();
+        String token = TestUtil.createHttpEventCollectorToken(httpEventCollectorName);
+
+        // Extract Splunk's certificate chain and create a TrustStore
+        final KeyStore trustStore = extractSplunkCertificateToTrustStore("localhost", 8088);
+
+        // Create and configure appender programmatically
+        LoggerContext loggerContext = new LoggerContext();
+        ch.qos.logback.classic.Logger logger = loggerContext.getLogger("truststore-test-logger");
+        logger.setLevel(Level.INFO);
+
+        HttpEventCollectorLogbackAppender<ILoggingEvent> appender = new HttpEventCollectorLogbackAppender<>();
+        appender.setContext(loggerContext);
+        appender.setUrl("https://localhost:8088");
+        appender.setToken(token);
+        appender.setTrustStore(trustStore);
+
+        // Set custom hostname verifier that checks the certificate matches what we trust
+        // (Splunk's default cert has CN=SplunkServerDefaultCert, not localhost)
+        appender.setHostnameVerifier(new HostnameVerifier() {
+            @Override
+            public boolean verify(String hostname, SSLSession session) {
+                return verifyTrustStoreContainsCertMatchingSslSession(trustStore, session);
+            }
+        });
+
+        // Configure encoder
+        PatternLayoutEncoder encoder = new PatternLayoutEncoder();
+        encoder.setContext(loggerContext);
+        encoder.setPattern("%msg");
+        encoder.start();
+        appender.setLayout(encoder.getLayout());
+
+        // Start appender and add to logger
+        appender.start();
+        logger.addAppender(appender);
+
+        // Send test messages
+        List<String> msgs = new ArrayList<>();
+        Date date = new Date();
+        String jsonMsg = String.format("{EventDate:%s, EventMsg:'test event with custom TrustStore}", date.toString());
+        logger.info(jsonMsg);
+        msgs.add(jsonMsg);
+
+        jsonMsg = String.format("{EventDate:%s, EventMsg:'second event with custom TrustStore}", date.toString());
+        logger.info(jsonMsg);
+        msgs.add(jsonMsg);
+
+        // Flush appender to ensure events are sent
+        appender.flush();
+
+        // Wait a bit for async sending
+        Thread.sleep(3000);
+
+        // Verify events arrived in Splunk
+        TestUtil.verifyEventsSentToSplunk(msgs);
+
+        // Cleanup
+        appender.stop();
+        loggerContext.stop();
+        TestUtil.deleteHttpEventCollectorToken(httpEventCollectorName);
+    }
+
+    /**
+     * Helper method to extract Splunk's self-signed certificate and create a TrustStore.
+     * This connects to Splunk's HTTPS port, captures the certificate, and adds it to a new TrustStore.
+     */
+    private static KeyStore extractSplunkCertificateToTrustStore(String host, int port) throws Exception {
+        // Create a trust manager that captures the certificate chain
+        final List<X509Certificate> capturedCerts = new ArrayList<>();
+        TrustManager capturingTrustManager = new X509TrustManager() {
+            public void checkClientTrusted(X509Certificate[] chain, String authType) {}
+            public void checkServerTrusted(X509Certificate[] chain, String authType) {
+                // Capture the entire certificate chain (server cert + CA certs)
+                for (X509Certificate cert : chain) {
+                    capturedCerts.add(cert);
+                }
+            }
+            public X509Certificate[] getAcceptedIssuers() { return new X509Certificate[0]; }
+        };
+
+        // Connect to Splunk HTTPS port to grab the certificate chain
+        SSLContext sslContext = SSLContext.getInstance("TLS");
+        sslContext.init(null, new TrustManager[]{capturingTrustManager}, null);
+        SSLSocket socket = (SSLSocket) sslContext.getSocketFactory().createSocket(host, port);
+        socket.startHandshake();
+        socket.close();
+
+        // Verify we captured at least one certificate
+        if (capturedCerts.isEmpty()) {
+            throw new Exception("Failed to capture Splunk's certificate chain");
+        }
+
+        // Create a TrustStore with all captured certificates
+        KeyStore trustStore = KeyStore.getInstance("PKCS12");
+        trustStore.load(null, "changeit".toCharArray());
+
+        // Add all certificates in the chain to the trust store
+        for (int i = 0; i < capturedCerts.size(); i++) {
+            trustStore.setCertificateEntry("splunk-cert-" + i, capturedCerts.get(i));
+        }
+
+        return trustStore;
+    }
+
+    /**
+     * Verifies that the certificate presented in the SSL session matches one in the provided TrustStore.
+     * This provides hostname verification for certificates that don't have the correct hostname in their
+     * Subject Alternative Names (SANs) by verifying the certificate itself is trusted, rather than
+     * verifying the hostname matches the certificate.
+     */
+    private static boolean verifyTrustStoreContainsCertMatchingSslSession(KeyStore trustStore, SSLSession session) {
+        try {
+            // Get the certificate from the session
+            Certificate[] peerCerts = session.getPeerCertificates();
+            if (peerCerts.length == 0) {
+                return false;
+            }
+
+            X509Certificate serverCert = (X509Certificate) peerCerts[0];
+
+            // Verify this certificate is in our TrustStore
+            Enumeration<String> aliases = trustStore.aliases();
+            while (aliases.hasMoreElements()) {
+                String alias = aliases.nextElement();
+                Certificate trustedCert = trustStore.getCertificate(alias);
+                if (trustedCert != null && trustedCert.equals(serverCert)) {
+                    // Certificate matches one in our TrustStore - accept it
+                    return true;
+                }
+            }
+            return false;
+        } catch (Exception e) {
+            return false;
+        }
     }
 }

@@ -27,6 +27,7 @@ import okhttp3.*;
 import javax.net.ssl.*;
 import java.io.IOException;
 import java.io.Serializable;
+import java.security.KeyStore;
 import java.security.cert.CertificateException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -84,6 +85,8 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
     private static final OkHttpClient httpSharedClient = new OkHttpClient(); // shared instance with the default settings
     private OkHttpClient httpClient = null; // shares the same connection pool and thread pools with the shared instance
     private boolean disableCertificateValidation = false;
+    private KeyStore trustStore = null;
+    private HostnameVerifier hostnameVerifier = null;
     private SendMode sendMode = SendMode.Sequential;
     private HttpEventCollectorMiddleware middleware = new HttpEventCollectorMiddleware();
 
@@ -253,6 +256,34 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
         disableCertificateValidation = true;
     }
 
+    /**
+     * Set a custom trust store for SSL/TLS connections.
+     * This allows the sender to trust custom certificates (e.g., self-signed certificates)
+     * without modifying the JVM's default cacerts file.
+     *
+     * Note: This is only applied when certificate validation is enabled. If
+     * disableCertificateValidation() is called, that takes precedence.
+     *
+     * @param trustStore KeyStore containing trusted certificates, or null to use JVM default
+     */
+    public void setTrustStore(KeyStore trustStore) {
+        this.trustStore = trustStore;
+    }
+
+    /**
+     * Set a custom hostname verifier for SSL/TLS connections.
+     * This allows fine-grained control over hostname verification, which is useful when
+     * working with certificates that don't have proper Subject Alternative Names (SANs).
+     *
+     * Note: This is only applied when certificate validation is enabled. If
+     * disableCertificateValidation() is called, that takes precedence.
+     *
+     * @param hostnameVerifier HostnameVerifier to use, or null to use default verification
+     */
+    public void setHostnameVerifier(HostnameVerifier hostnameVerifier) {
+        this.hostnameVerifier = hostnameVerifier;
+    }
+
     public void setEventBodySerializer(EventBodySerializer eventBodySerializer) {
         serializer.setEventBodySerializer(eventBodySerializer);
     }
@@ -385,6 +416,36 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
                     return true;
                 }
             });
+        } else {
+            if (trustStore != null) {
+                // Configure custom trust store only if certificate validation is not disabled
+                try {
+                    TrustManagerFactory tmf = TrustManagerFactory.getInstance(
+                            TrustManagerFactory.getDefaultAlgorithm());
+                    tmf.init(trustStore);
+
+                    SSLContext sslContext = SSLContext.getInstance("TLS");
+                    sslContext.init(null, tmf.getTrustManagers(), null);
+
+                    X509TrustManager trustManager = null;
+                    for (TrustManager tm : tmf.getTrustManagers()) {
+                        if (tm instanceof X509TrustManager) {
+                            trustManager = (X509TrustManager) tm;
+                            break;
+                        }
+                    }
+
+                    if (trustManager != null) {
+                        builder.sslSocketFactory(sslContext.getSocketFactory(), trustManager);
+                    }
+                } catch (Exception e) {
+                    System.err.println("Warning: Failed to configure custom SSL trust store: " + e.getMessage());
+                }
+            }
+            // Apply custom hostname verifier if provided (only when certificate validation is enabled)
+            if (hostnameVerifier != null) {
+                builder.hostnameVerifier(hostnameVerifier);
+            }
         }
 
         httpClient = builder.build();

@@ -1,5 +1,27 @@
 # Splunk Logging for Java Changelog
 
+## Version 1.11.9 (TBD)
+
+### Added
+- Custom TrustStore configuration support for SSL/TLS connections
+  - Added `setTrustStore(KeyStore)` method to `HttpEventCollectorSender`
+  - Added `setTrustStore(KeyStore)` and `getTrustStore()` methods to `HttpEventCollectorLogbackAppender`
+  - Allows programmatic configuration of trusted certificates for HTTPS connections
+  - Enables integration with Splunk servers using self-signed certificates without modifying JVM cacerts
+  - Note: `disableCertificateValidation` takes precedence and will override custom TrustStore if both are set
+  - Implemented for PortSwigger DAST ENT-10043
+- Custom HostnameVerifier configuration support for SSL/TLS connections
+  - Added `setHostnameVerifier(HostnameVerifier)` method to `HttpEventCollectorSender`
+  - Added `setHostnameVerifier(HostnameVerifier)` and `getHostnameVerifier()` methods to `HttpEventCollectorLogbackAppender`
+  - Allows fine-grained control over hostname verification for certificates without proper Subject Alternative Names (SANs)
+  - Independent of TrustStore configuration - can be used with default JVM trust store or custom TrustStore
+
+### Changed
+- None
+
+### Fixed
+- None
+
 ## Version 1.11.8
 
 ### Minor Changes

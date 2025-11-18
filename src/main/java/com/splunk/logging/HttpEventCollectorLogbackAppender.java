@@ -25,6 +25,8 @@ import ch.qos.logback.core.Layout;
 import com.google.gson.Gson;
 import com.splunk.logging.hec.MetadataTags;
 
+import javax.net.ssl.HostnameVerifier;
+import java.security.KeyStore;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -61,6 +63,8 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
     private long _retriesOnError = 0;
     private Map<String, String> _metadata = new HashMap<>();
     private boolean _batchingConfigured = false;
+    private KeyStore _trustStore = null;
+    private HostnameVerifier _hostnameVerifier = null;
 
 
     private HttpEventCollectorSender.TimeoutSettings timeoutSettings = new HttpEventCollectorSender.TimeoutSettings();
@@ -125,6 +129,14 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
 
         if (_disableCertificateValidation != null && _disableCertificateValidation.equalsIgnoreCase("true")) {
             sender.disableCertificateValidation();
+        }
+
+        if (_trustStore != null) {
+            sender.setTrustStore(_trustStore);
+        }
+
+        if (_hostnameVerifier != null) {
+            sender.setHostnameVerifier(_hostnameVerifier);
         }
 
         super.start();
@@ -358,6 +370,50 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
 
     public void setDisableCertificateValidation(String disableCertificateValidation) {
         this._disableCertificateValidation = disableCertificateValidation;
+    }
+
+    /**
+     * Set a custom trust store for SSL/TLS connections.
+     * Must be called before the appender is started.
+     *
+     * Note: This is only applied when certificate validation is enabled. If
+     * disableCertificateValidation is set to "true", that takes precedence.
+     *
+     * @param trustStore KeyStore containing trusted certificates
+     */
+    public void setTrustStore(KeyStore trustStore) {
+        this._trustStore = trustStore;
+    }
+
+    /**
+     * Get the configured trust store.
+     *
+     * @return the configured trust store, or null if not set
+     */
+    public KeyStore getTrustStore() {
+        return _trustStore;
+    }
+
+    /**
+     * Set a custom hostname verifier for SSL/TLS connections.
+     * Must be called before the appender is started.
+     *
+     * Note: This is only applied when certificate validation is enabled. If
+     * disableCertificateValidation is set to "true", that takes precedence.
+     *
+     * @param hostnameVerifier HostnameVerifier to use for hostname verification
+     */
+    public void setHostnameVerifier(HostnameVerifier hostnameVerifier) {
+        this._hostnameVerifier = hostnameVerifier;
+    }
+
+    /**
+     * Get the configured hostname verifier.
+     *
+     * @return the configured hostname verifier, or null if not set
+     */
+    public HostnameVerifier getHostnameVerifier() {
+        return _hostnameVerifier;
     }
 
     public void setbatch_size_count(String value) {

@@ -332,22 +332,27 @@ public final class HttpEventCollector_JavaLoggingTest {
         logger.info(jsonMsg);
 
         //wait for async process to return the error
+        // transient ConnectExceptions can be interleaved with the expected ServerErrorExceptions
+        // (Docker networking may tear down the connection before the server replies), so wait on
+        // ServerErrorException count specifically rather than logEx.size()
         long startTime = System.currentTimeMillis();
+        List<HttpEventCollectorErrorHandler.ServerErrorException> serverErrors = new ArrayList<>();
         while (System.currentTimeMillis() - startTime < 60 * 1000)/*wait for up to 60s*/ {
-            if (logEx.size() >= 2)
+            serverErrors.clear();
+            for (Exception ex : logEx) {
+                if (ex instanceof HttpEventCollectorErrorHandler.ServerErrorException)
+                    serverErrors.add((HttpEventCollectorErrorHandler.ServerErrorException) ex);
+            }
+            if (serverErrors.size() >= 2)
                 break;
             Thread.sleep(1000);
         }
-
-        if (logEx == null)
-            Assert.fail("didn't catch errors");
-
 
         System.out.println("======print logEx");
         System.out.println(logEx.toString());
         System.out.println("======finish print logEx");
         // in this case expect a valid http reply with a json error message
-        HttpEventCollectorErrorHandler.ServerErrorException serverErrorException = (HttpEventCollectorErrorHandler.ServerErrorException) logEx.get(1);
+        HttpEventCollectorErrorHandler.ServerErrorException serverErrorException = serverErrors.get(1);
         Assert.assertEquals("Invalid token", serverErrorException.getErrorText());
         Assert.assertEquals(4, serverErrorException.getErrorCode());
 
@@ -357,7 +362,7 @@ public final class HttpEventCollector_JavaLoggingTest {
                 System.out.println(info.getMessage());
             }
         }
-        Assert.assertEquals(2, errors.size());
+        Assert.assertTrue(errors.size() >= 2);
     }
 
 

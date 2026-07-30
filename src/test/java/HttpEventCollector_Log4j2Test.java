@@ -317,9 +317,18 @@ public final class HttpEventCollector_Log4j2Test {
         logger.info(jsonMsg);
 
         //wait for async process to return the error
+        // transient ConnectExceptions can be interleaved with the expected ServerErrorExceptions
+        // (Docker networking may tear down the connection before the server replies), so wait on
+        // ServerErrorException count specifically rather than logEx.size()
         long startTime = System.currentTimeMillis();
+        List<HttpEventCollectorErrorHandler.ServerErrorException> serverErrors = new ArrayList<>();
         while (System.currentTimeMillis() - startTime < 60 * 1000)/*wait for up to 60s*/ {
-            if (logEx.size() >= 2)
+            serverErrors.clear();
+            for (Exception ex : logEx) {
+                if (ex instanceof HttpEventCollectorErrorHandler.ServerErrorException)
+                    serverErrors.add((HttpEventCollectorErrorHandler.ServerErrorException) ex);
+            }
+            if (serverErrors.size() >= 2)
                 break;
             Thread.sleep(1000);
         }
@@ -334,15 +343,14 @@ public final class HttpEventCollector_Log4j2Test {
         System.out.println(logEx);
         System.out.println("======finish print logEx");
         // in this case expect a valid http reply with a json error message
-        HttpEventCollectorErrorHandler.ServerErrorException serverErrorException1 = (HttpEventCollectorErrorHandler.ServerErrorException) logEx.get(0);
+        HttpEventCollectorErrorHandler.ServerErrorException serverErrorException1 = serverErrors.get(0);
         Assert.assertEquals("Invalid token", serverErrorException1.getErrorText());
         Assert.assertEquals(4, serverErrorException1.getErrorCode());
-        HttpEventCollectorErrorHandler.ServerErrorException serverErrorException2 = (HttpEventCollectorErrorHandler.ServerErrorException) logEx.get(1);
+        HttpEventCollectorErrorHandler.ServerErrorException serverErrorException2 = serverErrors.get(1);
         Assert.assertEquals("Invalid token", serverErrorException2.getErrorText());
         Assert.assertEquals(4, serverErrorException2.getErrorCode());
 
-
-        Assert.assertEquals(2, errors.size());
+        Assert.assertTrue(errors.size() >= 2);
     }
 
 

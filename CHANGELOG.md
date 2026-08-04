@@ -1,5 +1,12 @@
 # Splunk Logging for Java Changelog
 
+## Version 1.11.11
+
+### Security Updates
+
+* Bump Logback to 1.3.16 (fixes CVE-2024-12798)
+* Bump slf4j-api to 2.0.7 for Logback 1.3.16 compatibility
+
 ## Version 1.11.10
 
 ### Security Updates

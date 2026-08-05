@@ -1,5 +1,8 @@
 package com.splunk.logging;
 
+import java.util.Arrays;
+import java.util.HashSet;
+
 /**
  * @copyright
  *
@@ -19,6 +22,7 @@ package com.splunk.logging;
  */
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * Splunk http event collector resend middleware.
@@ -30,6 +34,20 @@ import java.util.List;
  */
 public class HttpEventCollectorResendMiddleware
         extends HttpEventCollectorMiddleware.HttpSenderMiddleware {
+
+    /**
+     * List of HTTP event collector server application error statuses. These statuses
+     * indicate non-transient problems that cannot be fixed by resending the
+     * data.
+     */
+    private static final Set<Integer> HttpEventCollectorApplicationErrors  = new HashSet<>(Arrays.asList(
+            // Forbidden
+            403,
+            // Method Not Allowed
+            405,
+            // Bad Request
+            400
+    ));
     private long retriesOnError = 0;
 
     /**
@@ -45,6 +63,10 @@ public class HttpEventCollectorResendMiddleware
             HttpEventCollectorMiddleware.IHttpSender sender,
             HttpEventCollectorMiddleware.IHttpSenderCallback callback) {
          callNext(events, sender, new Callback(events, sender, callback));
+    }
+
+    private boolean shouldRetry(int statusCode) {
+        return statusCode != 200 && !HttpEventCollectorApplicationErrors.contains(statusCode);
     }
 
     private class Callback implements HttpEventCollectorMiddleware.IHttpSenderCallback {
@@ -66,25 +88,33 @@ public class HttpEventCollectorResendMiddleware
 
         @Override
         public void completed(int statusCode, final String reply) {
-            // if non-200, resend wouldn't help, delegate to previous callback
-            prevCallback.completed(statusCode, reply);
+            if (shouldRetry(statusCode) && retries < retriesOnError) {
+                retry();
+            } else {
+                // if non-retryable, resend wouldn't help, delegate to previous callback
+                prevCallback.completed(statusCode, reply);
+            }
         }
 
         @Override
         public void failed(final Exception ex) {
             if (retries < retriesOnError) {
-                retries++;
-                try {
-                    Thread.sleep(retryDelay);
-                    callNext(events, sender, this);
-                } catch (InterruptedException ie) {
-                    prevCallback.failed(ie);
-                }
-                // increase delay exponentially
-                retryDelay = Math.min(RetryDelayCeiling, retryDelay * 2);
+                retry();
             } else {
                 prevCallback.failed(ex);
             }
+        }
+
+        private void retry() {
+            retries++;
+            try {
+                Thread.sleep(retryDelay);
+                callNext(events, sender, this);
+            } catch (InterruptedException ie) {
+                prevCallback.failed(ie);
+            }
+            // increase delay exponentially
+            retryDelay = Math.min(RetryDelayCeiling, retryDelay * 2);
         }
     }
 }

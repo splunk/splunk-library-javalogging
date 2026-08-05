@@ -23,9 +23,12 @@ We love to see pull requests!
 To create a pull request:
 
 1. Fill out the [Individual Contributor Agreement][indivcontrib].
-1. Fork [the repository][repo].
-1. Make changes to the **`main`** branch, preferably with tests.
-1. Create a [pull request][pulls] against the **`main`** branch.
+2. Fork [the repository][repo].
+3. Make changes to the **`main`** branch, preferably with tests.
+4. Create a [pull request][pulls] against the **`main`** branch.
+
+### Code Reviews
+Contributions need to be reviewed by the [CODEOWNERS](.github/CODEOWNERS)
 
 ## Contact us
 

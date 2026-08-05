@@ -76,6 +76,7 @@ public class HttpEventCollectorErrorHandlerTest extends TestCase {
 
         HttpEventCollectorErrorHandler.error(data, new HttpEventCollectorErrorHandler.ServerErrorException("{ 'text':'test exception', 'code':4}"));
 
+        HttpEventCollectorErrorHandler.error(data, new HttpEventCollectorErrorHandler.ServerErrorException("Non Json response body: test exception"));
     }
 
     @NotNull

@@ -220,20 +220,8 @@
 
         <dependency>
             <groupId>com.squareup.okhttp3</groupId>
-            <artifactId>okhttp</artifactId>
-            <version>4.12.0</version>
-            <exclusions>
-            <exclusion>
-                <artifactId>okio</artifactId>
-                <groupId>com.squareup.okio</groupId>
-            </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <!-- Force okio version to override okhttp3's transitive dependency. Mitigates CVE-2023-3635 -->
-            <groupId>com.squareup.okio</groupId>
-            <artifactId>okio</artifactId>
-            <version>3.12.0</version>
+            <artifactId>okhttp-jvm</artifactId>
+            <version>5.5.0</version>
         </dependency>
 
         <dependency>

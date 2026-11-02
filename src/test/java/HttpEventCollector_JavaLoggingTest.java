@@ -70,7 +70,7 @@ public final class HttpEventCollector_JavaLoggingTest {
 
         String token = TestUtil.createHttpEventCollectorToken(httpEventCollectorName);
 
-        String loggerName = "splunkLoggerNoOptions";
+        String loggerName = "splunkLoggerNoOptionsException";
         HashMap<String, String> userInputs = new HashMap<String, String>();
         userInputs.put("user_httpEventCollector_token", token);
         userInputs.put("user_logger_name", loggerName);

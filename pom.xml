@@ -262,6 +262,19 @@
                 <configuration>
                     <source>8</source>
                     <target>8</target>
+                    <!--
+                        JDK 23+ no longer runs annotation processors found on the classpath
+                        implicitly. Without an explicit processor path, the Log4j2 plugin index
+                        (Log4j2Plugins.dat) is not generated and the SplunkHttp appender fails
+                        with CLASS_NOT_FOUND. An explicit path works on every JDK, including 8.
+                    -->
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.apache.logging.log4j</groupId>
+                            <artifactId>log4j-core</artifactId>
+                            <version>${log4j2.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
                 </configuration>
             </plugin>
             <plugin>

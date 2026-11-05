@@ -1,6 +1,8 @@
 name: Java CI with Maven
 
-on: [pull_request]
+on:
+  pull_request:
+  workflow_call:
 
 permissions:
   contents: read
@@ -11,12 +13,10 @@ concurrency:
 
 jobs:
   unit-test:
-    name: Unit Test (Java ${{ matrix.java-version }})
+    name: Unit Test (java-${{ matrix.java-version }})
     strategy:
       matrix:
-        java-version:
-          - 8
-          - latest
+        java-version: [8, 11]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -32,15 +32,17 @@ jobs:
         run: mvn -P Unittest -B verify --file pom.xml
 
   acceptance-test:
-    name: Acceptance Test (Splunk ${{ matrix.splunk-version }})
+    name: Acceptance Test (splunk-${{ matrix.splunk-version }})
     needs: unit-test
     strategy:
       matrix:
         include:
-          - splunk-version: "9.4"
-            splunk-image: splunk/splunk:9.4@sha256:8d3849f78c2814fd65e68a69aeaa4d1dc79f37e661dbe48e791f4552b025def5
-          - splunk-version: "latest"
-            splunk-image: splunk/splunk:latest
+          - splunk-version: "8.0"
+            splunk-image: splunk/splunk:8.0@sha256:d6d64ff30ed713238e0f493f0072aa1bc1e8707bec6d5235f115dcee6dc3a595
+          - splunk-version: "8.2"
+            splunk-image: splunk/splunk:8.2@sha256:fb09bda7453a579faa4325d49655f89e8fe654fafac159d5d957e845d818abf5
+          - splunk-version: "9.1"
+            splunk-image: splunk/splunk:9.1@sha256:46ac8d5e1fb6c15fa3abb2cf61d6571dce7d2f720574bd7ab85cb5c2fe0ecab2
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

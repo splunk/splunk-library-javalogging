@@ -11,7 +11,7 @@ concurrency:
 
 jobs:
   unit-test:
-    name: Unit Test (Java ${{ matrix.java-version }}
+    name: Unit Test (Java ${{ matrix.java-version }})
     strategy:
       matrix:
         java-version:
@@ -38,7 +38,7 @@ jobs:
       matrix:
         include:
           - splunk-version: "9.4"
-            splunk-image: splunk/splunk:9.4@sha256:8d3849f78c2814fd65e68a69aeaa4d1dc79f37e661dbe48e791f4552b025def
+            splunk-image: splunk/splunk:9.4@sha256:8d3849f78c2814fd65e68a69aeaa4d1dc79f37e661dbe48e791f4552b025def5
           - splunk-version: "latest"
             splunk-image: splunk/splunk:latest
     runs-on: ubuntu-latest
@@ -46,7 +46,7 @@ jobs:
 
     services:
       splunk:
-        image: ${{ matrix.splunk-image }}
+        image: ${{ matrix.splunk-image }} # zizmor: ignore[unpinned-images]
         env:
           SPLUNK_START_ARGS: --accept-license
           SPLUNK_HEC_TOKEN: 11111111-1111-1111-1111-1111111111113

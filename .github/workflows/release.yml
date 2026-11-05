@@ -12,8 +12,13 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  test:
+    name: Test
+    uses: ./.github/workflows/test.yml
+
   build:
     name: Create Release
+    needs: test
     runs-on: ubuntu-latest
     environment: release
     steps:

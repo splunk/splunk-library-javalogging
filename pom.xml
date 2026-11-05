@@ -1,12 +1,15 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<?xml version="1.0" encoding="UTF-8" ?>
+<project
+  xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd"
+>
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.splunk.logging</groupId>
     <artifactId>splunk-library-javalogging</artifactId>
 
-    <version>1.11.11</version>
+    <version>1.11.12</version>
 
     <packaging>jar</packaging>
 
@@ -71,7 +74,8 @@
                         <version>2.6</version>
                         <configuration>
                             <archive>
-                                <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
+                                <manifestFile
+                >${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
                             </archive>
                         </configuration>
                     </plugin>
@@ -98,7 +102,8 @@
                                 <id>attach-javadocs</id>
                                 <configuration>
                                     <additionalOptions>
-                                        <additionalOption>-Xdoclint:syntax</additionalOption>
+                                        <additionalOption
+                    >-Xdoclint:syntax</additionalOption>
                                     </additionalOptions>
                                 </configuration>
                                 <goals>
@@ -128,7 +133,7 @@
             </build>
         </profile>
         <profile>
-            <id>Unittest</id>
+            <id>UnitTest</id>
             <build>
                 <plugins>
                     <plugin>
@@ -137,7 +142,8 @@
                         <version>2.22.2</version>
                         <configuration>
                             <includes>
-                                <include>**/HttpEventCollectorUnitTest.class</include>
+                                <include
+                >**/HttpEventCollectorUnitTest.class</include>
                             </includes>
                         </configuration>
                     </plugin>
@@ -262,6 +268,20 @@
                 <configuration>
                     <source>8</source>
                     <target>8</target>
+                    <annotationProcessors>
+                        <!-- Explicit annotations for JDK23+ compat -->
+                        <annotationProcessor
+            >org.apache.logging.log4j.core.config.plugins.processor.PluginProcessor</annotationProcessor>
+                        <annotationProcessor
+            >org.apache.logging.log4j.core.config.plugins.processor.GraalVmProcessor</annotationProcessor>
+                    </annotationProcessors>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.apache.logging.log4j</groupId>
+                            <artifactId>log4j-core</artifactId>
+                            <version>${log4j2.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
                 </configuration>
             </plugin>
             <plugin>
@@ -290,7 +310,8 @@
                         <configuration>
                             <source>8</source>
                             <additionalOptions>
-                                <additionalOption>-Xdoclint:syntax</additionalOption>
+                                <additionalOption
+                >-Xdoclint:syntax</additionalOption>
                             </additionalOptions>
                         </configuration>
                     </execution>
@@ -332,8 +353,10 @@
     </contributors>
 
     <scm>
-        <connection>scm:git:git@github.com:splunk/splunk-library-javalogging.git</connection>
-        <developerConnection>scm:git:git@github.com:splunk/splunk-library-javalogging.git</developerConnection>
+        <connection
+    >scm:git:git@github.com:splunk/splunk-library-javalogging.git</connection>
+        <developerConnection
+    >scm:git:git@github.com:splunk/splunk-library-javalogging.git</developerConnection>
         <tag>HEAD</tag>
         <url>https://github.com/splunk/splunk-library-javalogging</url>
     </scm>

@@ -1,0 +1,24 @@
+version: 2
+updates:
+  - package-ecosystem: "maven"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    groups:
+      maven-minor-patch:
+        update-types: ["minor", "patch"]
+    ignore:
+      # Logback 1.4+ requires Java 11; the library targets Java 8.
+      - dependency-name: "ch.qos.logback:*"
+        versions: [">=1.4"]
+    cooldown:
+      default-days: 7
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    groups:
+      github-actions:
+        update-types: ["major", "minor", "patch"]
+    cooldown:
+      default-days: 7

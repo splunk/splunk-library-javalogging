@@ -22,13 +22,18 @@ init:
 	@echo "$(ATTN_COLOR)==> init $(NO_COLOR)"
 
 .PHONY: test
-test:
-	@echo "$(ATTN_COLOR)==> test $(NO_COLOR)"
-	@echo "Running Unit test"
-	@mvn -P Unittest -B verify --file pom.xml
-	@echo "Running Acceptance test"
+test: test_unit test_acceptance
+
+.PHONY: test_unit
+test_unit:
+	@echo "$(ATTN_COLOR)==> Running unit tests $(NO_COLOR)"
+	@mvn -P UnitTest -B verify --file pom.xml
+
+.PHONY: test_acceptance
+test_acceptance:
+	@echo "$(ATTN_COLOR)==> Running acceptance tests $(NO_COLOR)"
 	@mvn -P AcceptanceTest -B verify --file pom.xml
-	
+
 .PHONY: test_specific
 test_specific:
 	@echo "$(ATTN_COLOR)==> test_specific $(NO_COLOR)"
@@ -37,14 +42,14 @@ test_specific:
 .PHONY: up
 up:
 	@echo "$(ATTN_COLOR)==> up $(NO_COLOR)"
-	@docker-compose up -d
+	@docker compose up -d
 
 .PHONY: wait_up
 wait_up:
 	@echo "$(ATTN_COLOR)==> wait_up $(NO_COLOR)"
-	@for i in `seq 0 180`; do if docker exec -it splunk /sbin/checkstate.sh &> /dev/null; then break; fi; printf "\rWaiting for Splunk for %s seconds..." $$i; sleep 1; done
+	@for i in `seq 0 180`; do docker exec splunk /sbin/checkstate.sh >/dev/null 2>&1 && exit 0; sleep 5; done; echo "Splunk did not start in 600 seconds"; exit 1
 
 .PHONY: down
 down:
 	@echo "$(ATTN_COLOR)==> down $(NO_COLOR)"
-	@docker-compose stop
+	@docker compose stop

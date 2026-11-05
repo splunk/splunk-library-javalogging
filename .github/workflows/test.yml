@@ -11,17 +11,13 @@ concurrency:
 
 jobs:
   unit-test:
-    name: Unit Test (Java ${{ matrix.java-version }}, ${{ matrix.os }})
+    name: Unit Test (Java ${{ matrix.java-version }}
     strategy:
       matrix:
         java-version:
           - 8
-          - 11
-        os:
-          - ubuntu-latest
-          - windows-latest
-          - macos-latest
-    runs-on: ${{ matrix.os }}
+          - latest
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -41,12 +37,10 @@ jobs:
     strategy:
       matrix:
         include:
-          - splunk-version: "8.0"
-            splunk-image: splunk/splunk:8.0@sha256:d6d64ff30ed713238e0f493f0072aa1bc1e8707bec6d5235f115dcee6dc3a595
-          - splunk-version: "8.2"
-            splunk-image: splunk/splunk:8.2@sha256:fb09bda7453a579faa4325d49655f89e8fe654fafac159d5d957e845d818abf5
-          - splunk-version: "9.1"
-            splunk-image: splunk/splunk:9.1@sha256:46ac8d5e1fb6c15fa3abb2cf61d6571dce7d2f720574bd7ab85cb5c2fe0ecab2
+          - splunk-version: "9.4"
+            splunk-image: splunk/splunk:9.4@sha256:8d3849f78c2814fd65e68a69aeaa4d1dc79f37e661dbe48e791f4552b025def
+          - splunk-version: "latest"
+            splunk-image: splunk/splunk:latest
     runs-on: ubuntu-latest
     container: maven:3-jdk-8@sha256:ff18d86faefa15d1445d0fa4874408cc96dec068eb3487a0fc6d07f359a24607
 

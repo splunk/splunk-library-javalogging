@@ -266,8 +266,13 @@
                         JDK 23+ no longer runs annotation processors found on the classpath
                         implicitly. Without an explicit processor path, the Log4j2 plugin index
                         (Log4j2Plugins.dat) is not generated and the SplunkHttp appender fails
-                        with CLASS_NOT_FOUND. An explicit path works on every JDK, including 8.
+                        with CLASS_NOT_FOUND. An explicit processor and path work on every JDK, including 8.
+                        Naming PluginProcessor skips GraalVmProcessor, which would add native-image
+                        metadata to the jar.
                     -->
+                    <annotationProcessors>
+                        <annotationProcessor>org.apache.logging.log4j.core.config.plugins.processor.PluginProcessor</annotationProcessor>
+                    </annotationProcessors>
                     <annotationProcessorPaths>
                         <path>
                             <groupId>org.apache.logging.log4j</groupId>

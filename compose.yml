@@ -1,6 +1,6 @@
 services:
   splunk:
-    image: splunk/splunk:9.1
+    image: ${SPLUNK_IMAGE:-splunk/splunk:9.1}
     container_name: splunk
     platform: linux/amd64
     environment:

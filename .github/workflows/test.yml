@@ -42,23 +42,6 @@ jobs:
           - splunk-version: "latest"
             splunk-image: splunk/splunk:latest
     runs-on: ubuntu-latest
-    container: maven:3-jdk-8@sha256:ff18d86faefa15d1445d0fa4874408cc96dec068eb3487a0fc6d07f359a24607
-
-    services:
-      splunk:
-        image: ${{ matrix.splunk-image }} # zizmor: ignore[unpinned-images]
-        env:
-          SPLUNK_START_ARGS: --accept-license
-          SPLUNK_HEC_TOKEN: 11111111-1111-1111-1111-1111111111113
-          SPLUNK_PASSWORD: changed!
-        ports:
-          - 8089
-          - 8088
-          - 5555
-          - 15000
-          - 10667
-          - 10668/udp
-
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -69,8 +52,11 @@ jobs:
           java-version: 8.0.482+8
           distribution: "zulu"
           cache: maven
+      - name: Launch Splunk Docker instance
+        env:
+          SPLUNK_IMAGE: ${{ matrix.splunk-image }}
+        run: docker compose up -d
+      - name: Wait for Splunk
+        run: timeout 600 sh -c 'until docker exec splunk /sbin/checkstate.sh >/dev/null 2>&1; do sleep 5; done'
       - name: Acceptance Test
         run: mvn -P AcceptanceTest -B verify --file pom.xml
-        env:
-          SPLUNK_PASSWORD: changed!
-          SPLUNK_HOST: splunk

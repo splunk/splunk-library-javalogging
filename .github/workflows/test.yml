@@ -13,10 +13,7 @@ concurrency:
 
 jobs:
   unit-test:
-    name: Unit Test (java-${{ matrix.java-version }})
-    strategy:
-      matrix:
-        java-version: [8, 11]
+    name: Unit Tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -25,24 +22,22 @@ jobs:
       - name: Set up JDK
         uses: actions/setup-java@77dd5b2ce225ea11469928ac317850245a74ae78 # v6.2.0
         with:
-          java-version: ${{ matrix.java-version }}
+          java-version: 8
           distribution: "zulu"
           cache: maven
-      - name: Unit Test
+      - name: Run unit tests
         run: mvn -P Unittest -B verify --file pom.xml
 
   acceptance-test:
-    name: Acceptance Test (splunk-${{ matrix.splunk-version }})
+    name: Acceptance Tests (splunk-${{ matrix.splunk-version }})
     needs: unit-test
     strategy:
       matrix:
         include:
-          - splunk-version: "8.0"
-            splunk-image: splunk/splunk:8.0@sha256:d6d64ff30ed713238e0f493f0072aa1bc1e8707bec6d5235f115dcee6dc3a595
           - splunk-version: "8.2"
             splunk-image: splunk/splunk:8.2@sha256:fb09bda7453a579faa4325d49655f89e8fe654fafac159d5d957e845d818abf5
-          - splunk-version: "9.1"
-            splunk-image: splunk/splunk:9.1@sha256:46ac8d5e1fb6c15fa3abb2cf61d6571dce7d2f720574bd7ab85cb5c2fe0ecab2
+          - splunk-version: "9.4"
+            splunk-image: splunk/splunk:9.4@sha256:8d3849f78c2814fd65e68a69aeaa4d1dc79f37e661dbe48e791f4552b025def5
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -51,7 +46,7 @@ jobs:
       - name: Set up JDK
         uses: actions/setup-java@77dd5b2ce225ea11469928ac317850245a74ae78 # v6.2.0
         with:
-          java-version: 8.0.482+8
+          java-version: 8
           distribution: "zulu"
           cache: maven
       - name: Launch Splunk Docker instance
@@ -60,5 +55,5 @@ jobs:
         run: docker compose up -d
       - name: Wait for Splunk
         run: timeout 600 sh -c 'until docker exec splunk /sbin/checkstate.sh >/dev/null 2>&1; do sleep 5; done'
-      - name: Acceptance Test
+      - name: Run acceptance tests
         run: mvn -P AcceptanceTest -B verify --file pom.xml

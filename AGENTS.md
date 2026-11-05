@@ -12,6 +12,7 @@
 - Run the project's linter/formatter before considering code done. Fix type
   errors, unused imports, lint violations.
 - After modifying GitHub workflows, verify their security with zizmor (e.g. `uvx zizmor --no-ignores --persona=auditor`).
+- In GitHub Workflows, [`$/` means repo root](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#example-using-an-action-in-the-same-repository-as-the-workflow-at-the-running-commit-recommended)
 
 ## Scope
 

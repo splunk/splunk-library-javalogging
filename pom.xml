@@ -1,6 +1,9 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<?xml version="1.0" encoding="UTF-8" ?>
+<project
+  xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd"
+>
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.splunk.logging</groupId>
@@ -71,7 +74,8 @@
                         <version>2.6</version>
                         <configuration>
                             <archive>
-                                <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
+                                <manifestFile
+                >${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
                             </archive>
                         </configuration>
                     </plugin>
@@ -98,7 +102,8 @@
                                 <id>attach-javadocs</id>
                                 <configuration>
                                     <additionalOptions>
-                                        <additionalOption>-Xdoclint:syntax</additionalOption>
+                                        <additionalOption
+                    >-Xdoclint:syntax</additionalOption>
                                     </additionalOptions>
                                 </configuration>
                                 <goals>
@@ -137,7 +142,8 @@
                         <version>2.22.2</version>
                         <configuration>
                             <includes>
-                                <include>**/HttpEventCollectorUnitTest.class</include>
+                                <include
+                >**/HttpEventCollectorUnitTest.class</include>
                             </includes>
                         </configuration>
                     </plugin>
@@ -262,16 +268,10 @@
                 <configuration>
                     <source>8</source>
                     <target>8</target>
-                    <!--
-                        JDK 23+ no longer runs annotation processors found on the classpath
-                        implicitly. Without an explicit processor path, the Log4j2 plugin index
-                        (Log4j2Plugins.dat) is not generated and the SplunkHttp appender fails
-                        with CLASS_NOT_FOUND. An explicit processor and path work on every JDK, including 8.
-                        Naming PluginProcessor skips GraalVmProcessor, which would add native-image
-                        metadata to the jar.
-                    -->
                     <annotationProcessors>
-                        <annotationProcessor>org.apache.logging.log4j.core.config.plugins.processor.PluginProcessor</annotationProcessor>
+                        <!-- Fix Log4j2 plugin index not generated on JDK23+, skips GraalVmProcessor -->
+                        <annotationProcessor
+            >org.apache.logging.log4j.core.config.plugins.processor.PluginProcessor</annotationProcessor>
                     </annotationProcessors>
                     <annotationProcessorPaths>
                         <path>
@@ -308,7 +308,8 @@
                         <configuration>
                             <source>8</source>
                             <additionalOptions>
-                                <additionalOption>-Xdoclint:syntax</additionalOption>
+                                <additionalOption
+                >-Xdoclint:syntax</additionalOption>
                             </additionalOptions>
                         </configuration>
                     </execution>
@@ -350,8 +351,10 @@
     </contributors>
 
     <scm>
-        <connection>scm:git:git@github.com:splunk/splunk-library-javalogging.git</connection>
-        <developerConnection>scm:git:git@github.com:splunk/splunk-library-javalogging.git</developerConnection>
+        <connection
+    >scm:git:git@github.com:splunk/splunk-library-javalogging.git</connection>
+        <developerConnection
+    >scm:git:git@github.com:splunk/splunk-library-javalogging.git</developerConnection>
         <tag>HEAD</tag>
         <url>https://github.com/splunk/splunk-library-javalogging</url>
     </scm>

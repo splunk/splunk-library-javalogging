@@ -30,12 +30,9 @@ jobs:
         with:
           java-version: 8
           distribution: "zulu"
-          cache: maven
           server-id: splunk-artifactory
           server-username: MAVEN_USERNAME
           server-password: MAVEN_PASSWORD
-      - name: build
-        run: mvn -B package --file pom.xml
       - name: Deploy to Artifactory
         run: mvn --batch-mode deploy
         env:

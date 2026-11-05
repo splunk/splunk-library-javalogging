@@ -1,5 +1,19 @@
 # Splunk Logging for Java Changelog
 
+## Version 1.11.12
+
+### Security Updates
+
+- Bump Log4j2 to 2.26.1
+- Bump gson to 2.15.0
+- Replace okhttp3 4.12.0 with okhttp-jvm 5.5.1
+
+### Minor Changes
+
+- Bump slf4j-api (test scope) to 2.0.20
+- Bump commons-lang3 (test scope) to 3.21.0
+- Remove Log4j2 package-scanning deprecation warning from test configuration
+
 ## Version 1.11.11
 
 ### Security Updates

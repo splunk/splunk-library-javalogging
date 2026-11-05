@@ -11,7 +11,7 @@
 
 - Run the project's linter/formatter before considering code done. Fix type
   errors, unused imports, lint violations.
-- After modifying GitHub workflows, verify their security with zizmor (e.g. `uvx zizmor --no-ignores --persona=pedantic`).
+- After modifying GitHub workflows, verify their security with zizmor (e.g. `uvx zizmor --no-ignores --persona=auditor`).
 
 ## Scope
 

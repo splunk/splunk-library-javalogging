@@ -28,7 +28,7 @@ test:
 	@mvn -P Unittest -B verify --file pom.xml
 	@echo "Running Acceptance test"
 	@mvn -P AcceptanceTest -B verify --file pom.xml
-	
+
 .PHONY: test_specific
 test_specific:
 	@echo "$(ATTN_COLOR)==> test_specific $(NO_COLOR)"

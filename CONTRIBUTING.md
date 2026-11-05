@@ -33,11 +33,11 @@ You can [contact support][contact] if you have Splunk related questions.
 
 You can reach the Developer Platform team at _devinfo@splunk.com_.
 
-[contributions]:            http://dev.splunk.com/view/opensource/SP-CAAAEDM
-[indivcontrib]:             http://dev.splunk.com/goto/individualcontributions
-[companycontrib]:           http://dev.splunk.com/view/companycontributions/SP-CAAAEDR
-[answers]:                  http://answers.splunk.com/
-[repo]:                     https://github.com/splunk/splunk-library-javalogging
-[issues]:                   https://github.com/splunk/splunk-library-javalogging/issues
-[pulls]:                    https://github.com/splunk/splunk-library-javalogging/pulls
-[contact]:                  https://www.splunk.com/en_us/support-and-services.html
+[contributions]: http://dev.splunk.com/view/opensource/SP-CAAAEDM
+[indivcontrib]: http://dev.splunk.com/goto/individualcontributions
+[companycontrib]: http://dev.splunk.com/view/companycontributions/SP-CAAAEDR
+[answers]: http://answers.splunk.com/
+[repo]: https://github.com/splunk/splunk-library-javalogging
+[issues]: https://github.com/splunk/splunk-library-javalogging/issues
+[pulls]: https://github.com/splunk/splunk-library-javalogging/pulls
+[contact]: https://www.splunk.com/en_us/support-and-services.html

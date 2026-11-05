@@ -25,11 +25,8 @@ jobs:
         env:
           MAVEN_USERNAME: ${{ secrets.ARTIFACTORY_USERNAME }}
           MAVEN_PASSWORD: ${{ secrets.ARTIFACTORY_PASSWORD }}
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@8a0cd651e5b2365bd640854a3fa5dfc70e4875f3 # v3.0.4
-        with:
-          # body_path: ${{ github.workflow }}-CHANGELOG.txt
-          files: ./target/*.jar
-          draft: true
+      - name: Upload jars to release
+        run: gh release upload "$TAG" ./target/*.jar --clobber
         env:
-          GITHUB_TOKEN: ${{ secrets.RELEASE_GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.RELEASE_GITHUB_TOKEN }}
+          TAG: ${{ github.event.release.tag_name }}

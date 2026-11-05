@@ -21,6 +21,8 @@ jobs:
     needs: test
     runs-on: ubuntu-latest
     environment: release
+    permissions:
+      contents: write # upload jars to the release
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -31,15 +33,16 @@ jobs:
           java-version: 8
           distribution: "zulu"
           server-id: splunk-artifactory
-          server-username: MAVEN_USERNAME
-          server-password: MAVEN_PASSWORD
+          server-username-env-var: MAVEN_USERNAME
+          server-password-env-var: MAVEN_PASSWORD
       - name: Deploy to Artifactory
         run: mvn --batch-mode deploy
         env:
           MAVEN_USERNAME: ${{ secrets.ARTIFACTORY_USERNAME }}
           MAVEN_PASSWORD: ${{ secrets.ARTIFACTORY_PASSWORD }}
       - name: Upload jars to release
+        continue-on-error: true
         run: gh release upload "$TAG" ./target/*.jar --clobber
         env:
-          GH_TOKEN: ${{ secrets.RELEASE_GITHUB_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
           TAG: ${{ github.event.release.tag_name }}

@@ -269,7 +269,7 @@
                     <source>8</source>
                     <target>8</target>
                     <annotationProcessors>
-                        <!-- Fix Log4j2 plugin index not generated on JDK23+. GraalVmProcessor is kept so the jar still ships the native-image reflect-config.json -->
+                        <!-- Explicit annotations for JDK23+ compat -->
                         <annotationProcessor
             >org.apache.logging.log4j.core.config.plugins.processor.PluginProcessor</annotationProcessor>
                         <annotationProcessor

@@ -12,25 +12,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  unit-test:
-    name: Unit Tests
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - name: Set up JDK
-        uses: actions/setup-java@77dd5b2ce225ea11469928ac317850245a74ae78 # v6.2.0
-        with:
-          java-version: 8
-          distribution: "zulu"
-          cache: maven
-      - name: Run unit tests
-        run: mvn -P Unittest -B verify --file pom.xml
-
-  acceptance-test:
-    name: Acceptance Tests (splunk-${{ matrix.splunk-version }})
-    needs: unit-test
+  test:
+    name: Tests (splunk-${{ matrix.splunk-version }})
     strategy:
       matrix:
         include:
@@ -49,11 +32,13 @@ jobs:
           java-version: 8
           distribution: "zulu"
           cache: maven
+      - name: Run unit tests
+        run: make test_unit
       - name: Launch Splunk Docker instance
         env:
           SPLUNK_IMAGE: ${{ matrix.splunk-image }}
-        run: docker compose up -d
-      - name: Wait for Splunk
-        run: timeout 600 sh -c 'until docker exec splunk /sbin/checkstate.sh >/dev/null 2>&1; do sleep 5; done'
+        run: make up
+      - name: Wait for Splunk Docker instance
+        run: make wait_up
       - name: Run acceptance tests
-        run: mvn -P AcceptanceTest -B verify --file pom.xml
+        run: make test_acceptance

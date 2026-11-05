@@ -133,7 +133,7 @@
             </build>
         </profile>
         <profile>
-            <id>Unittest</id>
+            <id>UnitTest</id>
             <build>
                 <plugins>
                     <plugin>

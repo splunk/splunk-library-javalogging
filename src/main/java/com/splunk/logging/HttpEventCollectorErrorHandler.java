@@ -77,7 +77,7 @@ public class HttpEventCollectorErrorHandler {
                 errorCode = json.get("code").getAsLong();
                 errorText = json.get("text").getAsString();
             } catch (Exception e) {
-                errorText = e.getMessage();
+                errorText = serverReply;
             }
         }
 

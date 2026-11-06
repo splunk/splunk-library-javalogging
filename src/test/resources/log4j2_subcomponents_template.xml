@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="info" name="example" packages="com.splunk.logging">
+    <Appenders>
+        <SplunkHttp
+              name="httpconf"
+              url="%scheme%://%host%:8088"
+              token="%user_httpEventCollector_token%"
+              host="%user_host%"
+              index="%user_index%"
+              source="%user_source%"
+              sourcetype="%user_sourcetype%"
+              messageFormat="%user_messageFormat%"
+              batch_interval="%user_batch_interval%"
+              batch_size_bytes="%user_batch_size_bytes%"
+              batch_size_count="%user_batch_size_count%"
+              disableCertificateValidation="true"
+              send_mode="%user_send_mode%"
+              eventBodySerializer="%user_eventBodySerializer%"
+              eventHeaderSerializer="%user_eventHeaderSerializer%"
+                >
+            <Log4jTestMiddleware level="%user_eventLevel%" />
+            <PatternLayout pattern="%m"/>
+        </SplunkHttp>
+
+    </Appenders>
+
+    <!-- Define a logger named 'testSplunkLog4j' which writes to the socket appender we defined above. -->
+    <Loggers>
+        <Root level="INFO"/>
+        <Logger name="%user_logger_name%" level="DEBUG">
+            <AppenderRef ref="httpconf"/>
+        </Logger>
+    </Loggers>
+</Configuration>

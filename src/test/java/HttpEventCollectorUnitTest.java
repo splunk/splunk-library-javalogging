@@ -18,6 +18,8 @@
 
 import com.splunk.logging.HttpEventCollectorErrorHandler;
 import com.splunk.logging.HttpEventCollectorEventInfo;
+import com.splunk.logging.Log4jTestMiddleware;
+
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -92,6 +94,36 @@ public class HttpEventCollectorUnitTest {
         LOG4J.info("hello log4j");
         Assert.assertEquals(1, HttpEventCollectorUnitTestMiddleware.eventsReceived);
         Assert.assertEquals(1, HttpEventCollectorUnitTestMiddleware.eventsWithFailures);
+    }
+
+    @Test
+    public void log4j_subcomponents() throws Exception {
+        final org.apache.logging.log4j.Level[] levels = { org.apache.logging.log4j.Level.WARN,
+                org.apache.logging.log4j.Level.INFO, org.apache.logging.log4j.Level.DEBUG };
+        final long[]  expectedCounts = { 1, 2, 3 };
+        for (int i = 0; i < levels.length; i++) {
+            HashMap<String, String> userInputs = new HashMap<>();
+            String                  loggerName = "splunk.log4jSubcomponents";
+            userInputs.put("user_logger_name", loggerName);
+            userInputs.put("user_httpEventCollector_token", "11111111-2222-3333-4444-555555555555");
+            userInputs.put("user_middleware", "HttpEventCollectorUnitTestMiddleware");
+            userInputs.put("user_batch_size_count", "1");
+            userInputs.put("user_batch_size_bytes", "0");
+            userInputs.put("user_eventBodySerializer", "DoesNotExistButShouldNotCrashTest");
+            userInputs.put("user_eventHeaderSerializer", "DoesNotExistButShouldNotCrashTest");
+            userInputs.put("user_eventLevel", levels[i].toString());
+            TestUtil.resetLog4j2Configuration("log4j2_subcomponents_template.xml", "log4j2.xml", userInputs);
+            org.apache.logging.log4j.Logger LOG4J = org.apache.logging.log4j.LogManager.getLogger(loggerName);
+
+            HttpEventCollectorUnitTestMiddleware.eventsReceived = 0;
+            // send 3 events
+            LOG4J.warn("hello log4j");
+            LOG4J.info("hello log4j");
+            LOG4J.debug("hello log4j");
+            if (HttpEventCollectorUnitTestMiddleware.eventsReceived == 0)
+                sleep(1000);
+            Assert.assertEquals(expectedCounts[i], Log4jTestMiddleware.eventsReceived);
+        }
     }
 
     @Test
